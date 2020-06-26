@@ -1,0 +1,224 @@
+
+== Download Vim using git ==
+
+git clone https://github.com/vim/vim.git
+
+And update to the latest version with:
+cd vim
+git fetch
+git merge
+
+If you don't have local changes you can also combine the last two:
+cd vim
+git pull
+
+Build and install Vim as usual. If you are happy with the defaults:
+
+cd src
+make distclean  # if you build Vim before
+make
+sudo make install
+
+If you have local changes you may need to merge. If you are sure you can discard local changes (e.g. if you were just trying a patch), you can use:
+git fetch --all
+git reset --hard origin/master
+Browsing the Vim sources
+
+You can browse the git repository online. This shows the most recent version of the files, including runtime files.
+
+== Configure and Install Vim ==
+
+Make sure ncurses-dev is installed:
+sudo apt-get install ncurses-dev
+
+May have to edit file src/auto/config.mk
+- Add "-ldl" to LIBS
+
+For GUI support (gvim, (*) clipboard register...):
+sudo apt-get install vim-gtk2 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev
+sudo pacman -S vim-gtk2 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev
+
+Configure Vim for CLI
+
+./configure --prefix=/usr/local \
+    --enable-gui=yes \
+    --without-x \
+    --disable-nls \
+    --enable-multibyte=yes \
+    --enable-cscope=yes \
+    --with-tlib=ncurses \
+    --enable-pythoninterp \
+    --enable-python3interp \
+    --with-python-config-dir=/usr/lib/python2.7/config/ \
+    --with-python3-config-dir=/usr/lib/python3.7/config/ \
+    --enable-rubyinterp \
+    --with-ruby-command=/usr/bin/ruby \
+    --enable-fontset=yes \
+    --with-features=huge
+    --with-features=huge > log_configure.txt
+
+    --with-ruby-command=/usr/bin/ruby1.8 \
+    --enable-rubyinterp=dynamic \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.9.3-p194/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.9.2-p136/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.9.1-p430/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.8.7-p370/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.8.7-p299/bin/ruby \
+    --with-ruby-command=/usr/bin/ruby1.8 \
+
+./configure --prefix=/usr/local
+./configure --prefix=/home/bakerg/Vim73  --with-features=huge --x-includes=/usr/include/X11 --x-libraries=/usr/lib/X11 --with-x --enable-gui --disable-nls --enable-multibyte=yes --enable-cscope=yes --with-tlib=ncurses --enable-pythoninterp=yes --enable-pythoninterp=dynamic --with-python-config-dir=/usr/lib/python2.6/config/ --enable-rubyinterp=dynamic --with-ruby-command=/usr/bin/ruby --enable-fontset=yes > log_configure.txt
+./configure --prefix=~/Vim74  --with-features=huge --x-includes=/usr/include/X11 --x-libraries=/usr/lib/X11 --with-x --enable-gui --disable-nls --enable-multibyte=yes --enable-cscope=yes --with-tlib=ncurses --enable-pythoninterp=yes --enable-pythoninterp=dynamic --with-python-config-dir=/usr/lib/python2.6/config/ --enable-rubyinterp=dynamic --with-ruby-command=/usr/bin/ruby --enable-fontset=yes > log_configure.txt
+./configure --prefix=/home/one/Vim  --with-features=huge --x-includes=/usr/include/X11 --x-libraries=/usr/lib/X11 --with-x --enable-gui --disable-nls --enable-multibyte=yes --enable-cscope=yes --with-tlib=ncurses --enable-pythoninterp --enable-python3interp --with--with-python-config-dir=/usr/lib/python2.6/config/ --with-python3-config-dir=/usr/lib/python3.2/config/ --enable-rubyinterp --with-ruby-command=/usr/bin/ruby --enable-fontset=yes > log_configure.txt
+
+Configure Vim for GUI (Desktop Linux)
+
+Default:
+./configure --prefix=/usr/local \
+    --disable-nls \
+    --enable-multibyte=yes \
+    --enable-cscope=yes \
+    --with-tlib=ncurses \
+    --enable-pythoninterp \
+    --enable-python3interp \
+    --with-python-config-dir=/usr/lib/python2.7/config/ \
+    --with-python3-config-dir=/usr/lib/python3.7/config/ \
+    --enable-rubyinterp \
+    --with-ruby-command=/usr/bin/ruby \
+    --enable-fontset=yes \
+    --with-features=huge > log_configure.txt
+Custom:
+./configure --prefix=/home/bakerg/Vim \
+--with-features=huge \
+--x-includes=/usr/include/X11 \
+--x-libraries=/usr/lib/X11 \
+--with-x \
+--enable-gui \
+--disable-nls \
+--enable-multibyte=yes \
+--enable-cscope=yes \
+--with-tlib=ncurses \
+--enable-python3interp \
+--with-python3-config-dir=$(python3-config --configdir) \
+--enable-luainterp=yes \
+--enable-rubyinterp=yes \
+--enable-perlinterp=yes \
+--with-ruby-command=/usr/bin/ruby \
+--enable-fontset=yes > log_configure.txt
+
+--enable-pythoninterp \
+--with-python-config-dir=/usr/lib/python2.7/config/ \
+--enable-python3interp=yes \
+--with-python3-config-dir=/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/ \
+--with-python3-config-dir=/usr/lib/python3.7/config-3.7m-x86_64-linux-gnu/ \
+--with-python3-config-dir=/usr/lib/python3.7/config/ \
+--with-python3-config-dir=$(python3-config --configdir) \
+--enable-luainterp=yes \
+
+VM
+./configure --prefix=/home/one/Vim  --with-features=huge --x-includes=/usr/include/X11 --x-libraries=/usr/lib/X11 --with-x --enable-gui --disable-nls --enable-multibyte=yes --enable-cscope=yes --with-tlib=ncurses --enable-pythoninterp=dynamic --enable-python3interp=dynamic --with-python-config-dir=/usr/lib/python2.7/config-x86_64-linux-gnu --with-python3-config-dir=/usr/lib/python3.5/config-3.5m-x86_64-linux-gnu --enable-rubyinterp --with-ruby-command=/usr/bin/ruby --enable-fontset=yes > log_configure.txt
+    --enable-gui=auto
+    --with-ruby-command=/usr/bin/ruby \
+    --enable-rubyinterp=yes \
+    --enable-rubyinterp=dynamic \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.9.3-p194/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.9.2-p136/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.9.1-p430/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.8.7-p370/bin/ruby \
+    --with-ruby-command=/home/BakerG/.rvm/rubies/ruby-1.8.7-p299/bin/ruby \
+    --with-ruby-command=/usr/bin/ruby1.8 \
+
+Good information about installing vim with python and ruby support
+http://wikimatze.de/compiling-vim-from-source-for-ubuntu-and-mac-with-rbenv.html
+http://joncairns.com/2012/09/compiling-vim-with-ruby-from-rvm-on-ubuntu/
+http://greyblake.com/blog/2012/07/15/how-to-build-vim-against-specific-ruby-version/
+
+== Vim w/RUBY stuff ==
+
+https://blogs.law.harvard.edu/hoanga/2006/10/27/fixing-mkmf-load-error-ruby-in-ubuntu/
+Fixing 'mkmf' load error Ruby
+sudo apt-get install ruby1.8-dev
+
+Ok... got it to work. Took me like half hour or so.
+This should help (I got Ubuntu):
+sudo apt-get install mercurial
+hg clone https://vim.googlecode.com/hg/ vim
+cd vim
+./configure --enable-rubyinterp
+make
+sudo make install
+To test if things look fancy:
+vim --version | grep ruby
+Should return something like:
+-python3 +quickfix +reltime -rightleft +ruby +scrollbind +signs +smartindent
+Ruby should have plus now. Another trick to test it - enter vim and hit :ruby 1. Should not fail.
+
+$ rbenv shell system
+$ ruby -v
+ruby 1.8.7 (2010-01-10 patchlevel 229) [universal-darwin11.0]
+
+$ hg clone https://vim.googlecode.com/hg/ vim
+
+GB VM 2013/08/19
+systemone=>one@dev:~$ ruby -v
+ruby 1.8.7 (2008-08-11 patchlevel 72) [i686-linux]
+systemone=>one@dev:~$ vim --version | grep ruby
++printer -profile -python -python3 +quickfix +reltime -rightleft +ruby
+Linking: gcc   -L. -L/opt/XLS/usr/lib -rdynamic -Wl,-export-dynamic -L/opt/XLS/usr/lib -L/usr/local/lib -Wl,--as-needed -o vim   -pthread -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lpangoft2-1.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lcairo -lgio-2.0 -lpango-1.0 -lfreetype -lfontconfig -lgobject-2.0 -lgmodule-2.0 -lgthread-2.0 -lrt -lglib-2.0   -lSM -lICE -lXt -lX11 -lXdmcp -lSM -lICE -lm -lncurses -lelf -lnsl         -lruby-static -ldl -lcrypt -lm  -L/usr/local/lib
+systemone=>one@dev:~$ vim --version
+VIM - Vi IMproved 7.3 (2010 Aug 15, compiled Nov  5 2012 23:20:29)
+Included patches: 1-712
+Compiled by one@dev
+
+** Command-T **
+Install RVM (requires curl)
+https://rvm.io/rvm/install/
+http://sirupsen.com/get-started-right-with-rvm/
+
+Install different versions of ruby with RVM
+https://rvm.io/rubies/installing/
+
+cd ~/.vim/bundle
+git clone https://github.com/wincent/Command-T.git command-t
+
+ http://www.vim.org/scripts/script.php?script_id=2332
+
+ If you manage your entire ~/.vim folder using Git then you can add the
+ Command-T repository as a submodule:
+ cd ~/.vim
+ git submodule add git://git.wincent.com/command-t.git bundle/command-t
+ git submodule init
+
+ Or if you just wish to do a simple clone instead of using submodules:
+ cd ~/.vim
+ git clone git://git.wincent.com/command-t.git bundle/command-t
+
+ Once you have a local copy of the repository you can update it at any time with:
+ cd ~/.vim/bundle/command-t git pull
+
+ Or you can switch to a specific release with:
+ cd ~/.vim/bundle/command-t git checkout 0.8b
+
+ After installing or updating you must build the extension:
+ cd ~/.vim/bundle/command-t/ruby/command-t
+ ruby extconf.rb
+ make
+
+ While the Vimball installation automatically generates the help tags,
+ under Pathogen it is necessary to do so explicitly from inside Vim:
+ :call pathogen#helptags()
+
+ Tip: use 'find_header' in extconf.rb
+
+== Installing rtags ==
+
+cmake -DLLVM_CONFIG=/usr/local/llvm-3.6/bin/llvm-config -DCLANG_LIBDIR=/usr/local/llvm-3.6/lib -DCMAKE_CXX_COMPILER=/usr/local/llvm-3.6/bin/clang++ -DCMAKE_C_COMPILER=/usr/local/llvm-3.6/bin/clang -I/usr/local/llvm-3.6/include/c++/v1 ..
+
+cmake -DLLVM_CONFIG=/usr/local/llvm-3.6/bin/llvm-config -DCLANG_LIBDIR=/usr/local/llvm-3.6/lib -DCMAKE_CXX_COMPILER=/usr/local/llvm-3.6/bin/clang++ -DCMAKE_C_COMPILER=/usr/local/llvm-3.6/bin/clang -LCLANG_LIBS=/usr/local/llvm-3.6/lib/libclang.so ..
+
+cmake -DLLVM_CONFIG=/usr/local/llvm-3.6/bin/llvm-config -DCLANG_LIBDIR=/usr/local/llvm-3.6/lib -DCMAKE_CXX_COMPILER=/usr/local/llvm-3.6/bin/clang++ -DCMAKE_C_COMPILER=/usr/local/llvm-3.6/bin/clang -DCMAKE_LIBRARY_PATH=/usr/local/llvm-3.6/lib ..
+
+CLANG_LIBS:FILEPATH=/usr/local/llvm-3.6/lib/libclang.so
+/usr/local/llvm-3.6/lib/libclang.so
+NCLUDES+=-I/usr/local/llvm-3.6/include/c++/v1
+

@@ -1,0 +1,10 @@
+
+# ========== VM SPECIFIC =========== #
+
+#Dropbox
+alias dropbox="dbus-launch ~/.dropbox-dist/dropboxd start -i &"
+#alias dropbox="http_proxy=http://127.0.0.1:3128 ~/.dropbox-dist/dropboxd start -i &"
+#alias dropbox="(~/.dropbox-dist/dropboxd start -i &) &"
+
+# Java home directory
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64

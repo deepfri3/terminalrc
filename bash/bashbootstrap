@@ -1,0 +1,36 @@
+if [ -z "$PS1" ]; then
+   return
+fi
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+echo "Where is bootstrap? --> $SOURCE"
+
+basebashdir=$(dirname "$SOURCE")
+masterbashrc=$basebashdir/bashrc
+osbashrc=$masterbashrc-`uname`
+localbashrc=$osbashrc-`hostname | cut -d. -f1`
+
+if [ ! -f $localbashrc ]; then
+    echo "bashrc for $localbashrc doesn't exist...makin' it"
+    echo -e "\n# bashrc for local machine" > $localbashrc
+fi
+
+echo -n "Applicable shell configs: "
+for bashfile in "$masterbashrc" "$osbashrc" "$localbashrc"; do
+  if [ -r $bashfile ]; then
+    . $bashfile
+    echo -n "`basename $bashfile` "
+  fi
+done
+echo
+
+# Set convenience aliases
+myed=${VISUAL:-${EDITOR:-vim}}
+alias editbashrc="$myed $masterbashrc"
+alias editosbashrc="$myed $osbashrc"
+alias editlocalbashrc="$myed $localbashrc"

@@ -1,0 +1,36 @@
+if [ -z "$PS1" ]; then
+   return
+fi
+
+SOURCE="${(%):-%N}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+echo "Where is bootstrap? --> $SOURCE"
+
+basezshdir=$(dirname "$SOURCE")
+masterzshrc=$basezshdir/zshrc
+oszshrc=$masterzshrc-`uname`
+localzshrc=$oszshrc-`hostname | cut -d. -f1`
+
+if [ ! -f $localzshrc ]; then
+    echo "zshrc for $localzshrc doesn't exist...makin' it"
+    echo -e "\n# zshrc for local machine" > $localzshrc
+fi
+
+echo -n "Applicable shell configs: "
+for zshfile in "$masterzshrc" "$oszshrc" "$localzshrc"; do
+  if [ -r $zshfile ]; then
+    . $zshfile
+    echo -n "`basename $zshfile` "
+  fi
+done
+echo
+
+# Set convenience aliases
+myed=${VISUAL:-${EDITOR:-vim}}
+alias editzshrc="$myed $masterzshrc"
+alias editoszshrc="$myed $oszshrc"
+alias editlocalzshrc="$myed $localzshrc"

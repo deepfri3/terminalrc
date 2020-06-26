@@ -1,0 +1,184 @@
+## ~/.bashrc: executed by bash(1) for non-login shells.
+## see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+## for examples
+
+## If not running interactively, don't do anything
+#[ -z "$PS1" ] && return
+
+## don't put duplicate lines in the history. See bash(1) for more options
+## don't overwrite GNU Midnight Commander's setting of `ignorespace'.
+#HISTCONTROL=$HISTCONTROL${HISTCONTROL+:}ignoredups
+## ... or force ignoredups and ignorespace
+#HISTCONTROL=ignoreboth
+
+## append to the history file, don't overwrite it
+#shopt -s histappend
+
+## for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+
+## check the window size after each command and, if necessary,
+## update the values of LINES and COLUMNS.
+#shopt -s checkwinsize
+
+## make less more friendly for non-text input files, see lesspipe(1)
+##[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+## set variable identifying the chroot you work in (used in the prompt below)
+#if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
+    #debian_chroot=$(cat /etc/debian_chroot)
+#fi
+
+## uncomment for a colored prompt, if the terminal has the capability; turned
+## off by default to not distract the user: the focus in a terminal window
+## should be on the output of commands, not on the prompt
+#force_color_prompt=yes
+
+#if [ -n "$force_color_prompt" ]; then
+  #if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+		## We have color support; assume it's compliant with Ecma-48
+		## (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+		## a case would tend to support setf rather than setaf.)
+		#color_prompt=yes
+	#else
+		#color_prompt=
+	#fi
+#fi
+
+#if [ "$color_prompt" = yes ]; then
+	##set color
+	#export TERM="xterm-256color"
+
+	## set a fancy prompt (non-color, unless we know we "want" color)
+	#case "$TERM" in
+			#xterm-color) color_prompt=yes;;
+	#esac
+
+	## Enable colors for ls, etc.  Prefer user defined file
+	## run: $ dircolors -p > ~/.dircolorsrc
+	#if type -P dircolors >/dev/null ; then
+		#if [[ -f ~/.dircolorsrc ]] ; then
+			#eval $(dircolors -b ~/.dircolorsrc)
+		#elif [[ -f /etc/DIR_COLORS ]] ; then
+			#eval $(dircolors -b /etc/DIR_COLORS)
+		#fi
+	#fi
+
+	## You may uncomment the following lines if you want `ls' to be colorized:
+	#export GREP_OPTIONS='--color=auto'
+	#alias grep="grep $GREP_OPTIONS"
+	#alias fgrep="fgrep $GREP_OPTIONS"
+	#alias egrep="egrep $GREP_OPTIONS"
+
+	## You may uncomment the following lines if you want `ls' to be colorized:
+	#export LS_OPTIONS='--color=auto'
+	#alias ls="ls $LS_OPTIONS"
+	#alias ll="ls $LS_OPTIONS -l"
+
+	#PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+#else
+	#PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+#fi
+
+## dont pollute the rest of the bashrc
+#unset color_prompt force_color_prompt
+
+## If this is an xterm set the title to user@host:dir
+#case "$TERM" in
+#xterm*|rxvt*)
+    #PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    #;;
+#*)
+    #;;
+#esac
+
+## Alias definitions.
+## You may want to put all your additions into a separate file like
+## ~/.bash_aliases, instead of adding them here directly.
+## See /usr/share/doc/bash-doc/examples in the bash-doc package.
+#if [ -f ~/.bash_aliases ]; then
+    #. ~/.bash_aliases
+#fi
+
+## enable programmable completion features (you don't need to enable
+## this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+## sources /etc/bash.bashrc).
+#if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    #. /etc/bash_completion
+#fi
+
+## prepend PATH for AgentSmith env
+#export PATH=/home/$USER/bin:/usr/atria/bin:/usr/atria/etc:/usr/atria/etc/utils:$PATH
+
+## CC CLI Info
+#export CCASE_USERNAME=bakerg
+#export CCASE_SERVER=https://usfhp00001esrv.ww009.siemens.net/ccrc
+#export CCASE_PASSWORD=wat3rp010pwn\$15
+#export CCASE_CONFIGSPECS=~/projects/cc_configspecs
+#export PS1='$PROJECT=>${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+#alias ct="cleartool"
+#alias rct="rcleartool"
+#VISUAL=vim
+#export VISUAL
+#EDITOR=vim
+#export EDITOR
+
+
+## import path for XLS CodeSourcery libraries and includes
+#export PATH=/opt/arm-2010.09/bin:$PATH
+#export CFLAGS=-I/opt/XLS/usr/include
+#export LDFLAGS=-L/opt/XLS/usr/lib
+
+## Set the proxy up to outside world
+#export https_proxy=127.0.0.1:3128
+#export http_proxy=$https_proxy
+#export ftp_proxy=$https_proxy
+
+
+## My vimrc
+#export MYVIMRC=~/.vimrc
+
+## My bashrc
+#export MYBASHRC=~/.bashrc
+
+## ClearCase standard views
+#export VIEWROOT=~/projects/cc_viewroot
+
+## print return code to shell
+#export PROMPT_COMMAND='ret=$?; if [ $ret -ne 0 ] ; then echo -e "returned \033[01;31m$ret\033[00;00m"; fi'
+
+##autojump
+#[[ -s /home/bakerg/.autojump/etc/profile.d/autojump.sh ]] && source /home/bakerg/.autojump/etc/profile.d/autojump.sh
+
+#hgrep (){ find ~/.dir_bash_history/ -type f|xargs grep -h $*;}
+
+## Usage: mycd
+## Replacement for builtin 'cd', wh ich keeps a separate bash-history
+## for every directory.
+##shopt -s histappend
+#alias cd="mycd"
+#export HISTFILE="$HOME/.dir_bash_history$PWD/bash_history.txt"
+
+#function mycd()
+#{
+  #history -w # write current history file
+  #builtin cd "$@" # do actual c d
+  #local HISTDIR="$HOME/.dir_bash_history$PWD" # use& nbsp;nested folders for history
+  #if [ ! -d "$HISTDIR" ]; then # create folder if neede d
+    #mkdir -p "$HISTDIR"
+  #fi
+  #export HISTFILE="$HISTDIR/bash_history.txt" # set& nbsp;new history file
+  #history -c # clear memory
+  #history -r #read from current histfile
+#}
+
+#[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# ========== SPECIFIC =========== #
+
+# Java home directory
+#export JAVA_HOME=/usr/lib/jvm/java-6-openjdk/jre
+export JAVA_HOME=/usr/lib/jvm/java-6-openjdk-common/jre
+#export JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64/jre
+
+#Dropbox
+alias dropbox="http_proxy=http://127.0.0.1:3128 ~/.dropbox-dist/dropboxd start -i"
