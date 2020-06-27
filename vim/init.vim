@@ -632,8 +632,10 @@ endfun
 autocmd BufWritePre * :call TrimWhitespace()
 if !g:running_windows
     autocmd FileType go,ts,js :call GoYCM()
+    autocmd FileType cpp,cxx,h,hpp,c,py,java,rs :call GoCOC()
+else
+    autocmd FileType cpp,cxx,h,hpp,c,py,java,rs,go,ts,js :call GoCOC()
 endif
-autocmd FileType cpp,cxx,h,hpp,c,py,java,rs :call GoCOC()
 
 function! CmdLine(str)
   exe "menu Foo.Bar :" . a:str
