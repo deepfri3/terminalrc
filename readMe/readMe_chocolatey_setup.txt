@@ -3,7 +3,7 @@
 @powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 
 Required tools
-choco install -y fzf ag ctags cmder notepadplusplus kitty teraterm find-and-run-robot launchy-beta teracopy 7zip python3 mingw cmake gnuwin32-coreutils
+choco install -y fzf ag ctags cmder notepadplusplus kitty teraterm find-and-run-robot launchy-beta teracopy 7zip python3 mingw cmake gnuwin32-coreutils cygwin
 
 Optional development tools
 choco install -y sourcetree
@@ -22,6 +22,7 @@ Once installed, Chocolatey can be upgraded in exactly the same way as any other 
 choco upgrade chocolatey
 
 C:\Go\bin
+C:\tools\cygwin\bin
 C:\tools\mingw64\bin
 C:\tools\neovim\Neovim\bin
 C:\Users\bakerg\.cargo\bin
@@ -29,17 +30,3 @@ C:\Users\bakerg\go
 C:\Program Files (x86)\GnuWin32\bin
 C:\Program Files\CMake\bin
 
-$ choco install neovim --pre
-$ pip install pynvim
-Install vim-plug for neovim:
-md ~\AppData\Local\nvim\autoload
-$uri = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-(New-Object Net.WebClient).DownloadFile(
-  $uri,
-  $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
-    "~\AppData\Local\nvim\autoload\plug.vim"
-  )
-)
-
-λ mklink C:\Users\bakerg\AppData\Local\nvim\init.vim C:\Users\bakerg\terminalrc\vim\init.vim
-symbolic link created for C:\Users\bakerg\AppData\Local\nvim\init.vim <<===>> C:\Users\bakerg\terminalrc\vim\init.vim
