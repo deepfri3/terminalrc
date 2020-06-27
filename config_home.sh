@@ -16,7 +16,7 @@ echo -e "\n** bash configuration **\n"
 rm ~/.bashrc
 ln -s $basedir/bash/bashbootstrap ~/.bashrc
 rm ~/.dircolorsrc
-ln -s $basedir/dotdircolorsrc ~/.dircolorsrc
+ln -s $basedir/dotFiles/dotdircolorsrc ~/.dircolorsrc
 echo "git prompt for bash"
 if [ ! -d ~/.bash-git-prompt ]; then
     echo "need to download bash-git-prompt..."
@@ -77,7 +77,7 @@ popd
 #echo -e "set -g @resurrect-dir '~/.tmux/resurrect/$localtmuxconf'\n" >> ~/.tmux.conf
 #echo -e "source-file ~/.tmux-main.conf\n" >> ~/.tmux.conf
 rm ~/.tmux.conf
-ln -s $basedir/dottmuxdotconf ~/.tmux.conf
+ln -s $basedir/dotFiles/dottmuxdotconf ~/.tmux.conf
 
 # vim install and configure links
 #echo -e "\n** vim install and configure **\n"
@@ -201,7 +201,7 @@ mkdir -p ~/.ssh
 chmod 0740 ~/.ssh
 echo "ignore file"
 rm ~/.agignore
-ln -s $basedir/dotagignore ~/.agignore
+ln -s $basedir/dotFiles/dotagignore ~/.agignore
 
 # configure fonts
 echo -e "\n** configure fonts **\n"

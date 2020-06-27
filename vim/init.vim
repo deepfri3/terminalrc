@@ -5,37 +5,30 @@
 filetype off
 let g:running_windows = has("win16") || has("win32") || has("win64")
 if g:running_windows
-    " Load with Windows paths
-    "md ~\AppData\Local\nvim\autoload
-    "$uri = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-    "(New-Object Net.WebClient).DownloadFile(
-      "$uri,
-      "$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath(
-        ""~\AppData\Local\nvim\autoload\plug.vim"
-      ")
-    ")
     silent !md $HOME\AppData\Local\nvim\autoload
     silent !md $HOME\AppData\Local\nvim\undodir
     silent !md $HOME\AppData\Local\nvim\plugged
     let g:python3_host_prog='C:\Python38\Lib\venv\scripts\nt\python.exe'
-	:cd D:\OneDrive\OneDrive\ -\ Siemens\ AG
+    :cd D:\OneDrive\OneDrive\ -\ Siemens\ AG
 else
-	if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-	  silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-		\ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-	  autocmd VimEnter * PlugInstall --sync | source ~/.config/nvim/init.vim
-	endif
+    if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
+      silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
+        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+      autocmd VimEnter * PlugInstall --sync | source ~/.config/nvim/init.vim
+    endif
 endif
 
 " Specify a directory for plugins
 if g:running_windows
-	call plug#begin('~/AppData/Local/nvim/plugged')
+    call plug#begin('~/AppData/Local/nvim/plugged')
 else
-	call plug#begin('~/.local/share/nvim/site/plugged')
+    call plug#begin('~/.local/share/nvim/site/plugged')
 endif
 
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'ycm-core/YouCompleteMe'
+if !g:running_windows
+    Plug 'ycm-core/YouCompleteMe'
+endif
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-dispatch'
@@ -70,7 +63,6 @@ Plug 'gruvbox-community/gruvbox'
 Plug 'phanviet/vim-monokai-pro'
 Plug 'vim-airline/vim-airline'
 Plug 'flazz/vim-colorschemes'
-Plug '/home/mpaulson/personal/vim-be-good'
 
 call plug#end()
 
@@ -137,14 +129,14 @@ set undofile " enable vim undo history
 set undolevels=1000 " use many muchos levels of undo
 
 if g:running_windows
-	set undodir=$HOME\AppData\Local\nvim\undodir " Keep undo history across sessions,
-										   " by storing in file.
-	set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
+    set undodir=$HOME\AppData\Local\nvim\undodir " Keep undo history across sessions,
+                                           " by storing in file.
+    set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 else
-	silent execute '!mkdir -p ~/.local/share/nvim/undodir'
-	set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
-										  " by storing in file.
-	set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
+    silent execute '!mkdir -p ~/.local/share/nvim/undodir'
+    set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
+                                          " by storing in file.
+    set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 endif
 
 set history=1000         " remember more commands and search history
@@ -563,8 +555,13 @@ nmap <F6> :exec("Tags ".expand("<cword>"))<CR>
 
 
 " ## Quickly edit/reload the vimrc file ##
-nmap <silent> <leader>ev :e $MYVIMRC<CR>
-nmap <silent> <leader>sv :so $MYVIMRC<CR>
+if g:running_windows
+    nmap <silent> <leader>ev :e $MYVIMRC<CR>
+    nmap <silent> <leader>sv :so $MYVIMRC<CR>
+else
+    nmap <silent> <leader>ev :e ~/.config/nvim/init.vim<CR>
+    nmap <silent> <Leader>:so ~/.config/nvim/init.vim<CR>
+endif
 
 
 " ## Editing, Copying, Pasting, Files ##
