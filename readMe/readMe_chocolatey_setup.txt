@@ -41,4 +41,5 @@ $uri = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
   )
 )
 
-
+λ mklink C:\Users\bakerg\AppData\Local\nvim\init.vim C:\Users\bakerg\terminalrc\vim\init.vim
+symbolic link created for C:\Users\bakerg\AppData\Local\nvim\init.vim <<===>> C:\Users\bakerg\terminalrc\vim\init.vim
