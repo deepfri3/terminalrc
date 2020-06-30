@@ -5,9 +5,6 @@
 filetype off
 let g:running_windows = has("win16") || has("win32") || has("win64")
 if g:running_windows
-    silent !md $HOME\AppData\Local\nvim\autoload
-    silent !md $HOME\AppData\Local\nvim\undodir
-    silent !md $HOME\AppData\Local\nvim\plugged
     let g:python3_host_prog='C:\Python38\Lib\venv\scripts\nt\python.exe'
     :cd D:\OneDrive\OneDrive\ -\ Siemens\ AG
 else
