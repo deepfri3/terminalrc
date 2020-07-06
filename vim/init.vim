@@ -23,9 +23,6 @@ else
 endif
 
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-if !g:running_windows
-    Plug 'ycm-core/YouCompleteMe'
-endif
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-dispatch'
@@ -39,11 +36,6 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'myusuf3/numbers.vim'
 Plug 'rking/ag.vim'
-Plug 'ctrlpvim/ctrlp.vim'
-if g:running_windows
-    Plug 'JazzCore/ctrlp-cmatcher'
-    Plug 'FelikZ/ctrlp-py-matcher'
-endif
 Plug 'garbas/vim-snipmate'
 Plug 'MarcWeber/vim-addon-mw-utils'
 Plug 'tomtom/tlib_vim'
@@ -86,6 +78,15 @@ colorscheme gruvbox
 "colorscheme monokai_pro
 "colorscheme base16-monokai
 " font is set by the shell program
+if g:GuiLoaded
+    " windows
+    GuiFont! Consolas:h9:cANSI
+    "set guifont=Source_Code_Pro_Medium:h9:cANSI
+    "set guifont=Source_Code_Pro_Medium:h11:cANSI
+    "set guifont=Source\ Code\ Pro\ for\ Powerline:h9:cANSI
+    "set guifont=Source\ Code\ Pro\ for\ Powerline:h11:cANSI
+    "set guifont=Source\ Code\ Pro\ for\ Powerline:h13:cANSI
+endif
 
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
@@ -130,7 +131,6 @@ if g:running_windows
                                            " by storing in file.
     set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 else
-    silent execute '!mkdir -p ~/.local/share/nvim/undodir'
     set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
                                           " by storing in file.
     set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
@@ -188,10 +188,12 @@ nmap <leader>w :w!<cr>
 nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
 nmap <leader>vtm :highlight Pmenu ctermbg=gray guibg=gray
 
+" Vim Explorer
 let loaded_matchparen = 1
 let g:netrw_browse_split = 2
 let g:netrw_banner = 0
 let g:netrw_winsize = 25
+nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 
 " ## Navigation mappings ##
 "
@@ -228,6 +230,8 @@ function! ProjRoot()
 endfunction
 " Change to the proj_root directory
 noremap <silent> <F12> :call ProjRoot()<cr>
+" search help for current word
+nnoremap <leader>phw :h <C-R>=expand("<cword>")<CR><CR>
 " Easy vim splits
 "https://technotales.wordpress.com/2010/04/29/vim-splits-a-guide-to-doing-exactly-what-you-want/
 nmap <leader>swh :topleft  vnew<CR>
@@ -245,13 +249,9 @@ nnoremap <leader>+ :vertical resize +5<cr>
 " expand down and up
 nnoremap <leader>-d :resize -5<cr>
 nnoremap <leader>+u :resize +5<cr>
+nnoremap <Leader>rp :resize 100<CR>
 " equalize buffers
 nnoremap <leader>seq <C-W>=
-nnoremap <leader>phw :h <C-R>=expand("<cword>")<CR><CR>
-nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
-" search help for current word
-nnoremap <leader>phw :h <C-R>=expand("<cword>")<CR><CR>
-nnoremap <Leader>rp :resize 100<CR>
 
 
 " ## CTAGS mappings ##
@@ -300,39 +300,26 @@ map <leader>tl :tlast<cr>
 
 " ## Plugin mappings ##
 "
-" ++ YCM ++
-if !g:running_windows
-    func GoYCM()
-        :CocDisable
-        nnoremap <buffer> <silent> <leader>gd :YcmCompleter GoTo<CR>
-        nnoremap <buffer> <silent> <leader>gr :YcmCompleter GoToReferences<CR>
-        nnoremap <buffer> <silent> <leader>rr :YcmCompleter RefactorRename<space>
-    endfun
-endif
-"
 " ++ COC ++
-func GoCOC()
-    :CocEnable
-    inoremap <buffer> <silent><expr> <TAB>
-                \ pumvisible() ? "\<C-n>" :
-                \ <SID>check_back_space() ? "\<TAB>" :
-                \ coc#refresh()
+inoremap <buffer> <silent><expr> <TAB>
+            \ pumvisible() ? "\<C-n>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
 
-    inoremap <buffer> <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
-    inoremap <buffer> <silent><expr> <C-space> coc#refresh()
+inoremap <buffer> <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+inoremap <buffer> <silent><expr> <C-space> coc#refresh()
 
-    " GoTo code navigation.
-    nmap <leader>gd <Plug>(coc-definition)
-    nmap <leader>gy <Plug>(coc-type-definition)
-    nmap <leader>gi <Plug>(coc-implementation)
-    nmap <leader>gr <Plug>(coc-references)
-    nmap <leader>rr <Plug>(coc-rename)
-    nmap <leader>g[ <Plug>(coc-diagnostic-prev)
-    nmap <leader>g] <Plug>(coc-diagnostic-next)
-    nmap <silent> <leader>gp <Plug>(coc-diagnostic-prev)
-    nmap <silent> <leader>gn <Plug>(coc-diagnostic-next)
-    nnoremap <leader>cr :CocRestart
-endfun
+" GoTo code navigation.
+nmap <leader>gd <Plug>(coc-definition)
+nmap <leader>gy <Plug>(coc-type-definition)
+nmap <leader>gi <Plug>(coc-implementation)
+nmap <leader>gr <Plug>(coc-references)
+nmap <leader>rr <Plug>(coc-rename)
+nmap <leader>g[ <Plug>(coc-diagnostic-prev)
+nmap <leader>g] <Plug>(coc-diagnostic-next)
+nmap <silent> <leader>gp <Plug>(coc-diagnostic-prev)
+nmap <silent> <leader>gn <Plug>(coc-diagnostic-next)
+nnoremap <leader>cr :CocRestart
 "
 " ++ UNDOTREE ++
 nnoremap <leader>u :UndotreeShow<CR>
@@ -412,52 +399,6 @@ nnoremap <F10> :NumbersToggle<CR>
 let g:numbers_exclude = ['unite', 'tagbar', 'startify', 'gundo', 'vimshell',
                         \ 'w3m', 'nerdtree', 'buffergator', 'grep', 'Grep']
 "
-" ++ CTRLP ++
-if g:running_windows
-    " Trigger
-    nmap <leader>t <C-p>
-    " Find using tags file
-    nmap <leader>tag :CtrlPBufTag<CR>
-    " Open buffer List
-    nmap <leader>bb :CtrlPBuffer<CR>
-    " Open jump List
-    nmap <leader>j :CtrlPMRUFiles<CR>
-    " Open List buf + mru + fil
-    nmap <leader>m :CtrlPMixed<CR>
-endif
-" Setup some default ignores
-let g:ctrlp_custom_ignore = {
-  \ 'dir':  '\v[\/](\.(git|hg|svn)|\_site)$',
-  \ 'file': '\v\.(exe|so|dll|class|png|jpg|jpeg|dsw|dsp)$',
-\}
-" format of the matching window
-let g:ctrlp_match_window = 'top,order:btt,min:1,max:25,results:25'
-" Set this to 1 to show only MRU files in the current working directory
-let g:ctrlp_mruf_relative = 1
-" Specify the number of recently opened files you want CtrlP to remember: >
-let g:ctrlp_mruf_max = 30
-" Do not clear cache on vim exit
-let g:ctrlp_clear_cache_on_exit = 0
-" Enable/Disable per-session caching:
-"  0 - Disable caching, 1 - Enable caching, n - When bigger than 1, disable caching and use the number as the limit to enable caching again.
-"  Note: you can quickly purge the cache by pressing <F5> while inside CtrlP.
-let g:ctrlp_use_caching = 0
-" Set this to 0 to enable cross-session caching by not deleting the cache files upon exiting Vim:
-"if g:running_windows
-  "let g:ctrlp_cache_dir = 'C:\vimfiles\_ctrlp'
-"else
-  "let g:ctrlp_cache_dir = $HOME.'/.vim/ctrlp'
-"endif
-" Command-T matcher extenstions for CtrP
-" Set the directory to store the cache files:
-if g:running_windows
-  " JazzCore - https://github.com/JazzCore/ctrlp-cmatcher/
-  "let g:ctrlp_match_func = {'match' : 'matcher#cmatch' }
-"else
-  "FelikZ - https://github.com/FelikZ/ctrlp-py-matcher
-  let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
-endif
-"
 " ++ TABULAR ++
 nmap <Leader>a& :Tabularize /&<CR>
 vmap <Leader>a& :Tabularize /&<CR>
@@ -482,7 +423,7 @@ vmap <Leader>a" :Tabularize /"<CR>
 "
 " ++ BUFFERGATOR ++
 " Use the right side of the screen
-let g:buffergator_viewport_split_policy = 'L'
+let g:buffergator_viewport_split_policy = 'B'
 " I want my own keymappings...
 let g:buffergator_suppress_keymaps = 1
 " autoupdate buffer list in catalog
@@ -498,40 +439,36 @@ nmap <leader>kk :BuffergatorMruCyclePrev<cr>
 " Go to the next buffer open
 nmap <leader>jj :BuffergatorMruCycleNext<cr>
 " View the entire list of buffers open
-nmap <leader>bl :BuffergatorOpen<cr>
+"nmap <leader>bl :BuffergatorOpen<cr>
+nmap <leader>bb :BuffergatorOpen<cr>
 "
 " ++ FZF - Fuzzy finder ++
-if !g:running_windows
-    "
-    " This is the default extra key bindings
-    let g:fzf_action = {
-                \ 'ctrl-t': 'tab split',
-                \ 'ctrl-x': 'split',
-                \ 'ctrl-v': 'vsplit' }
-    " Default fzf layout
-    let g:fzf_layout = { 'down': '50%'}
-    " Invoke fuzzy finder to find files
-    nnoremap <silent> <leader>t :Files <cr>
-    "nnoremap <silent> <leader>t :FZF <cr>
-    " List buffers
-    nnoremap <silent> <leader>bb :Buffers<cr>
-    "nnoremap <silent> <leader>bb :FZFbuf<cr>
-    " Simple MRU search - v:oldfiles
-    nnoremap <silent> <Leader><Enter> :History<cr>
-    "nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
-endif
+" This is the default extra key bindings
+let g:fzf_action = {
+            \ 'ctrl-t': 'tab split',
+            \ 'ctrl-x': 'split',
+            \ 'ctrl-v': 'vsplit' }
+" Default fzf layout
+let g:fzf_layout = { 'down': '50%'}
+" Invoke fuzzy finder to find files
+nnoremap <silent> <leader>t :Files <cr>
+"nnoremap <silent> <leader>t :FZF <cr>
+" List buffers
+"nnoremap <silent> <leader>bb :Buffers<cr>
+"nnoremap <silent> <leader>bb :FZFbuf<cr>
+" Simple MRU search - v:oldfiles
+"nnoremap <silent> <leader><Enter> :History<cr>
+nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
 nnoremap <C-p> :GFiles<CR>
 "
 " ++ Ag - the silver searcher ++
-"if !g:running_windows
-    let g:ag_prg="ag --vimgrep --smart-case --path-to-agignore ~/.agignore"
-    " specify the project root direoctory path for searching
-    let g:ag_working_path_mode="r"
-    " If 1, highlight the search terms after searching. Default: 0.
-    let g:ag_highlight=1
-    "Format to recognize the matches. See 'errorformat' for more info.
-    let g:ag_format="%f:%l:%c:%m"
-"endif
+let g:ag_prg="ag --vimgrep --smart-case --path-to-agignore ~/.agignore"
+" specify the project root direoctory path for searching
+let g:ag_working_path_mode="r"
+" If 1, highlight the search terms after searching. Default: 0.
+let g:ag_highlight=1
+"Format to recognize the matches. See 'errorformat' for more info.
+let g:ag_format="%f:%l:%c:%m"
 
 
 " ## Search function mappings ##
@@ -552,13 +489,9 @@ nmap <F6> :exec("Tags ".expand("<cword>"))<CR>
 
 
 " ## Quickly edit/reload the vimrc file ##
-if g:running_windows
-    nmap <silent> <leader>ev :e $MYVIMRC<CR>
-    nmap <silent> <leader>sv :so $MYVIMRC<CR>
-else
-    nmap <silent> <leader>ev :e ~/.config/nvim/init.vim<CR>
-    nmap <silent> <Leader>:so ~/.config/nvim/init.vim<CR>
-endif
+" Works for both Linux/Windows
+nmap <silent> <leader>ev :e $MYVIMRC<CR>
+nmap <silent> <leader>sv :so $MYVIMRC<CR>
 
 
 " ## Editing, Copying, Pasting, Files ##
@@ -627,12 +560,6 @@ fun! TrimWhitespace()
     call winrestview(l:save)
 endfun
 autocmd BufWritePre * :call TrimWhitespace()
-if !g:running_windows
-    autocmd FileType go,ts,js :call GoYCM()
-    autocmd FileType cpp,cxx,h,hpp,c,py,java,rs :call GoCOC()
-else
-    autocmd FileType cpp,cxx,h,hpp,c,py,java,rs,go,ts,js :call GoCOC()
-endif
 
 function! CmdLine(str)
   exe "menu Foo.Bar :" . a:str
