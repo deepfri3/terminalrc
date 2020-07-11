@@ -65,11 +65,6 @@ syntax on
 syntax enable
 set termguicolors
 set t_ut=
-""support base16 colorschemes
-"if filereadable(expand("~/.vimrc_background"))
-  "let base16colorspace=256
-  "source ~/.vimrc_background
-"endif "support base16 colorschemes
 " set default colorscheme and background
 set background=dark
 " favorite colorschemes :)
@@ -78,15 +73,6 @@ colorscheme gruvbox
 "colorscheme monokai_pro
 "colorscheme base16-monokai
 " font is set by the shell program
-if g:GuiLoaded
-    " windows
-    GuiFont! Consolas:h9:cANSI
-    "set guifont=Source_Code_Pro_Medium:h9:cANSI
-    "set guifont=Source_Code_Pro_Medium:h11:cANSI
-    "set guifont=Source\ Code\ Pro\ for\ Powerline:h9:cANSI
-    "set guifont=Source\ Code\ Pro\ for\ Powerline:h11:cANSI
-    "set guifont=Source\ Code\ Pro\ for\ Powerline:h13:cANSI
-endif
 
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
