@@ -171,7 +171,7 @@ export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
 # Add user $HOME/bin to PATH
 export PATH=$HOME/bin:$PATH
 ZSH_TMUX_AUTOSTART=true
-#ZSH_TMUX_AUTOSTART_ONCE=true
+ZSH_TMUX_AUTOSTART_ONCE=true
 
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
@@ -211,6 +211,10 @@ export LC_ALL="en_US.UTF-8"
 
 # My vimrc
 export MYVIMRC=~/.config/nvim/init.vim
+# Set PATH
+export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
+# Add user $HOME/bin to PATH
+export PATH=$HOME/bin:$PATH
 
 # set default editor
 export VISUAL=vim

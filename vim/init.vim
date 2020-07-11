@@ -125,7 +125,6 @@ if g:running_windows
                                              " by storing in file.
     set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 else
-    silent execute '!mkdir -p ~/.local/share/nvim/undodir'
     set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
                                             " by storing in file.
     set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
@@ -183,6 +182,7 @@ nmap <leader>w :w!<cr>
 nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
 nmap <leader>vtm :highlight Pmenu ctermbg=gray guibg=gray
 
+" Vim Explorer
 let loaded_matchparen = 1
 let g:netrw_browse_split = 2
 let g:netrw_banner = 0
@@ -399,45 +399,6 @@ let g:numbers_exclude = ['unite', 'tagbar', 'startify', 'gundo', 'vimshell',
                         \ 'w3m', 'nerdtree', 'buffergator', 'grep', 'Grep',
                         \ 'fzf', 'coc', 'ctrlp']
 "
-" ++ CTRLP ++
-if g:running_windows
-    " Trigger
-    nmap <leader>t <C-p>
-    " Find using tags file
-    nmap <leader>tag :CtrlPBufTag<CR>
-    " Open buffer List
-    nmap <leader>bb :CtrlPBuffer<CR>
-    " Open jump List
-    nmap <leader>j :CtrlPMRUFiles<CR>
-    " Open List buf + mru + fil
-    nmap <leader>m :CtrlPMixed<CR>
-    " Setup some default ignores
-    let g:ctrlp_custom_ignore = {
-      \ 'dir':  '\v[\/](\.(git|hg|svn)|\_site)$',
-      \ 'file': '\v\.(exe|so|dll|class|png|jpg|jpeg|dsw|dsp)$',
-    \}
-    " format of the matching window
-    let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:50,results:25'
-    " Set this to 1 to show only MRU files in the current working directory
-    let g:ctrlp_mruf_relative = 1
-    " Specify the number of recently opened files you want CtrlP to remember: >
-    let g:ctrlp_mruf_max = 30
-    " Do not clear cache on vim exit
-    let g:ctrlp_clear_cache_on_exit = 0
-    " Enable/Disable per-session caching:
-    "  0 - Disable caching, 1 - Enable caching, n - When bigger than 1, disable caching and use the number as the limit to enable caching again.
-    "  Note: you can quickly purge the cache by pressing <F5> while inside CtrlP.
-    let g:ctrlp_use_caching = 0
-    " Set this to 0 to enable cross-session caching by not deleting the cache files upon exiting Vim:
-    "let g:ctrlp_cache_dir = 'C:\vimfiles\_ctrlp'
-    " Command-T matcher extenstions for CtrP
-    " Set the directory to store the cache files:
-    " JazzCore - https://github.com/JazzCore/ctrlp-cmatcher/
-    "let g:ctrlp_match_func = {'match' : 'matcher#cmatch' }
-    "FelikZ - https://github.com/FelikZ/ctrlp-py-matcher
-    "let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
-endif
-"
 " ++ TABULAR ++
 nmap <Leader>a& :Tabularize /&<CR>
 vmap <Leader>a& :Tabularize /&<CR>
@@ -462,7 +423,7 @@ vmap <Leader>a" :Tabularize /"<CR>
 "
 " ++ BUFFERGATOR ++
 " Use the right side of the screen
-let g:buffergator_viewport_split_policy = 'L'
+let g:buffergator_viewport_split_policy = 'B'
 " I want my own keymappings...
 let g:buffergator_suppress_keymaps = 1
 " autoupdate buffer list in catalog
@@ -478,32 +439,29 @@ nmap <leader>kk :BuffergatorMruCyclePrev<cr>
 " Go to the next buffer open
 nmap <leader>jj :BuffergatorMruCycleNext<cr>
 " View the entire list of buffers open
-nmap <leader>bl :BuffergatorOpen<cr>
+"nmap <leader>bl :BuffergatorOpen<cr>
+nmap <leader>bb :BuffergatorOpen<cr>
 "
 " ++ FZF - Fuzzy finder ++
-if !g:running_windows
-    "
-    " This is the default extra key bindings
-    let g:fzf_action = {
-                \ 'ctrl-t': 'tab split',
-                \ 'ctrl-x': 'split',
-                \ 'ctrl-v': 'vsplit' }
-    " Default fzf layout
-    let g:fzf_layout = { 'down': '50%'}
-    " Invoke fuzzy finder to find files
-    nnoremap <silent> <leader>t :Files <cr>
-    "nnoremap <silent> <leader>t :FZF <cr>
-    " List buffers
-    nnoremap <silent> <leader>bb :Buffers<cr>
-    "nnoremap <silent> <leader>bb :FZFbuf<cr>
-    " Simple MRU search - v:oldfiles
-    nnoremap <silent> <Leader><Enter> :History<cr>
-    "nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
-endif
+" This is the default extra key bindings
+let g:fzf_action = {
+            \ 'ctrl-t': 'tab split',
+            \ 'ctrl-x': 'split',
+            \ 'ctrl-v': 'vsplit' }
+" Default fzf layout
+let g:fzf_layout = { 'down': '50%'}
+" Invoke fuzzy finder to find files
+nnoremap <silent> <leader>t :Files <cr>
+"nnoremap <silent> <leader>t :FZF <cr>
+" List buffers
+"nnoremap <silent> <leader>bb :Buffers<cr>
+"nnoremap <silent> <leader>bb :FZFbuf<cr>
+" Simple MRU search - v:oldfiles
+"nnoremap <silent> <leader><Enter> :History<cr>
+nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
 nnoremap <C-p> :GFiles<CR>
 "
 " ++ AG - the silver searcher ++
-"if !g:running_windows
 let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
 " specify the project root direoctory path for searching
 let g:ag_working_path_mode="r"
@@ -511,7 +469,6 @@ let g:ag_working_path_mode="r"
 let g:ag_highlight=1
 "Format to recognize the matches. See 'errorformat' for more info.
 let g:ag_format="%f:%l:%c:%m"
-"endif
 "
 " ++ DISPATCH ++
 autocmd FileType java let b:dispatch = 'javac %'
@@ -534,13 +491,9 @@ vnoremap <F5> y :exec("Ag ".expand("<C-R>""))<CR>
 
 
 " ## Quickly edit/reload the vimrc file ##
-if g:running_windows
-    nmap <silent> <leader>ev :e $MYVIMRC<CR>
-    nmap <silent> <leader>sv :so $MYVIMRC<CR>
-else
-    nmap <silent> <leader>ev :e ~/.config/nvim/init.vim<CR>
-    nmap <silent> <Leader>sv :so ~/.config/nvim/init.vim<CR>
-endif
+" Works for both Linux/Windows
+nmap <silent> <leader>ev :e $MYVIMRC<CR>
+nmap <silent> <leader>sv :so $MYVIMRC<CR>
 
 
 " ## Editing, Copying, Pasting, Files ##
