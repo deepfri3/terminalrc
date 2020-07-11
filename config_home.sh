@@ -3,7 +3,6 @@
 
 basedir=$(pwd)
 echo "basedir=$basedir"
-pause()
 if [ ! -d ~/bin ]; then
     mkdir ~/bin
 fi
@@ -13,9 +12,13 @@ fi
 
 # bash configuration
 echo -e "\n** bash configuration **\n"
-rm ~/.bashrc
+if [ -f ~/.bashrc ]; then
+    rm ~/.bashrc
+fi
 ln -s $basedir/bash/bashbootstrap ~/.bashrc
-rm ~/.dircolorsrc
+if [ -f ~/.dircolorsrc ]; then
+    rm ~/.dircolorsrc
+fi
 ln -s $basedir/dotFiles/dotdircolorsrc ~/.dircolorsrc
 echo "git prompt for bash"
 if [ ! -d ~/.bash-git-prompt ]; then
@@ -51,7 +54,9 @@ echo "updating oh-my-zsh"
 git pull
 echo "update complete"
 popd
-rm ~/.zshrc
+if [ -f ~/.zshrc ]; then
+    rm ~/.zshrc
+fi
 ln -s $basedir/zsh/zshbootstrap ~/.zshrc
 
 echo -e "\n** tmux installation and configuration **\n"
@@ -68,7 +73,9 @@ git pull
 echo "update complete"
 sh autogen.sh
 ./configure && make
-rm ~/bin/tmux
+if [ -f ~/bin/tmux ]; then
+    rm ~/bin/tmux
+fi
 ln -s ~/Downloads/tmux/tmux ~/bin/tmux
 popd
 #ostmuxconf=tmux-`uname`
@@ -76,7 +83,9 @@ popd
 #echo -e "\n# default resurrect dir" > ~/.tmux.conf
 #echo -e "set -g @resurrect-dir '~/.tmux/resurrect/$localtmuxconf'\n" >> ~/.tmux.conf
 #echo -e "source-file ~/.tmux-main.conf\n" >> ~/.tmux.conf
-rm ~/.tmux.conf
+if [ -f ~/.tmux.conf ]; then
+    rm ~/.tmux.conf
+fi
 ln -s $basedir/dotFiles/dottmuxdotconf ~/.tmux.conf
 
 # vim install and configure links
@@ -133,18 +142,29 @@ echo "updating neovim..."
 git pull
 echo "update complete"
 echo "make neovim..."
+#DISTRO=$(cat /etc/issue | cut -d\  -f1)
+#if [ $DISTRO == "Ubuntu" ]; then
+    #Ubuntu / Debian
+    #sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip
+#elif [ $DISTRO == "Arch" ]; then
+    #Arch Linux
+    #sudo pacman -S base-devel cmake unzip ninja
+#fi
 make CMAKE_INSTALL_PREFIX=/home/bakerg/Applications/neovim CMAKE_BUILD_TYPE=Release
 echo "neovim compiled."
 echo "install neovim"
 make install
 echo "install done"
 popd
-rm ~/bin/nvim
+if [ -f ~/bin/nvim ]; then
+    rm ~/bin/nvim
+fi
 ln -s ~/Applications/neovim/bin/nvim ~/bin/nvim
-ln -s ~/Applications/neovim/bin/nvim ~/bin/vim
 mkdir -p ~/.config/nvim
 mkdir -p ~/.local/share/nvim/site/plugged
-rm ~/.config/nvim/init.vim
+if [ -f ~/.config/nvim/init.vim ]; then
+    rm ~/.config/nvim/init.vim
+fi
 ln -s $basedir/vim/init.vim ~/.config/nvim/init.vim
 echo "neovim setup completed"
 
@@ -177,7 +197,9 @@ echo "install ag"
 ./build.sh
 echo "install done"
 popd
-rm ~/bin/ag
+if [ -f ~/bin/ag ]; then
+    rm ~/bin/ag
+fi
 ln ~/Downloads/the_silver_searcher/ag ~/bin/ag
 
 echo -e "\n** install fzf **\n"
@@ -200,21 +222,31 @@ echo "ssh configuration"
 mkdir -p ~/.ssh
 chmod 0740 ~/.ssh
 echo "ignore file"
-rm ~/.agignore
+if [ -f ~/.agignore ]; then
+    rm ~/.agignore
+fi
 ln -s $basedir/dotFiles/dotagignore ~/.agignore
 
 # configure fonts
 echo -e "\n** configure fonts **\n"
+if [ ! -d ~/.local/share/fonts ]; then
+    mkdir -p ~/.local/share/fonts
+fi
 if [ ! -d ~/Downloads/fonts ]; then
     echo "need to download fonts..."
     git clone https://github.com/powerline/fonts.git ~/Downloads/fonts/powerline
     git clone https://github.com/JetBrains/JetBrainsMono.git ~/Downloads/fonts/JetBrainsMono
     git clone https://github.com/Znuff/consolas-powerline.git ~/Downloads/fonts/consolas-powerline
-    mkdir -p ~/.local/share/fonts
-    find ~/Downloads/fonts -name "*.ttf" -exec mv {} ~/.local/share/fonts/ \;
-    fc-cache -f -v
+    # Copy all fonts to user fonts directory
+    echo "Copying fonts..."
+    find ~/Downloads/fonts \( -name "*.[ot]tf" -or -name "*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" ~/.local/share/fonts
+    # Reset font cache on Linux
+    if which fc-cache >/dev/null 2>&1 ; then
+        echo "Resetting font cache, this may take a moment..."
+        fc-cache -f -v ~/.local/share/fonts
+    fi
 fi
-# restart applications that need the fonts
 
+# restart applications that need the fonts
 echo -e "\nswitch to zsh:"
 echo -e "\n\tchsh -s \$(which zsh)\n"
