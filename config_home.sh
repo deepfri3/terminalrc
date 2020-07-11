@@ -133,6 +133,14 @@ echo "updating neovim..."
 git pull
 echo "update complete"
 echo "make neovim..."
+DISTRO=$(cat /etc/issue | cut -d\  -f1)
+if [ $DISTRO == "Ubuntu" ]; then
+    #Ubuntu / Debian
+    sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip
+#elif [ $DISTRO == "Arch" ]; then
+    #Arch Linux
+    #sudo pacman -S base-devel cmake unzip ninja
+fi
 make CMAKE_INSTALL_PREFIX=/home/bakerg/Applications/neovim CMAKE_BUILD_TYPE=Release
 echo "neovim compiled."
 echo "install neovim"
