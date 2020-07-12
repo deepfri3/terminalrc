@@ -18,6 +18,14 @@ Basic Method
    # Synology USFHPNAS5 backup
    //136.157.0.158/backups/kane /mnt/nas5backups cifs user,uid=bakerg,gid=USFHP-CC_EngDefault-U,rw,suid,credentials=/etc/cifspwd 0 0
 
+   For NFS
+   sudo apt-get install nfs-common
+   # mount synology NAS volumes
+   192.168.1.56:/volume1/MEDIA /media/synology/media nfs rsize=8192,wsize=8192,timeo=14,intr 0 0
+   192.168.1.56:/volume1/DOWNLOADS /media/synology/downloads nfs rsize=8192,wsize=8192,timeo=14,intr 0 0
+   192.168.1.56:/volume1/ARCHIVES /media/synology/archives nfs rsize=8192,wsize=8192,timeo=14,intr 0 0
+   192.168.1.56:/volume1/PC_BACKUPS /media/synology/backups nfs rsize=8192,wsize=8192,timeo=14,intr 0 0
+
 3. Create the file /etc/cifspwd with your login credentials and secure it:
 
     echo username=yourusername > /etc/cifspwd
@@ -28,7 +36,7 @@ Basic Method
 
     sudo mount -a
 
-== SSH into your Synology DiskStation with SSH Keys as Root == 
+== SSH into your Synology DiskStation with SSH Keys as Root ==
 
 https://www.chainsawonatireswing.com/2012/01/15/ssh-into-your-synology-diskstation-with-ssh-keys/
 
@@ -75,8 +83,8 @@ Enter 'help' for a list of built-in commands.
 
 
 It worked! In four further posts over the next several days, let’s make this situation better:
-	
-== SSH into your Synology DiskStation with SSH Keys as User == 
+
+== SSH into your Synology DiskStation with SSH Keys as User ==
 
 https://www.chainsawonatireswing.com/2012/01/16/log-in-to-a-synology-diskstation-using-ssh-keys-as-a-user-other-than-root/
 
