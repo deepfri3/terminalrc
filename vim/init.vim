@@ -40,6 +40,7 @@ Plug 'garbas/vim-snipmate'
 Plug 'MarcWeber/vim-addon-mw-utils'
 Plug 'tomtom/tlib_vim'
 Plug 'honza/vim-snippets'
+"Plug 'ludovicchabant/vim-gutentags'
 
 " on-demand loading
 Plug 'majutsushi/tagbar', { 'on':  'TagbarToggle' }
@@ -49,6 +50,7 @@ Plug 'jeetsukumaran/vim-buffergator', { 'on':  'BuffergatorOpen' }
 " Colors
 Plug 'chriskempson/base16-vim'
 Plug 'gruvbox-community/gruvbox'
+Plug 'sainnhe/gruvbox-material'
 Plug 'phanviet/vim-monokai-pro'
 Plug 'vim-airline/vim-airline'
 Plug 'flazz/vim-colorschemes'
@@ -67,11 +69,17 @@ set termguicolors
 set t_ut=
 " set default colorscheme and background
 set background=dark
+let g:gruvbox_contrast_dark = 'hard'
+if exists('+termguicolors')
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+endif
+let g:gruvbox_invert_selection='0'
 " favorite colorschemes :)
 colorscheme gruvbox
 "colorscheme base16-tomorrow-night
-"colorscheme monokai_pro
 "colorscheme base16-monokai
+"colorscheme monokai_pro
 " font is set by the shell program
 
 set colorcolumn=80 " highlights column 80
@@ -113,12 +121,12 @@ set undofile " enable vim undo history
 set undolevels=1000 " use many muchos levels of undo
 
 if g:running_windows
-    set undodir=$HOME\AppData\Local\nvim\undodir " Keep undo history across sessions,
-                                           " by storing in file.
+    set undodir=~\AppData\Local\nvim\undodir " Keep undo history across sessions,
+                                             " by storing in file.
     set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 else
     set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
-                                          " by storing in file.
+                                            " by storing in file.
     set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 endif
 
@@ -132,7 +140,7 @@ set cmdheight=2           " Give more space for displaying messages.
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 " delays and poor user experience.
-set updatetime=3000
+set updatetime=50
 
 " Don't pass messages to |ins-completion-menu|.
 set shortmess+=c
@@ -179,6 +187,7 @@ let loaded_matchparen = 1
 let g:netrw_browse_split = 2
 let g:netrw_banner = 0
 let g:netrw_winsize = 25
+" Toggle netrw in sidebar
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 
 " ## Navigation mappings ##
@@ -220,14 +229,14 @@ noremap <silent> <F12> :call ProjRoot()<cr>
 nnoremap <leader>phw :h <C-R>=expand("<cword>")<CR><CR>
 " Easy vim splits
 "https://technotales.wordpress.com/2010/04/29/vim-splits-a-guide-to-doing-exactly-what-you-want/
-nmap <leader>swh :topleft  vnew<CR>
 nmap <leader>swl :botright vnew<CR>
-nmap <leader>swk :topleft  new<CR>
-nmap <leader>swj :botright new<CR>
-nmap <leader>sh :leftabove  vnew<CR>
+nmap <leader>sw. :botright new<CR>
 nmap <leader>sl :rightbelow vnew<CR>
-nmap <leader>sk :leftabove  new<CR>
-nmap <leader>sj :rightbelow new<CR>
+nmap <leader>s. :rightbelow new<CR>
+nmap <leader>swj :topleft  vnew<CR>
+nmap <leader>swu :topleft  new<CR>
+nmap <leader>sj :leftabove  vnew<CR>
+nmap <leader>su :leftabove  new<CR>
 " resize current buffer by +/- 5
 " expand right and left
 nnoremap <leader>- :vertical resize -5<cr>
@@ -235,7 +244,7 @@ nnoremap <leader>+ :vertical resize +5<cr>
 " expand down and up
 nnoremap <leader>-d :resize -5<cr>
 nnoremap <leader>+u :resize +5<cr>
-nnoremap <Leader>rp :resize 100<CR>
+nnoremap <leader>rp :resize 50<cr>
 " equalize buffers
 nnoremap <leader>seq <C-W>=
 
@@ -244,11 +253,10 @@ nnoremap <leader>seq <C-W>=
 "
 " build ctags for current directory
 if g:running_windows
-    " Windows
     let g:tagbar_ctags_bin = "ctags.exe"
-    map <F11> :!ctags -R .<CR><CR>
+    map <leader>tag :!ctags -R .<CR><CR>
+    "nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R --fields=+iaS --extras=+q .<cr>
 else
-    " Linux
     " Change to the proj_root directory and execute ctags from proj_root
     nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R --fields=+iaS --extras=+q .<cr>
 endif
@@ -310,6 +318,11 @@ nnoremap <leader>cr :CocRestart
 " ++ UNDOTREE ++
 nnoremap <leader>u :UndotreeShow<CR>
 "
+" ++ FUGITIVE ++
+nmap <leader>gj :diffget //3<CR>
+nmap <leader>gf :diffget //2<CR>
+nmap <leader>gs :G<CR>
+"
 " ++ RIP GREP ++
 if executable('rg')
     let g:rg_derive_root='true'
@@ -333,7 +346,7 @@ let g:tagbar_updateonsave_maxlines=10000
 "
 " ++ NERDTREE ++
 " NERDTree ignore files
-let g:NERDTreeIgnore=['\.vim$', '\~$','\.cat$']
+let g:NERDTreeIgnore=['\.vim$', '\~$','\.cat$','\.agignore$']
 " Automatically centers on cursor focus
 let g:NERDTreeAutoCenter=1
 " Pretty colors!
@@ -383,7 +396,8 @@ let g:enable_numbers=1
 nnoremap <F10> :NumbersToggle<CR>
 " Numbers dont belong here
 let g:numbers_exclude = ['unite', 'tagbar', 'startify', 'gundo', 'vimshell',
-                        \ 'w3m', 'nerdtree', 'buffergator', 'grep', 'Grep']
+                        \ 'w3m', 'nerdtree', 'buffergator', 'grep', 'Grep',
+                        \ 'fzf', 'coc', 'ctrlp']
 "
 " ++ TABULAR ++
 nmap <Leader>a& :Tabularize /&<CR>
@@ -447,14 +461,18 @@ nnoremap <silent> <leader>t :Files <cr>
 nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
 nnoremap <C-p> :GFiles<CR>
 "
-" ++ Ag - the silver searcher ++
-let g:ag_prg="ag --vimgrep --smart-case --path-to-agignore ~/.agignore"
+" ++ AG - the silver searcher ++
+let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
 " specify the project root direoctory path for searching
 let g:ag_working_path_mode="r"
 " If 1, highlight the search terms after searching. Default: 0.
 let g:ag_highlight=1
 "Format to recognize the matches. See 'errorformat' for more info.
 let g:ag_format="%f:%l:%c:%m"
+"
+" ++ DISPATCH ++
+autocmd FileType java let b:dispatch = 'javac %'
+autocmd FileType python let b:dispatch = 'python %'
 
 
 " ## Search function mappings ##
@@ -470,8 +488,6 @@ vnoremap <silent> # :call VisualSelection('b')<CR>
 " Search for current word using Ag
 nmap <F5> :exec("Ag ".expand("<cword>"))<CR>
 vnoremap <F5> y :exec("Ag ".expand("<C-R>""))<CR>
-" Search for current word in tags
-nmap <F6> :exec("Tags ".expand("<cword>"))<CR>
 
 
 " ## Quickly edit/reload the vimrc file ##
@@ -655,14 +671,6 @@ command! FZFbuf call fzf#run({
 \   'up':        '50%'
 \ })<CR>
 
-"" List buffers
-"command! FZFbuf call fzf#run({
-"\   'source':  reverse(<sid>buflist()),
-"\   'sink':    function('<sid>bufopen'),
-"\   'options': '+m',
-"\   'down':    len(<sid>buflist()) + 2
-"\ })<CR>
-
 "Simple MRU search - v:oldfiles
 command! FZFMruSimple call fzf#run({
 \  'source':  v:oldfiles,
@@ -706,6 +714,7 @@ function! s:tags()
   \ 'sink':    function('s:tags_sink')})
 endfunction
 command! Tags call s:tags()
+nmap <F6> :Tags<CR>
 
 " Narrow ag results within vim
 "   CTRL-X, CTRL-V, CTRL-T to open in a new split, vertical split, tab respectively.
@@ -738,15 +747,15 @@ function! s:ag_handler(lines)
   endif
 endfunction
 
-"command! -nargs=* Ag call fzf#run({
-"\ 'source':  printf('ag --vimgrep --path-to-agignore ~/.agignore --smart-case "%s"',
-"\                   escape(empty(<q-args>) ? '^(?=.)' : <q-args>, '"\')),
-"\ 'sink*':    function('<sid>ag_handler'),
-"\ 'options': '--ansi +x --expect=ctrl-t,ctrl-v,ctrl-x --delimiter : --nth 4.. '.
-"\            '--multi --bind ctrl-a:select-all,ctrl-d:deselect-all '.
-"\            '--color hl:197,hl+:10',
-"\ 'up':    '50%'
-"\ })
+command! -nargs=* Ag call fzf#run({
+\ 'source':  printf('ag --vimgrep -p ~/.agignore --smart-case "%s"',
+\                   escape(empty(<q-args>) ? '^(?=.)' : <q-args>, '"\')),
+\ 'sink*':    function('<sid>ag_handler'),
+\ 'options': '--ansi +x --expect=ctrl-t,ctrl-v,ctrl-x --delimiter : --nth 4.. '.
+\            '--multi --bind ctrl-a:select-all,ctrl-d:deselect-all '.
+\            '--color hl:197,hl+:10',
+\ 'up':    '50%'
+\ })
 
 "//////////////////////////////////////
 "// UNUSED CODE
