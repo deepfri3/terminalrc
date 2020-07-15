@@ -78,5 +78,7 @@ $uri = 'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 Open Cmder settings and go to Startup -> Environment, add the following settings:
 set TERM=xterm-256color
 
+Run in cmd:
 mklink ~\AppData\Local\nvim\init.vim .\terminalrc\vim\init.vim
+mklink ~\AppData\Local\nvim\ginit.vim .\terminalrc\vim\ginit.vim
 symbolic link created for C:\Users\bakerg\AppData\Local\nvim\init.vim <<===>> C:\Users\bakerg\terminalrc\vim\init.vim
