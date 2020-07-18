@@ -16,7 +16,7 @@ function mv() {
     return
   fi
 
-  read -ei "$1" newfilename
+  read "$1" newfilename
   command mv -v -- "$1" "$newfilename"
 }
 

@@ -21,10 +21,10 @@ set -s escape-time 0
 bind c new-window -c "#{pane_current_path}"
 
 # Set status bar
- set -g status-bg black
- set -g status-fg white
- set -g status-left ""
- set -g status-right "#[fg=green]#H"
+set -g status-bg black
+set -g status-fg white
+set -g status-left ""
+set -g status-right "#[fg=green]#H"
 
 # Split windows (new panes) with current path
 unbind % # Remove default binding since we’re replacing
@@ -126,22 +126,13 @@ set -g default-terminal "xterm-256color"
 # fiddle with colors of status bar
 set -g status-fg white
 set -g status-bg colour234
-# set color for status bar
-#set-option -g status-style fg=yellow,bg=colour235
-set-option -g status-attr dim
 
 # fiddle with colors of inactive windows
-setw -g window-status-fg cyan
-setw -g window-status-bg colour234
 set-window-option -g window-status-style fg=brightblue,bg=colour236
-setw -g window-status-attr dim
 
 # change color of active window
-setw -g window-status-current-fg white
-setw -g window-status-current-bg colour88
 # set window list colors - red for active and cyan for inactive
 set-window-option -g window-status-current-style fg=brightred,bg=colour236
-setw -g window-status-current-attr bright
 
 # set color of regular and active panes
 set -g pane-border-style fg=colour238,bg=default
@@ -149,7 +140,6 @@ set -g pane-active-border-style fg=green,bg=default
 
 # set color of command line
 set -g message-style fg=white,bg=colour22
-set -g message-attr bright
 
 # configure contents of status bar
 set -g status-position top
@@ -170,6 +160,7 @@ set -g visual-bell off
 set -g @shell_mode 'vi'
 
 # copy/paste using vim-style keys
+<<<<<<< HEAD
 #unbind [
 #bind Escape copy-mode
 #unbind p
@@ -181,6 +172,23 @@ set -g @shell_mode 'vi'
 # tell tmux to use the system clipboard
 set -g set-clipboard on
 set -g @yank_selection 'clipboard'
+=======
+set-option -g mouse on
+setw -g mode-keys vi
+set-option -s set-clipboard off
+unbind [
+bind Escape copy-mode
+unbind P
+bind P paste-buffer
+# Begin selection in copy mode.
+bind-key -T copy-mode-vi v send-keys -X begin-selection
+bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
+bind-key -T copy-mode-vi 'C-v' send-keys -X rectangle-toggle
+# copy to the system clipboard
+unbind -T copy-mode-vi Enter
+bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel 'xclip -se c -i'
+bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel 'xclip -se c -i'
+>>>>>>> e80b817513de3474776d87b56274ae03d2256de7
 
 # Continuum - Automatic restore
 # Last saved environment is automatically restored when tmux is started.

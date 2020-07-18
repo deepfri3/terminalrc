@@ -75,11 +75,8 @@ if exists('+termguicolors')
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
 endif
 let g:gruvbox_invert_selection='0'
-" favorite colorschemes :)
+" favorite colorscheme :)
 colorscheme gruvbox
-"colorscheme base16-tomorrow-night
-"colorscheme base16-monokai
-"colorscheme monokai_pro
 " font is set by the shell program
 
 set colorcolumn=80 " highlights column 80
@@ -153,19 +150,6 @@ set wildignore+=*.d,*.o,*.a,*.dsw,*.dsp,*.hgc,*.hrc,*.png,*.jpg,*.gif
 set wildignore+=log/**
 set wildignore+=tmp/**
 
-"set statusline=%F%m%r%h%w[%L][%{&ff}]%y[%p%%][%04l,%04v]
-"              | | | | |  |   |      |  |     |    |
-"              | | | | |  |   |      |  |     |    + current column
-"              | | | | |  |   |      |  |     +-- current line
-"              | | | | |  |   |      |  +-- current % into file
-"              | | | | |  |   |      +-- current syntax in square brackets
-"              | | | | |  |   +-- current fileformat
-"              | | | | |  +-- number of lines
-"              | | | | +-- preview flag in square brackets
-"              | | | +-- help flag in square brackets
-"              | | +-- readonly flag in square brackets
-"              | +-- modified flag in square brackets
-"              +-- full path to file in the buffer
 
 " ## Ease of use ##
 "
