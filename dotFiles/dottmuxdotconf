@@ -170,13 +170,13 @@ set -g visual-bell off
 set -g @shell_mode 'vi'
 
 # copy/paste using vim-style keys
-unbind [
-bind Escape copy-mode
-unbind p
-bind p paste-buffer
-bind -t vi-copy 'v' begin-selection
-bind -t vi-copy 'y' copy-selection
-bind-key -t vi-copy 'C-v' rectangle-toggle # Begin selection in copy mode.
+#unbind [
+#bind Escape copy-mode
+#unbind p
+#bind p paste-buffer
+#bind -t vi-copy 'v' begin-selection
+#bind -t vi-copy 'y' copy-selection
+#bind-key -t vi-copy 'C-v' rectangle-toggle # Begin selection in copy mode.
 
 # tell tmux to use the system clipboard
 set -g set-clipboard on
