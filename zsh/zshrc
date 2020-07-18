@@ -178,7 +178,7 @@ ZSH_TMUX_AUTOSTART_ONCE=true
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git z zsh-autosuggestions per-directory-history git-extras tmux)
+plugins=(git z zsh-autosuggestions per-directory-history git-extras tmux cp)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -209,8 +209,6 @@ export LC_ALL="en_US.UTF-8"
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# My vimrc
-export MYVIMRC=~/.config/nvim/init.vim
 # Set PATH
 export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
 # Add user $HOME/bin to PATH
@@ -219,6 +217,9 @@ export PATH=$HOME/bin:$PATH
 # set default editor
 export VISUAL=vim
 export EDITOR=$VISUAL
+# My vimrc
+export MYVIMRC=~/.config/nvim/init.vim
+alias editvimconf="$EDITOR ~/.config/nvim/init.vim"
 
 #gdb aliases
 alias gdb="gdb -quiet -fullname"
@@ -279,7 +280,6 @@ cdf() {
    file=$(fzf +m -q "$1") && dir=$(dirname "$file") && cd "$dir"
 }
 
-alias killtmux="tmux ls | grep : | cut -d. -f1 | awk '{print substr($1, 0, length($1)-1)}' | xargs -n 1 tmux kill-session -t"
 #alias tmux="TERM=screen-256color-bce tmux"
 #export TERM="xterm-256color"
 
