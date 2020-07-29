@@ -34,12 +34,14 @@ Plug 'vim-utils/vim-man'
 Plug 'sheerun/vim-polyglot'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'myusuf3/numbers.vim'
 Plug 'rking/ag.vim'
 Plug 'garbas/vim-snipmate'
 Plug 'MarcWeber/vim-addon-mw-utils'
 Plug 'tomtom/tlib_vim'
 Plug 'honza/vim-snippets'
+Plug 'benmills/vimux'
+Plug 'theprimeagen/vim-apm'
+Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
 "Plug 'ludovicchabant/vim-gutentags'
 
 " on-demand loading
@@ -50,10 +52,7 @@ Plug 'jeetsukumaran/vim-buffergator', { 'on':  'BuffergatorOpen' }
 " Colors
 Plug 'chriskempson/base16-vim'
 Plug 'gruvbox-community/gruvbox'
-Plug 'sainnhe/gruvbox-material'
-Plug 'phanviet/vim-monokai-pro'
 Plug 'vim-airline/vim-airline'
-Plug 'flazz/vim-colorschemes'
 
 call plug#end()
 
@@ -85,6 +84,7 @@ highlight ColorColumn ctermbg=0 guibg=gray14
 set ruler " Show the line and column number of the cursor position,
           " separated by a comma.
 set number " show line numbers
+set relativenumber " show line numbers
 set hidden " preserver buffers
 set nowrap " dont wrap lines
 set linebreak "wrap lines at convenient location
@@ -162,17 +162,7 @@ let g:C_MapLeader = ','
 " Fast saving
 nmap <leader>w :w!<cr>
 
-" Vim with me
-nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
-nmap <leader>vtm :highlight Pmenu ctermbg=gray guibg=gray
 
-" Vim Explorer
-let loaded_matchparen = 1
-let g:netrw_browse_split = 2
-let g:netrw_banner = 0
-let g:netrw_winsize = 25
-" Toggle netrw in sidebar
-nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 
 " ## Navigation mappings ##
 "
@@ -231,6 +221,8 @@ nnoremap <leader>+u :resize +5<cr>
 nnoremap <leader>rp :resize 50<cr>
 " equalize buffers
 nnoremap <leader>seq <C-W>=
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap K :m '<-2<CR>gv=gv
 
 
 " ## CTAGS mappings ##
@@ -239,55 +231,53 @@ nnoremap <leader>seq <C-W>=
 if g:running_windows
     let g:tagbar_ctags_bin = "ctags.exe"
     map <leader>tag :!ctags -R .<CR><CR>
-    "nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R --fields=+iaS --extras=+q .<cr>
 else
     " Change to the proj_root directory and execute ctags from proj_root
     nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R --fields=+iaS --extras=+q .<cr>
 endif
-" C-] - go to definition = Ctrl-Left_MouseClick - Go to definition
-" C-T - Jump back from the definition.(or :pop) =
-"       Ctrl-Right_MouseClick - Jump back from definition
-" C-W C-] - Open the definition in a horizontal split
 " Open the definition in a vertical split
 map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
-":tag start-of-tag-name_TAB
-"  Vim supports tag name completion. Start the typing the tag name and then
-"  type the TAB key and name completion will complete the tag name for you.
-":tag /search-string
-"  Jump to a tag name found by a search.
-":tselect <function-name>
-"  When multiple entries exist in the tags file, such as a function declaration
-"  in a header file and a function definition (the function itself), the
-"  operator can choose by issuing this command. The user will be presented with
-"  all the references to the function and the user will be prompted to enter
-"  the number associated with the appropriate one.
-map <leader>ts :tselect <CR>/
-":tags 	 - Show tag stack (history)
-":4pop 	 - Jump to a particular position in the tag stack (history).
-"          (jump to the 4th from bottom of tag stack (history).
-":4tag   - jump to the 4th from top of tag stack)
-":tnext  - Jump to next matching tag (Also short form :tn and jump two :2tnext)
-map <leader>tn :tnext<cr>
-":tprevious	- Jump to previous matching tag. (Also short form :tp and jump two :2tp)
-map <leader>tp :tprevious<cr>
-":tfirst 	  - Jump to first matching tag. (Also short form :tf, :trewind, :tr)
-map <leader>tf :tfirst<cr>
-":tlast 	  - Jump to last matching tag. (Also short form :tl)
-map <leader>tl :tlast<cr>
+" C-] - go to definition = Ctrl-Left_MouseClick - Go to definition
+" C-T - Jump back from the definition.(or :pop) =
+" C-W C-] - Open the definition in a horizontal split
 
 
 " ## Plugin mappings ##
+"
+" ++ VIM WITH ME ++
+nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
+nmap <leader>vtm :highlight Pmenu ctermbg=gray guibg=gray
+"
+" ++ VIM EXPLORER ++
+let loaded_matchparen = 1
+let g:netrw_browse_split = 2
+let g:netrw_banner = 0
+let g:netrw_winsize = 25
+" Toggle netrw in sidebar
+nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
+"
+" ++ VIM TODO ++
+nmap <Leader>tu <Plug>BujoChecknormal
+nmap <Leader>th <Plug>BujoAddnormal
+let g:bujo#todo_file_path = $HOME . "/.cache/bujo"
 "
 " ++ COC ++
 inoremap <buffer> <silent><expr> <TAB>
             \ pumvisible() ? "\<C-n>" :
             \ <SID>check_back_space() ? "\<TAB>" :
             \ coc#refresh()
-
 inoremap <buffer> <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+command! -nargs=0 Prettier :CocCommand prettier.formatFile
 inoremap <buffer> <silent><expr> <C-space> coc#refresh()
 
 " GoTo code navigation.
+nnoremap <leader>prw :CocSearch <C-R>=expand("<cword>")<CR><CR>
 nmap <leader>gd <Plug>(coc-definition)
 nmap <leader>gy <Plug>(coc-type-definition)
 nmap <leader>gi <Plug>(coc-implementation)
@@ -306,6 +296,7 @@ nnoremap <leader>u :UndotreeShow<CR>
 nmap <leader>gj :diffget //3<CR>
 nmap <leader>gf :diffget //2<CR>
 nmap <leader>gs :G<CR>
+nnoremap <C-p> :GFiles<CR>
 "
 " ++ RIP GREP ++
 if executable('rg')
@@ -373,16 +364,6 @@ smap <C-H> <Plug>snipMateBack
 imap <C-J> <Plug>snipMateShow
 vmap <C-J> <Plug>snipMateVisual
 "
-" ++ NUMBERS ++
-" Enable numbers by default
-let g:enable_numbers=1
-" Toggle numbers on/off
-nnoremap <F10> :NumbersToggle<CR>
-" Numbers dont belong here
-let g:numbers_exclude = ['unite', 'tagbar', 'startify', 'gundo', 'vimshell',
-                        \ 'w3m', 'nerdtree', 'buffergator', 'grep', 'Grep',
-                        \ 'fzf', 'coc', 'ctrlp']
-"
 " ++ TABULAR ++
 nmap <Leader>a& :Tabularize /&<CR>
 vmap <Leader>a& :Tabularize /&<CR>
@@ -433,17 +414,18 @@ let g:fzf_action = {
             \ 'ctrl-x': 'split',
             \ 'ctrl-v': 'vsplit' }
 " Default fzf layout
-let g:fzf_layout = { 'down': '50%'}
+"let g:fzf_layout = { 'down': '50%'}
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
+let $FZF_DEFAULT_OPTS='--reverse'
 " Invoke fuzzy finder to find files
 nnoremap <silent> <leader>t :Files <cr>
 "nnoremap <silent> <leader>t :FZF <cr>
 " List buffers
-"nnoremap <silent> <leader>bb :Buffers<cr>
+nnoremap <silent> <leader>bb :Buffers<cr>
 "nnoremap <silent> <leader>bb :FZFbuf<cr>
 " Simple MRU search - v:oldfiles
-"nnoremap <silent> <leader><Enter> :History<cr>
-nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
-nnoremap <C-p> :GFiles<CR>
+nnoremap <silent> <leader><Enter> :History<cr>
+"nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
 "
 " ++ AG - the silver searcher ++
 let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
@@ -457,6 +439,7 @@ let g:ag_format="%f:%l:%c:%m"
 " ++ DISPATCH ++
 autocmd FileType java let b:dispatch = 'javac %'
 autocmd FileType python let b:dispatch = 'python %'
+autocmd FileType cpp let b:dispatch = 'g++ % -o %.o'
 
 
 " ## Search function mappings ##
@@ -546,6 +529,11 @@ fun! TrimWhitespace()
     call winrestview(l:save)
 endfun
 autocmd BufWritePre * :call TrimWhitespace()
+
+augroup highlight_yank
+    autocmd!
+    autocmd TextYankPost * silent! lua require'vim.highlight'.on_yank()
+augroup END
 
 function! CmdLine(str)
   exe "menu Foo.Bar :" . a:str

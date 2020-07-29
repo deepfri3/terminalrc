@@ -20,4 +20,4 @@ function mv() {
   command mv -v -- "$1" "$newfilename"
 }
 
-
+alias g++='g++ -Wall -g -O0 -std=c++17'
