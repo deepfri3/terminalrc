@@ -106,8 +106,8 @@ set scrolloff=8
 
 " Open new split panes to right and bottom, which feels more
 " natural than Vim’s default:
-set splitbelow
-set splitright
+"set splitbelow
+"set splitright
 
 set autoread  " reload files edited outside of vim
 set autowrite " write file when switching between buffers
@@ -183,7 +183,7 @@ nmap <S-K> :bn<CR>
 nmap <S-Z> :bp <BAR> bd #<cr>
 map <silent> <leader>bd :Bclose<cr>
 " List buffers
-"nnoremap <leader>bb :ls<CR>:b<space>
+nnoremap <leader>bb :ls<CR>:b<space>
 " Create new buffer
 nmap <leader>T :enew<cr>
 " Change to local/current directory of buffer
@@ -255,6 +255,35 @@ let g:netrw_banner = 0
 let g:netrw_winsize = 25
 " Toggle netrw in sidebar
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
+"
+" ++ FZF - Fuzzy finder ++
+" This is the default extra key bindings
+let g:fzf_action = {
+            \ 'ctrl-t': 'tab split',
+            \ 'ctrl-x': 'split',
+            \ 'ctrl-v': 'vsplit' }
+" Default fzf layout
+"let g:fzf_layout = { 'down': '50%'}
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
+"let $FZF_DEFAULT_OPTS='--reverse'
+" Invoke fuzzy finder to find files
+nnoremap <silent> <leader>t :Files <cr>
+"nnoremap <silent> <leader>t :FZF <cr>
+" List buffers
+"nnoremap <silent> <leader>bb :Buffers<cr>
+"nnoremap <silent> <leader>bb :FZFbuf<cr>
+" Simple MRU search - v:oldfiles
+nnoremap <silent> <leader><Enter> :History<cr>
+"nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
+"
+" ++ AG - the silver searcher ++
+let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
+" specify the project root direoctory path for searching
+let g:ag_working_path_mode="r"
+" If 1, highlight the search terms after searching. Default: 0.
+let g:ag_highlight=1
+"Format to recognize the matches. See 'errorformat' for more info.
+let g:ag_format="%f:%l:%c:%m"
 "
 " ++ VIM TODO ++
 nmap <Leader>tu <Plug>BujoChecknormal
@@ -404,37 +433,8 @@ nmap <leader>kk :BuffergatorMruCyclePrev<cr>
 " Go to the next buffer open
 nmap <leader>jj :BuffergatorMruCycleNext<cr>
 " View the entire list of buffers open
-"nmap <leader>bl :BuffergatorOpen<cr>
 nmap <leader>bb :BuffergatorOpen<cr>
 "
-" ++ FZF - Fuzzy finder ++
-" This is the default extra key bindings
-let g:fzf_action = {
-            \ 'ctrl-t': 'tab split',
-            \ 'ctrl-x': 'split',
-            \ 'ctrl-v': 'vsplit' }
-" Default fzf layout
-"let g:fzf_layout = { 'down': '50%'}
-let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
-let $FZF_DEFAULT_OPTS='--reverse'
-" Invoke fuzzy finder to find files
-nnoremap <silent> <leader>t :Files <cr>
-"nnoremap <silent> <leader>t :FZF <cr>
-" List buffers
-nnoremap <silent> <leader>bb :Buffers<cr>
-"nnoremap <silent> <leader>bb :FZFbuf<cr>
-" Simple MRU search - v:oldfiles
-nnoremap <silent> <leader><Enter> :History<cr>
-"nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
-"
-" ++ AG - the silver searcher ++
-let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
-" specify the project root direoctory path for searching
-let g:ag_working_path_mode="r"
-" If 1, highlight the search terms after searching. Default: 0.
-let g:ag_highlight=1
-"Format to recognize the matches. See 'errorformat' for more info.
-let g:ag_format="%f:%l:%c:%m"
 "
 " ++ DISPATCH ++
 autocmd FileType java let b:dispatch = 'javac %'
