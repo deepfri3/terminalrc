@@ -40,7 +40,9 @@ Plug 'MarcWeber/vim-addon-mw-utils'
 Plug 'tomtom/tlib_vim'
 Plug 'honza/vim-snippets'
 Plug 'benmills/vimux'
-Plug 'theprimeagen/vim-apm'
+if !g:running_windows
+    Plug 'theprimeagen/vim-apm'
+endif
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
 "Plug 'ludovicchabant/vim-gutentags'
 
@@ -81,6 +83,9 @@ colorscheme gruvbox
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
 
+if !g:running_windows
+    set kscb " vim-apm
+endif
 set ruler " Show the line and column number of the cursor position,
           " separated by a comma.
 set number " show line numbers
@@ -161,7 +166,6 @@ let mapleader = ","
 let g:C_MapLeader = ','
 " Fast saving
 nmap <leader>w :w!<cr>
-
 
 
 " ## Navigation mappings ##
