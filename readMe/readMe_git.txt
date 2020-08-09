@@ -35,5 +35,5 @@ $ ssh -T git@github.com
 the error was shown unable to start ssh-agent service, error :1058.
 Enable in local services: "OpenSSH Authentication Agent"
 
-git add remote origin git@<remote repository>
+git remote add origin git@<remote repository>
 git -u push origin master
