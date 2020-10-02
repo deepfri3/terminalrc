@@ -269,7 +269,7 @@ let g:fzf_action = {
 " Default fzf layout
 "let g:fzf_layout = { 'down': '50%'}
 let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
-"let $FZF_DEFAULT_OPTS='--reverse'
+let $FZF_DEFAULT_OPTS='--reverse'
 " Invoke fuzzy finder to find files
 nnoremap <silent> <leader>t :Files <cr>
 "nnoremap <silent> <leader>t :FZF <cr>
