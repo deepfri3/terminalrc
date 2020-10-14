@@ -40,11 +40,10 @@ Plug 'MarcWeber/vim-addon-mw-utils'
 Plug 'tomtom/tlib_vim'
 Plug 'honza/vim-snippets'
 Plug 'benmills/vimux'
+Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
 "if !g:running_windows
     "Plug 'ThePrimeagen/vim-apm'
 "endif
-Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
-"Plug 'ludovicchabant/vim-gutentags'
 
 " on-demand loading
 Plug 'majutsushi/tagbar', { 'on':  'TagbarToggle' }
@@ -122,12 +121,11 @@ set undolevels=1000 " use many muchos levels of undo
 if g:running_windows
     set undodir=~\AppData\Local\nvim\undodir " Keep undo history across sessions,
                                              " by storing in file.
-    set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 else
     set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
                                             " by storing in file.
-    set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 endif
+set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 
 set history=1000         " remember more commands and search history
 set title                " change the terminal's title
@@ -135,7 +133,7 @@ set noerrorbells         " don't beep
 set showcmd              " Show incomplete cmds down the bottom
 set showmode             " Show current mode down the bottom
 set gcr=a:blinkon0       " Disable cursor blink
-set cmdheight=2           " Give more space for displaying messages.
+set cmdheight=2          " Give more space for displaying messages.
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 " delays and poor user experience.
