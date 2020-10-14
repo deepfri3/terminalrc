@@ -6,7 +6,6 @@ filetype off
 let g:running_windows = has("win16") || has("win32") || has("win64")
 if g:running_windows
     let g:python3_host_prog='C:\Python38\Lib\venv\scripts\nt\python.exe'
-    :cd D:\OneDrive\OneDrive\ -\ Siemens\ AG
 else
     if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
       silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
@@ -272,7 +271,7 @@ let g:fzf_action = {
 " Default fzf layout
 "let g:fzf_layout = { 'down': '50%'}
 let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
-"let $FZF_DEFAULT_OPTS='--reverse'
+let $FZF_DEFAULT_OPTS='--reverse'
 " Invoke fuzzy finder to find files
 nnoremap <silent> <leader>t :Files <cr>
 "nnoremap <silent> <leader>t :FZF <cr>
