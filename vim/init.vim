@@ -34,15 +34,16 @@ Plug 'vim-utils/vim-man'
 Plug 'sheerun/vim-polyglot'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'stsewd/fzf-checkout.vim'
 Plug 'rking/ag.vim'
 Plug 'garbas/vim-snipmate'
 Plug 'MarcWeber/vim-addon-mw-utils'
 Plug 'tomtom/tlib_vim'
 Plug 'honza/vim-snippets'
 Plug 'benmills/vimux'
-if !g:running_windows
-    Plug 'theprimeagen/vim-apm'
-endif
+"if !g:running_windows
+    "Plug 'ThePrimeagen/vim-apm'
+"endif
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
 "Plug 'ludovicchabant/vim-gutentags'
 
@@ -83,9 +84,6 @@ colorscheme gruvbox
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
 
-if !g:running_windows
-    set kscb " vim-apm
-endif
 set ruler " Show the line and column number of the cursor position,
           " separated by a comma.
 set number " show line numbers
@@ -248,6 +246,11 @@ map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
 " ## Plugin mappings ##
 "
+" ++ VIM APM ++
+"if !g:running_windows
+    "set kscb " vim-apm
+"endif
+"
 " ++ VIM WITH ME ++
 nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
 nmap <leader>vtm :highlight Pmenu ctermbg=gray guibg=gray
@@ -329,6 +332,7 @@ nnoremap <leader>u :UndotreeShow<CR>
 nmap <leader>gj :diffget //3<CR>
 nmap <leader>gf :diffget //2<CR>
 nmap <leader>gs :G<CR>
+nnoremap <leader>gc :GCheckout<CR>
 nnoremap <C-p> :GFiles<CR>
 "
 " ++ RIP GREP ++
