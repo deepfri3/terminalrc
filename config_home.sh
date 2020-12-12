@@ -232,21 +232,47 @@ echo -e "\n** configure fonts **\n"
 if [ ! -d ~/.local/share/fonts ]; then
     mkdir -p ~/.local/share/fonts
 fi
-if [ ! -d ~/Downloads/fonts ]; then
-    echo "need to download fonts..."
-    git clone https://github.com/powerline/fonts.git ~/Downloads/fonts/powerline
-    git clone https://github.com/JetBrains/JetBrainsMono.git ~/Downloads/fonts/JetBrainsMono
-    git clone https://github.com/Znuff/consolas-powerline.git ~/Downloads/fonts/consolas-powerline
-    # Copy all fonts to user fonts directory
-    echo "Copying fonts..."
-    find ~/Downloads/fonts \( -name "*.[ot]tf" -or -name "*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" ~/.local/share/fonts
-    # Reset font cache on Linux
-    if which fc-cache >/dev/null 2>&1 ; then
-        echo "Resetting font cache, this may take a moment..."
-        fc-cache -f -v ~/.local/share/fonts
-    fi
+# goto fonts directory and download...
+pushd ~/.local/share/fonts
+# Hack
+curl -fLo "Hack Regular Nerd Font Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Hack/Regular/complete/Hack%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+#Inconsolata
+curl -fLo "Inconsolata Regular Nerd Font Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Inconsolata/complete/Inconsolata%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+curl -fLo "Inconsolata Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Inconsolata/complete/Inconsolata%20Regular%20Nerd%20Font%20Complete.ttf
+#Source Code Pro
+curl -fLo "Source Code Pro Regular Nerd Font Complete Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete%20Mono.ttf
+curl -fLo "Source Code Pro Regular Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete.ttf
+curl -fLo "Source Code Pro Semibold Nerd Font Complete Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete%20Mono.ttf
+curl -fLo "Source Code Pro Semibold Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete.ttf
+popd
+# Reset font cache on Linux
+if which fc-cache >/dev/null 2>&1 ; then
+    echo "Resetting font cache, this may take a moment..."
+    fc-cache -f -v ~/.local/share/fonts
 fi
 
-# restart applications that need the fonts
+#if [ ! -d ~/Downloads/fonts ]; then
+    #echo "need to download fonts..."
+    #git clone https://github.com/powerline/fonts.git ~/Downloads/fonts/powerline
+    #git clone https://github.com/JetBrains/JetBrainsMono.git ~/Downloads/fonts/JetBrainsMono
+    #git clone https://github.com/Znuff/consolas-powerline.git ~/Downloads/fonts/consolas-powerline
+    ## Copy all fonts to user fonts directory
+    #echo "Copying fonts..."
+    #find ~/Downloads/fonts \( -name "*.[ot]tf" -or -name "*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" ~/.local/share/fonts
+    ## Reset font cache on Linux
+    #if which fc-cache >/dev/null 2>&1 ; then
+        #echo "Resetting font cache, this may take a moment..."
+        #fc-cache -f -v ~/.local/share/fonts
+    #fi
+#fi
+
+ restart applications that need the fonts
 echo -e "\nswitch to zsh:"
 echo -e "\n\tchsh -s \$(which zsh)\n"
