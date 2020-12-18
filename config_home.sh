@@ -251,6 +251,19 @@ curl -fLo "Source Code Pro Semibold Nerd Font Complete Mono.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete%20Mono.ttf
 curl -fLo "Source Code Pro Semibold Nerd Font Complete.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete.ttf
+#JetBrainsMono
+curl -fLo "JetBrains Regular Nerd Font Complete Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+curl -fLo "JetBrains Regular Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete.ttf
+curl -fLo "JetBrains Medium Nerd Font Complete Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete%20Mono.ttf
+curl -fLo "JetBrains Medium Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete.ttf
+curl -fLo "JetBrains Bold Nerd Font Complete Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete%20Mono.ttf
+curl -fLo "JetBrains Bold Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete.ttf
 popd
 # Reset font cache on Linux
 if which fc-cache >/dev/null 2>&1 ; then
@@ -273,6 +286,6 @@ fi
     #fi
 #fi
 
- restart applications that need the fonts
+#restart applications that need the fonts
 echo -e "\nswitch to zsh:"
 echo -e "\n\tchsh -s \$(which zsh)\n"
