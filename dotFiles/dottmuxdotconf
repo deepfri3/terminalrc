@@ -117,6 +117,9 @@ bind -r J resize-pane -D 5
 bind -r K resize-pane -U 5
 bind -r L resize-pane -R 5
 
+bind-key b break-pane -d
+bind-key C-j choose-tree
+
 # turn on 256 color support in tmux
 #set -ga terminal-overrides ",*:Tc"
 set -ga terminal-overrides "$TERM:Tc"
