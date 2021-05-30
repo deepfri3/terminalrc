@@ -1,0 +1,37 @@
+
+# zshrc for local machine
+
+# set theme for local machine
+ZSH_THEME="robbyrussell"
+
+# autojump (https://github.com/wting/autojump)
+# configured for Debian
+[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
+
+# fzf - fuzzy finder (https://github.com/junegunn/fzf)
+source /usr/share/doc/fzf/examples/key-bindings.zsh
+source /usr/share/doc/fzf/examples/completion.zsh
+
+# Put this function to your .bashrc file.
+# Usage: mv oldfilename
+# If you call mv without the second parameter it will prompt you to edit the filename on command line.
+# Original mv is called when it's called with more than one argument.
+# It's useful when you want to change just a few letters in a long name.
+#
+# Also see:
+# - imv from renameutils
+# - Ctrl-W Ctrl-Y Ctrl-Y (cut last word, paste, paste)
+function mv() {
+  if [ "$#" -ne 1 ] || [ ! -e "$1" ]; then
+    command mv "$@"
+    return
+  fi
+
+  read "$1" newfilename
+  command mv -v -- "$1" "$newfilename"
+}
+
+alias g++='g++ -Wall -g -O0 -std=c++17'
+
+# Set JAVA_HOME to Corretto 11
+export JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto

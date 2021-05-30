@@ -1,28 +1,81 @@
 #!/usr/bin/bash
 # Configure terminal environment
 
+function pause(){
+ read -s -n 1 -p "Press any key to continue . . ."
+ echo ""
+}
+
 basedir=$(pwd)
 echo "basedir=$basedir"
+
+DISTRO=$(cat /etc/issue | cut -d\  -f1)
+echo "disro=$DISTRO"
+
+# install dependencies
+echo -e "\n** Install dependencies **\n"
+if [ $DISTRO == "Ubuntu" ]; then
+    #Ubuntu / Debian
+    sudo apt-get install -y ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip nodeje npm -y
+    sudo apt-get install -y curl libevent-dev libncurses-dev bison byacc
+    # for gui support (gvim, (*) clipboard register...):
+    sudo apt-get install -y vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev pip pip3
+elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
+    #Arch Linux
+    sudo pacman -S base-devel cmake unzip ninja
+fi
+echo -e "\n** Installation of dependencies completed **\n"
+
+
+echo -e "\n** Determine desktop environment **\n"
+if [ "$XDG_CURRENT_DESKTOP" = "" ]
+then
+  desktop=$(echo "$XDG_DATA_DIRS" | sed 's/.*\(xfce\|kde\|gnome\).*/\1/')
+else
+  desktop=`echo $XDG_CURRENT_DESKTOP | cut -d ':' -f 2`
+fi
+desktop=${desktop,,}  # convert to lower case
+echo "Desktop Environment --> $desktop"
+
+if [ $desktop == "gnome" ]; then
+    if [ ! -d ~/.config/base16-gnome-terminal ]; then
+         echo "cloning gnome base-16 theme..."
+         git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
+    fi
+    #install desired base-16 themes
+    ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark-256.sh
+    ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark.sh
+    ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard-256.sh
+    ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
+fi
+
 if [ ! -d ~/bin ]; then
+    echo "~/bin doesn't exist...create it."
     mkdir ~/bin
 fi
-if [ ! -d ~/Applications ]; then
-    mkdir ~/Applications
+if [ ! -d ~/applications ]; then
+    echo "~/applications doesn't exist...create it."
+    mkdir ~/applications
 fi
 
 # bash configuration
-echo -e "\n** bash configuration **\n"
+echo -e "\n** bash configuration started **\n"
 if [ -f ~/.bashrc ]; then
+    echo "~/.bashrc exists...remove it."
     rm ~/.bashrc
 fi
 ln -s $basedir/bash/bashbootstrap ~/.bashrc
-if [ -f ~/.dircolorsrc ]; then
-    rm ~/.dircolorsrc
-fi
-ln -s $basedir/dotFiles/dotdircolorsrc ~/.dircolorsrc
+#if [ -f ~/.dircolorsrc ]; then
+#    echo "~/.dircolorsrc exists...remove it."
+#    rm ~/.dircolorsrc
+#fi
+#ln -s $basedir/dotFiles/dotdircolorsrc ~/.dircolorsrc
+echo -e "\n** bash configuration completed **\n"
+
+echo -e "\n** bash-git-promt configuration started **\n"
 echo "git prompt for bash"
 if [ ! -d ~/.bash-git-prompt ]; then
-    echo "need to download bash-git-prompt..."
+    echo "cloning bash-git-prompt..."
     git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1
 fi
 pushd ~/.bash-git-prompt
@@ -30,8 +83,9 @@ echo "updating bash-git-prompt"
 git pull
 echo "update complete"
 popd
+echo -e "\n** bash-git-promt configuration completed **\n"
 
-echo -e "\n** base16 shell configuration **\n"
+echo -e "\n** base16 shell configuration started **\n"
 # add base16-shell (https://github.com/chriskempson/base16-shell)
 if [ ! -d ~/.config/base16-shell ]; then
     echo "need to download base16-shell..."
@@ -42,10 +96,11 @@ echo "updating base16-shell"
 git pull
 echo "update complete"
 popd
+echo -e "\n** base16 shell configuration completed **\n"
 
-echo -e "\n** zsh configuration **\n"
+echo -e "\n** zsh configuration start **\n"
 if [ ! -d ~/.oh-my-zsh ]; then
-    echo "need to download oh my zsh..."
+    echo "go download oh my zsh!..."
     wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 fi
@@ -55,166 +110,240 @@ git pull
 echo "update complete"
 popd
 if [ -f ~/.zshrc ]; then
+    echo "~/.zshrc exists...remove it."
     rm ~/.zshrc
 fi
 ln -s $basedir/zsh/zshbootstrap ~/.zshrc
+echo -e "\n** zsh configuration completed **\n"
 
 echo -e "\n** tmux installation and configuration **\n"
 # tmux installation and configuration
-if [ ! -d ~/Downloads/tmux ]; then
-    echo "need to download tmux..."
-    git clone https://github.com/tmux/tmux.git ~/Downloads/tmux
+if [ ! -d ~/repositories/tmux ]; then
+    echo "cloning tmux..."
+    git clone https://github.com/tmux/tmux.git ~/repositories/tmux
     # setup tmux plugins
+    echo "cloning and installing tmux tpm plugin manager..."
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
-pushd ~/Downloads/tmux
+pushd ~/repositories/tmux
 echo "updating tmux..."
 git pull
 echo "update complete"
+echo "tmux configure..."
 sh autogen.sh
-./configure && make
+./configure --prefix=/home/bakerg/applications > log_configure.txt
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "tmux clean..."
+make clean > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "tmux build..."
+make > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "tmux install..."
+make install > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 if [ -f ~/bin/tmux ]; then
+    echo "~/bin/tmux exists...remove it."
     rm ~/bin/tmux
 fi
-ln -s ~/Downloads/tmux/tmux ~/bin/tmux
+ln -s ~/applications/bin/tmux ~/bin/tmux
+echo "tmux installed"
 popd
+if [ -f ~/.tmux.conf ]; then
+    echo "~/.tmux.conf exists...remove it."
+    rm ~/.tmux.conf
+fi
+ln -s $basedir/dotFiles/dottmuxdotconf ~/.tmux.conf
 #ostmuxconf=tmux-`uname`
 #localtmuxconf=$ostmuxconf-`hostname | cut -d. -f1`
 #echo -e "\n# default resurrect dir" > ~/.tmux.conf
 #echo -e "set -g @resurrect-dir '~/.tmux/resurrect/$localtmuxconf'\n" >> ~/.tmux.conf
-#echo -e "source-file ~/.tmux-main.conf\n" >> ~/.tmux.conf
-if [ -f ~/.tmux.conf ]; then
-    rm ~/.tmux.conf
-fi
-ln -s $basedir/dotFiles/dottmuxdotconf ~/.tmux.conf
+#echo -e "source-file $basedir/dotFiles/dottmuxdotconf\n" >> ~/.tmux.conf
+echo -e "\n** tmux installation and configuration completed **\n"
 
 # vim install and configure links
-#echo -e "\n** vim install and configure **\n"
-#if [ ! -d ~/Downloads/vim ]; then
-    #echo "need to download vim..."
-    #git clone https://github.com/vim/vim.git ~/Downloads/vim
-    #curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-        #https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-#fi
-#pushd ~/Downloads/vim
-#echo "updating vim..."
-#git pull
-#echo "update complete"
-#echo "configuring vim..."
-#./configure --prefix=~/Applicatons/vim \
-#--with-features=huge \
-#--disable-nls \
-#--enable-multibyte=yes \
-#--enable-cscope=yes \
-#--with-tlib=ncurses \
-#--enable-python3interp \
-#--with-python3-config-dir=$(python3-config --configdir) \
-#--enable-luainterp=yes \
-#--enable-rubyinterp=yes \
-#--enable-perlinterp=yes \
-#--with-ruby-command=/usr/bin/ruby \
-#--enable-fontset=yes > log_configure.txt
-#echo "vim configured"
-#echo "make and install"
-#make
-#echo "make done"
-#make install
-#echo "install done"
-#popd
-#rm ~/bin/vim ~/bin/gvim
-#ln -s ~/Applications/vim/bin/vim ~/bin/vim
-#ln -s ~/Applications/vim/bin/gvim ~/bin/gvim
-#rm ~/.vimrc
-#ln -s $basedir/vim/vimrc.vim ~/.vimrc
-#mkdir -p ~/.vim/undodir
-#echo "vim setup completed"
+echo -e "\n** vim install and configure started **\n"
+if [ ! -d ~/repositories/vim ]; then
+    echo "cloning vim..."
+    git clone https://github.com/vim/vim.git ~/repositories/vim
+    curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    echo -e "install modern vim dependencies..."
+    # python 3 support
+    pip install python-config
+fi
+pushd ~/repositories/vim
+echo "updating vim..."
+git pull
+echo "update complete"
+echo "configuring vim..."
+./configure --prefix=/home/bakerg/applications \
+--with-features=huge \
+--disable-nls \
+--enable-multibyte=yes \
+--enable-cscope=yes \
+--with-tlib=ncurses \
+--enable-pythoninterp \
+--with-python-command=/usr/bin/python2.7 \
+--enable-python3interp \
+--with-python3-command=/usr/bin/python3.8 \
+--with-python-config-dir=$(python2.7-config --configdir) \
+--with-python3-config-dir=$(python3-config --configdir) \
+--enable-luainterp=yes \
+--enable-rubyinterp=yes \
+--enable-perlinterp=yes \
+--with-ruby-command=/usr/bin/ruby \
+--enable-fontset=yes > log_configure.txt
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "vim configured"
+echo "vim clean..."
+make clean > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "vim build..."
+make > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "make done"
+echo "vim install"
+make install > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "install done"
+popd
+if [ -f ~/bin/vim ]; then
+    echo "~/bin/vim exists...remove it."
+    rm ~/bin/vim
+fi
+ln -s ~/applications/bin/vim ~/bin/vim
+if [ -f ~/bin/gvim ]; then
+    echo "~/bin/gvim exists...remove it."
+    rm ~/bin/gvim
+fi
+ln -s ~/applications/bin/gvim ~/bin/gvim
+if [ -f ~/.vimrc ]; then
+    echo "~/.vimrc exists...remove it."
+    rm ~/.vimrc
+fi
+ln -s $basedir/vim/no_plugins.vimrc ~/.vimrc
+echo -e "\n** vim install and configuration completed **\n"
 
 # neovim install and configure links
 echo -e "\n** neovim install and configure **\n"
-if [ ! -d ~/Downloads/neovim ]; then
-    echo "need to download neovim..."
-    git clone https://github.com/neovim/neovim.git ~/Downloads/neovim
+if [ ! -d ~/respositories/neovim ]; then
+    echo "clone neovim from repo..."
+    git clone https://github.com/neovim/neovim.git ~/repositories/neovim
+    echo "download from plug.vim and install..."
     sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 fi
-pushd ~/Downloads/neovim
+pushd ~/repositories/neovim
 echo "updating neovim..."
 git pull
 echo "update complete"
 echo "make neovim..."
-DISTRO=$(cat /etc/issue | cut -d\  -f1)
-if [ $DISTRO == "Ubuntu" ]; then
-    Ubuntu / Debian
-    sudo apt-get install ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip
-elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
-    Arch Linux
-    sudo pacman -S base-devel cmake unzip ninja
-fi
-make CMAKE_INSTALL_PREFIX=/home/bakerg/Applications/neovim CMAKE_BUILD_TYPE=Release
+echo "neovim clean..."
+make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release clean > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
+echo "neovim build..."
+make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release all > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "neovim compiled."
 echo "install neovim"
-make install
+make install > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "install done"
 popd
 if [ -f ~/bin/nvim ]; then
+    echo "~/bin/nvim exists...remove it."
     rm ~/bin/nvim
 fi
-ln -s ~/Applications/neovim/bin/nvim ~/bin/nvim
+ln -s ~/applications/bin/nvim ~/bin/nvim
 mkdir -p ~/.config/nvim
 mkdir -p ~/.local/share/nvim/site/plugged
 if [ -f ~/.config/nvim/init.vim ]; then
+    echo "init.vim exists...remove it."
     rm ~/.config/nvim/init.vim
 fi
 ln -s $basedir/vim/init.vim ~/.config/nvim/init.vim
 echo "neovim setup completed"
 
+
 # install autojump
+# https://github.com/wting/autojump
 echo -e "\n** install autojump **\n"
-if [ ! -d ~/Downloads/autojump ]; then
-    echo "need to download autojump..."
-    git clone git://github.com/wting/autojump.git ~/Downloads/autojump
+if [ $DISTRO == "Ubuntu" ]; then
+    sudo apt-get install -y autojump
+    # autojump (https://github.com/wting/autojump)
+    # configured for Debian
+    # add to terminalrc
+    #[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
 fi
-pushd ~/Downloads/autojump
+echo "install done"
+:<<'END'
+if [ ! -d ~/applications/autojump ]; then
+    echo "cloning autojump..."
+    git clone git://github.com/wting/autojump.git ~/applications/autojump
+fi
+pushd ~/applications/autojump
 echo "updating autojump..."
 git pull
 echo "update complete"
 echo "install autojump"
+python uninstall.py
 python install.py
 echo "install done"
 popd
+END
 
 # install ag the silver searcher
+# https://github.com/ggreer/the_silver_searcher
 echo -e "\n** install ag - the sliver searcher **\n"
-if [ ! -d ~/Downloads/the_silver_searcher ]; then
-    echo "need to download ag..."
-    git clone https://github.com/ggreer/the_silver_searcher.git ~/Downloads/the_silver_searcher
+if [ $DISTRO == "Ubuntu" ]; then
+    sudo apt-get install -y silversearcher-ag
 fi
-pushd ~/Downloads/the_silver_searcher
+echo "install done"
+:<<'END'
+if [ ! -d ~/applications/the_silver_searcher ]; then
+    echo "cloning ag..."
+    git clone https://github.com/ggreer/the_silver_searcher.git ~/applications/the_silver_searcher
+fi
+pushd ~/applications/the_silver_searcher
 echo "updating ag..."
 git pull
 echo "update complete"
 echo "install ag"
 ./build.sh
-echo "install done"
 popd
 if [ -f ~/bin/ag ]; then
     rm ~/bin/ag
 fi
 ln ~/Downloads/the_silver_searcher/ag ~/bin/ag
+echo "install done"
+END
 
 echo -e "\n** install fzf **\n"
-if [ ! -d ~/Downloads/fzf ]; then
-    echo "need to download fzf..."
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/Downloads/fzf
+if [ $DISTRO == "Ubuntu" ]; then
+    # fzf - fuzzy finder (https://github.com/junegunn/fzf)
+    sudo apt-get install -y fzf
+    # configured for Debian
+    # add to terminalrc
+    #source /usr/share/doc/fzf/examples/key-bindings.zsh
+    #source /usr/share/doc/fzf/examples/completion.zsh
 fi
-pushd ~/Downloads/fzf
+echo "install done"
+:<<'END'
+# https://github.com/junegunn/fzf
+if [ ! -d ~/applications/fzf ]; then
+    echo "cloning fzf..."
+    git clone --depth 1 https://github.com/junegunn/fzf.git ~/applications/fzf
+fi
+pushd ~/applications/fzf
 echo "updating fzf..."
 git pull
 echo "update complete"
-echo "install fzf"
+echo "clean and install fzf"
 ./install
 echo "install done"
 popd
+END
 
 # Misc
 echo -e "\n** do misc **\n"
@@ -253,39 +382,43 @@ curl -fLo "Source Code Pro Semibold Nerd Font Complete.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete.ttf
 #JetBrainsMono
 curl -fLo "JetBrains Regular Nerd Font Complete Mono.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
 curl -fLo "JetBrains Regular Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete.ttf
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete.ttf
 curl -fLo "JetBrains Medium Nerd Font Complete Mono.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete%20Mono.ttf
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete%20Mono.ttf
 curl -fLo "JetBrains Medium Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete.ttf
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete.ttf
 curl -fLo "JetBrains Bold Nerd Font Complete Mono.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete%20Mono.ttf
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete%20Mono.ttf
 curl -fLo "JetBrains Bold Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete.ttf
+    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete.ttf
 popd
 # Reset font cache on Linux
 if which fc-cache >/dev/null 2>&1 ; then
     echo "Resetting font cache, this may take a moment..."
     fc-cache -f -v ~/.local/share/fonts
 fi
+pause
+exit
 
-#if [ ! -d ~/Downloads/fonts ]; then
-    #echo "need to download fonts..."
-    #git clone https://github.com/powerline/fonts.git ~/Downloads/fonts/powerline
-    #git clone https://github.com/JetBrains/JetBrainsMono.git ~/Downloads/fonts/JetBrainsMono
-    #git clone https://github.com/Znuff/consolas-powerline.git ~/Downloads/fonts/consolas-powerline
-    ## Copy all fonts to user fonts directory
-    #echo "Copying fonts..."
-    #find ~/Downloads/fonts \( -name "*.[ot]tf" -or -name "*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" ~/.local/share/fonts
-    ## Reset font cache on Linux
-    #if which fc-cache >/dev/null 2>&1 ; then
-        #echo "Resetting font cache, this may take a moment..."
-        #fc-cache -f -v ~/.local/share/fonts
-    #fi
-#fi
+:<<'END'
+if [ ! -d ~/Downloads/fonts ]; then
+    echo "need to download fonts..."
+    git clone https://github.com/powerline/fonts.git ~/Downloads/fonts/powerline
+    git clone https://github.com/JetBrains/JetBrainsMono.git ~/Downloads/fonts/JetBrainsMono
+    git clone https://github.com/Znuff/consolas-powerline.git ~/Downloads/fonts/consolas-powerline
+    # Copy all fonts to user fonts directory
+    echo "Copying fonts..."
+    find ~/Downloads/fonts \( -name "*.[ot]tf" -or -name "*.pcf.gz" \) -type f -print0 | xargs -0 -n1 -I % cp "%" ~/.local/share/fonts
+    # Reset font cache on Linux
+    if which fc-cache >/dev/null 2>&1 ; then
+        echo "Resetting font cache, this may take a moment..."
+        fc-cache -f -v ~/.local/share/fonts
+    fi
+fi
 
 #restart applications that need the fonts
 echo -e "\nswitch to zsh:"
 echo -e "\n\tchsh -s \$(which zsh)\n"
+END
