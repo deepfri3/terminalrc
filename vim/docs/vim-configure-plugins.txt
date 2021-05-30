@@ -35,8 +35,8 @@ May have to edit file src/auto/config.mk
 - Add "-ldl" to LIBS
 
 For GUI support (gvim, (*) clipboard register...):
-sudo apt-get install vim-gtk2 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev
-sudo pacman -S vim-gtk2 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev
+sudo apt-get install vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev
+sudo pacman -S vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev
 
 Configure Vim for CLI
 

@@ -63,8 +63,9 @@ set fenc=utf-8 " UTF-8
 set autoread
 
 " switch syntax highlighting on, when terminal has colors
-syntax on
 syntax enable
+" enable syntax and plugins (for netrw)
+filetype plugin on
 set termguicolors
 set t_ut=
 " set default colorscheme and background
@@ -390,6 +391,7 @@ nmap <leader>' yss'
 vmap <leader>' S'
 "
 " ++ SNIPMATE ++
+let g:snipMate = { 'snippet_version' : 1 }
 imap <C-L> <Plug>snipMateNextOrTrigger
 smap <C-L> <Plug>snipMateNextOrTrigger
 imap <C-K> <Plug>snipMateTrigger
