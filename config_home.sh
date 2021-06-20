@@ -16,10 +16,13 @@ echo "disro=$DISTRO"
 echo -e "\n** Install dependencies **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
-    sudo apt-get install -y ninja-build gettext libtool libtool-bin autoconf automake cmake g++ pkg-config unzip nodeje npm -y
-    sudo apt-get install -y curl libevent-dev libncurses-dev bison byacc
-    # for gui support (gvim, (*) clipboard register...):
-    sudo apt-get install -y vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev pip pip3
+    sudo apt-get update
+    sudo apt-get -y upgrade
+    sudo apt-get install -y ninja-build gettext libtool libtool-bin autoconf \
+        automake cmake g++ pkg-config unzip nodeje npm curl libevent-dev \
+        libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev \
+        libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python3-pip \
+        python3-dev python2-dev
 elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
     #Arch Linux
     sudo pacman -S base-devel cmake unzip ninja
@@ -39,14 +42,14 @@ echo "Desktop Environment --> $desktop"
 
 if [ $desktop == "gnome" ]; then
     if [ ! -d ~/.config/base16-gnome-terminal ]; then
-         echo "cloning gnome base-16 theme..."
-         git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
+        echo "cloning gnome base-16 theme..."
+        git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
+        #install desired base-16 themes
+        ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark-256.sh
+        ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark.sh
+        ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard-256.sh
+        ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
     fi
-    #install desired base-16 themes
-    ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark-256.sh
-    ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark.sh
-    ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard-256.sh
-    ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
 fi
 
 if [ ! -d ~/bin ]; then
@@ -57,6 +60,58 @@ if [ ! -d ~/applications ]; then
     echo "~/applications doesn't exist...create it."
     mkdir ~/applications
 fi
+
+
+# i3 installation and configuration
+echo -e "\n** i3 installation configuration started **\n"
+if [ $DISTRO == "Ubuntu" ]; then
+    if [ -f ~/Downloads/keyring.deb ]; then
+        pushd ~/Downloads
+        /usr/lib/apt/apt-helper download-file https://debian.sur5r.net/i3/pool/main/s/sur5r-keyring/sur5r-keyring_2021.02.02_all.deb keyring.deb SHA256:cccfb1dd7d6b1b6a137bb96ea5b5eef18a0a4a6df1d6c0c37832025d2edaa710
+        dpkg -i ./keyring.deb
+        echo "deb http://debian.sur5r.net/i3/ $(grep '^DISTRIB_CODENAME=' /etc/lsb-release | cut -f2 -d=) universe" >> /etc/apt/sources.list.d/sur5r-i3.list
+        sudo apt-get update
+        sudo apt install -y i3 i3lock i3lock-fancy rofi
+        popd
+    fi
+    if [ ! -d ~/.config/i3 ]; then
+        echo "~/.config/i3 doesn't exist...create it."
+        mkdir -p ~/.config/i3
+    fi
+    if [ ! -d ~/.config/i3status ]; then
+        echo "~/.config/i3status doesn't exist...create it."
+        mkdir -p ~/.config/i3status
+    fi
+    if [ -f ~/.Xresources ]; then
+        echo "~/.Xresources exists...remove it."
+        rm ~/.Xresources
+    fi
+    ln -s $basedir/dotFiles/dotXresources ~/.Xresources
+    if [ -f ~/.config/i3/config ]; then
+        echo "~/.config/i3/config exists...remove it."
+        rm ~/.config/i3/config
+    fi
+    ln -s $basedir/i3/i3config ~/.config/i3/config
+    if [ -f ~/.config/i3/config ]; then
+        echo "~/.config/i3/config exists...remove it."
+        rm ~/.config/i3/config
+    fi
+    ln -s $basedir/i3/i3config ~/.config/i3/config
+    if [ -f ~/.config/i3status/config ]; then
+        echo "~/.config/i3status/config exists...remove it."
+        rm ~/.config/i3status/config
+    fi
+    ln -s $basedir/i3/i3status ~/.config/i3status/config
+    if [ ! -d ~/.config/rofi/themes/gruvbox ]; then
+        echo "Install gruvbox theme for rofi..."
+        git clone https://github.com/bardisty/gruvbox-rofi ~/.config/rofi/themes/gruvbox
+        mkdir -p ~/.config/rofi
+        echo -e "rofi.theme: ~/.config/rofi/themes/gruvbox/gruvbox-dark.rasi\n" > ~/.config/rofi/config
+    fi
+    sudo cp $basedir/dotFiles/wakelock.service /etc/systemd/system
+    sudo systemctl enable wakelock.service
+fi
+echo -e "\n** i3 installation and configuration completed **\n"
 
 # bash configuration
 echo -e "\n** bash configuration started **\n"
@@ -345,6 +400,19 @@ echo "install done"
 popd
 END
 
+# install pCloud
+echo -e "\n** pcloud installation **\n"
+echo "downloading pcloud..."
+curl -fLo ~/applications/appimages/pcloud --create-dirs https://p-def1.pcloud.com/cBZQDzjb1Z9CfNIgZU0W57Z4ZASUmv7Z2ZZra5ZkZ8ArFVZRzZa5ZFJZBJZuFZlpZmXZaHZbpZAkZm5ZskZm0ZbZh0QTXZ0aWldaF2GSVl2ntml2GDF0cPtSwX/pcloud
+echo "download completed"
+if [ -f ~/bin/pcloud ]; then
+    echo "~/bin/pcloud exists...remove it."
+    rm ~/bin/pcloud
+fi
+ln -s ~/applications/appimages/pcloud ~/bin/pcloud
+cp $basedir/dotFiles/pcloud.desktop ~/.local/share/applications
+echo -e "\n** pcloud installation completed  **\n"
+
 # Misc
 echo -e "\n** do misc **\n"
 echo "ssh configuration"
@@ -364,35 +432,42 @@ fi
 # goto fonts directory and download...
 pushd ~/.local/share/fonts
 # Hack
-curl -fLo "Hack Regular Nerd Font Mono.ttf" \
+curl -fLo "Hack Regular Nerd Font Complete Mono.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Hack/Regular/complete/Hack%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
+#curl -fLo "Hack Regular Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Hack/Regular/complete/Hack%20Regular%20Nerd%20Font%20Complete.ttf
 #Inconsolata
 curl -fLo "Inconsolata Regular Nerd Font Mono.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Inconsolata/complete/Inconsolata%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
-curl -fLo "Inconsolata Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Inconsolata/complete/Inconsolata%20Regular%20Nerd%20Font%20Complete.ttf
+#curl -fLo "Inconsolata Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Inconsolata/complete/Inconsolata%20Regular%20Nerd%20Font%20Complete.ttf
 #Source Code Pro
 curl -fLo "Source Code Pro Regular Nerd Font Complete Mono.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete%20Mono.ttf
-curl -fLo "Source Code Pro Regular Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete.ttf
+#curl -fLo "Source Code Pro Regular Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Regular/complete/Sauce%20Code%20Pro%20Nerd%20Font%20Complete.ttf
 curl -fLo "Source Code Pro Semibold Nerd Font Complete Mono.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete%20Mono.ttf
-curl -fLo "Source Code Pro Semibold Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete.ttf
+#curl -fLo "Source Code Pro Semibold Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/SourceCodePro/Semibold/complete/Sauce%20Code%20Pro%20Semibold%20Nerd%20Font%20Complete.ttf
 #JetBrainsMono
 curl -fLo "JetBrains Regular Nerd Font Complete Mono.ttf" \
     https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete%20Mono.ttf
-curl -fLo "JetBrains Regular Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete.ttf
-curl -fLo "JetBrains Medium Nerd Font Complete Mono.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete%20Mono.ttf
-curl -fLo "JetBrains Medium Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete.ttf
-curl -fLo "JetBrains Bold Nerd Font Complete Mono.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete%20Mono.ttf
-curl -fLo "JetBrains Bold Nerd Font Complete.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete.ttf
+#curl -fLo "JetBrains Regular Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/complete/JetBrains%20Mono%20Regular%20Nerd%20Font%20Complete.ttf
+#curl -fLo "JetBrains Medium Nerd Font Complete Mono.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete%20Mono.ttf
+#curl -fLo "JetBrains Medium Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Medium/complete/JetBrains%20Mono%20Medium%20Nerd%20Font%20Complete.ttf
+#curl -fLo "JetBrains Bold Nerd Font Complete Mono.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete%20Mono.ttf
+#curl -fLo "JetBrains Bold Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete.ttf
+#Ubuntu
+curl -fLo "Ubuntu Regular Nerd Font Complete Mono.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Ubuntu/Regular/complete/Ubuntu%20Nerd%20Font%20Complete%20Mono.ttf
+#curl -fLo "Ubuntu Regular Nerd Font Complete.ttf" \
+    #https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Ubuntu/Regular/complete/Ubuntu%20Nerd%20Font%20Complete.ttf
 popd
 # Reset font cache on Linux
 if which fc-cache >/dev/null 2>&1 ; then

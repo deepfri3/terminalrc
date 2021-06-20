@@ -41,9 +41,9 @@ Plug 'tomtom/tlib_vim'
 Plug 'honza/vim-snippets'
 Plug 'benmills/vimux'
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
-"if !g:running_windows
-    "Plug 'ThePrimeagen/vim-apm'
-"endif
+if !g:running_windows
+    Plug 'ThePrimeagen/vim-apm'
+endif
 
 " on-demand loading
 Plug 'majutsushi/tagbar', { 'on':  'TagbarToggle' }
@@ -246,7 +246,7 @@ map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 "
 " ++ VIM APM ++
 "if !g:running_windows
-    "set kscb " vim-apm
+   "set kscb " vim-apm
 "endif
 "
 " ++ VIM WITH ME ++
@@ -520,7 +520,7 @@ imap <leader>fp <c-x><c-f>
 set listchars=tab:>-,trail:!,eol:$
 nmap <silent> <leader>s :set nolist!<CR>
 " remove end of line spaces;
-"nmap <silent> <leader>dt :%s/\s\+$//<cr>
+nmap <silent> <leader>dt :%s/\s\+$//e<cr>
 " add semicolon at end of line
 nmap <silent> <leader>; <s-a>;<esc>|
 " add colon at end of line

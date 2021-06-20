@@ -226,8 +226,8 @@ alias gdb="gdb -quiet -fullname"
 alias gdb-arm="arm-none-linux-gnueabi-gdb -quiet -fullname"
 
 # autojump (https://github.com/wting/autojump)
-export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ;} history -a"
-[[ -s ~/.autojump/etc/profile.d/autojump.sh ]] && source ~/.autojump/etc/profile.d/autojump.sh
+#export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ;} history -a"
+#[[ -s ~/.autojump/etc/profile.d/autojump.sh ]] && source ~/.autojump/etc/profile.d/autojump.sh
 
 #base16 colorscheme support
 #https://github.com/chriskempson/base16-shell
@@ -236,14 +236,14 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 
 # fzf - fuzzy finder (https://github.com/junegunn/fzf)
 # ag - the silver searcher (https://github.com/ggreer/the_silver_searcher/wiki)
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 # Setting ag as the default source for fzf
 export FZF_DEFAULT_COMMAND='ag -l -g ""'
 # Apply the command to CTRL-T as well
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+#export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # other default fzf options
 #export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info --reverse"
+#export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info --reverse"
 
 # fd - cd to selected directory
 fd() {

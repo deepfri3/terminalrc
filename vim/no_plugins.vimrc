@@ -50,7 +50,7 @@ set undofile " enable vim undo history
 set undolevels=1000 " use many muchos levels of undo
 
 silent execute '!mkdir -p ~/.vim/undodir'
-"set undodir=~/.vim/undodir " Keep undo history across sessions,
+set undodir=~/.vim/undodir " Keep undo history across sessions,
                                             " by storing in file.
 set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 
@@ -72,7 +72,9 @@ set wildignore+=*.d,*.o,*.a,*.dsw,*.dsp,*.hgc,*.hrc,*.png,*.jpg,*.gif
 set wildignore+=log/**
 set wildignore+=tmp/**
 
-set statusline=%F%m%r%h%w[%L][%{&ff}]%y[%p%%][%04l,%04v]
+
+set laststatus=2
+set statusline=%f%m%r%h%w%=[%L][%{&ff}]%y[%p%%][%04l,%04v]
 "              | | | | |  |   |      |  |     |    |
 "              | | | | |  |   |      |  |     |    + current column
 "              | | | | |  |   |      |  |     +-- current line
@@ -242,7 +244,7 @@ nmap <silent> <leader>sv :so ~/.vimrc<CR>
 set listchars=tab:>-,trail:!,eol:$
 nmap <silent> <leader>s :set nolist!<CR>
 " remove end of line spaces;
-"nmap <silent> <leader>dt :%s/\s\+$//<cr>
+nmap <silent> <leader>dt :%s/\s\+$//e<cr>
 " add semicolon at end of line
 nmap <silent> <leader>; <s-a>;<esc>|
 " add colon at end of line
@@ -277,7 +279,6 @@ nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 " - check |netrw-browse-maps| for more mappings
 
 " SNIPPETS:
-
 " Read an empty HTML template and move cursor to title
 "nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>3jwf>a
 
@@ -286,10 +287,8 @@ nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 "   (with much fewer keystrokes)
 
 " BUILD INTEGRATION:
-
 " Steal Mr. Bradley's formatter & add it to our spec_helper
 " http://philipbradley.net/rspec-into-vim-with-quickfix
-
 " Configure the `make` command to run RSpec
 "set makeprg=bundle\ exec\ rspec\ -f\ QuickfixFormatter
 
@@ -298,7 +297,6 @@ nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 " - :cl to list errors
 " - :cc# to jump to error by number
 " - :cn and :cp to navigate forward and back
-
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Helper functions

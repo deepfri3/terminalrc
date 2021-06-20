@@ -6,10 +6,11 @@ A collection of `.vimrc` and other various configurations for an awesome termina
 
 ### Configures and installs:
 
+* i3
 * bash
 * zsh
 * tmux
-* vim
+* (n)vim
 * fonts
 * base-16 _for that sexy look!_
 
