@@ -22,7 +22,7 @@ if [ $DISTRO == "Ubuntu" ]; then
         automake cmake g++ pkg-config unzip nodeje npm curl libevent-dev \
         libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev \
         libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python3-pip \
-        python3-dev python2-dev
+        python3-dev python2-dev neofetch htop bpytop
 elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
     #Arch Linux
     sudo pacman -S base-devel cmake unzip ninja
@@ -447,6 +447,12 @@ if [ -f ~/.config/autostart/1password.desktop ]; then
     rm ~/.config/autostart/1password.desktop
 fi
 ln -s $basedir/configuration/1password.desktop ~/.config/autostart/1password.desktop
+echo "add .profile"
+if [ -f ~/.profile ]; then
+    echo "~/.profile exists...remove it."
+    rm ~/.profile
+fi
+ln -s $basedir/dotFiles/dotProfile ~/.profile
 echo -e "\n** misc done **\n"
 
 # configure fonts

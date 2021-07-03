@@ -240,7 +240,7 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 # Setting ag as the default source for fzf
 export FZF_DEFAULT_COMMAND='ag -l -g ""'
 # Apply the command to CTRL-T as well
-#export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # other default fzf options
 #export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
 #export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info --reverse"
@@ -339,3 +339,5 @@ function acp() {
 }
 
 bindkey -v
+
+eval "$(ssh-agent -s)"
