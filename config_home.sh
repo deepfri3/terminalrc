@@ -108,7 +108,7 @@ if [ $DISTRO == "Ubuntu" ]; then
         mkdir -p ~/.config/rofi
         echo -e "rofi.theme: ~/.config/rofi/themes/gruvbox/gruvbox-dark.rasi\n" > ~/.config/rofi/config
     fi
-    sudo cp $basedir/dotFiles/wakelock.service /etc/systemd/system
+    sudo cp $basedir/configuration/wakelock.service /etc/systemd/system
     sudo systemctl enable wakelock.service
 fi
 echo -e "\n** i3 installation and configuration completed **\n"
@@ -404,14 +404,32 @@ END
 echo -e "\n** pcloud installation **\n"
 echo "downloading pcloud..."
 curl -fLo ~/applications/appimages/pcloud --create-dirs https://p-def1.pcloud.com/cBZQDzjb1Z9CfNIgZU0W57Z4ZASUmv7Z2ZZra5ZkZ8ArFVZRzZa5ZFJZBJZuFZlpZmXZaHZbpZAkZm5ZskZm0ZbZh0QTXZ0aWldaF2GSVl2ntml2GDF0cPtSwX/pcloud
+chmod +x ~/applications/appimages/pcloud
 echo "download completed"
 if [ -f ~/bin/pcloud ]; then
     echo "~/bin/pcloud exists...remove it."
     rm ~/bin/pcloud
 fi
 ln -s ~/applications/appimages/pcloud ~/bin/pcloud
-cp $basedir/dotFiles/pcloud.desktop ~/.local/share/applications
+if [ -f ~/.local/share/applications/pcloud.desktop ]; then
+    rm ~/.local/share/applications/pcloud.desktop
+fi
+ln -s $basedir/configuration/pcloud-dmenu.desktop ~/.local/share/applications/pcloud.desktop
+if [ -f ~/.config/autostart/pcloud.desktop ]; then
+    rm ~/.config/autostart/pcloud.desktop
+fi
+ln -s $basedir/configuration/pcloud-autostart.desktop ~/.config/autostart/pcloud.desktop
 echo -e "\n** pcloud installation completed  **\n"
+
+# install UHK
+echo -e "\n** UHK installation **\n"
+if [ -f ~/bin/uhk ]; then
+    echo "~/bin/uhk exists...remove it."
+    rm ~/bin/uhk
+fi
+ln -s ~/applications/appimages/uhk ~/bin/uhk
+cp $basedir/configuration/uhk.desktop ~/.local/share/applications
+echo -e "\n** UHK installation completed  **\n"
 
 # Misc
 echo -e "\n** do misc **\n"
@@ -422,7 +440,14 @@ echo "ignore file"
 if [ -f ~/.agignore ]; then
     rm ~/.agignore
 fi
+echo "agignore"
 ln -s $basedir/dotFiles/dotagignore ~/.agignore
+echo "1password dmenu entry"
+if [ -f ~/.config/autostart/1password.desktop ]; then
+    rm ~/.config/autostart/1password.desktop
+fi
+ln -s $basedir/configuration/1password.desktop ~/.config/autostart/1password.desktop
+echo -e "\n** misc done **\n"
 
 # configure fonts
 echo -e "\n** configure fonts **\n"

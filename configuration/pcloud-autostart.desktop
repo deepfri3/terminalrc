@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=pcloud
+Comment=pcloud startup script
+Exec=/home/bakerg/bin/pcloud
+StartupNotify=false
+Terminal=false

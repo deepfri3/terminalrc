@@ -7,34 +7,52 @@
 # If the above line is not correctly displayed, fix your editor first!
 
 general {
-        colors = true
-        interval = 5
+    colors = true
+    interval = 5
 }
 
 order += "disk /"
 order += "wireless _first_"
 order += "battery all"
+order += "cpu_usage"
 order += "load"
+order += "memory"
+order += "volume master"
 order += "tztime local"
 
 wireless _first_ {
-        format_up = "W: (%quality at %essid) %ip"
-        format_down = "W: down"
+    format_up = "W: (%quality at %essid) %ip"
+    format_down = "W: down"
 }
 
 battery all {
-        format = "%status %percentage %remaining"
+    format = "%status %percentage %remaining"
 }
 
 tztime local {
-        format = "%Y-%m-%d %H:%M:%S"
+    format = "%Y-%m-%d %H:%M:%S"
 }
 
 load {
-        format = "%1min"
+    format = "L: %1min"
+}
+
+cpu_usage {
+    format = "C: %usage"
+}
+
+memory {
+    format = "R: %free"
 }
 
 disk "/" {
-        format = "%avail"
+    format = "%avail"
+}
+
+# pacmd list-sinks | grep name:
+volume master {
+    format = "♪: %volume"
+    format_muted = "♪: muted (%volume)"
+    device="default"
 }
 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=UHK
+Comment=UHK agent keyboard configuration utility
+Exec=/home/bakerg/bin/uhk
+Icon=/home/bakerg/applications/appimages/uhk.png
+Terminal=false
+Type=Application
+Categories=Development
