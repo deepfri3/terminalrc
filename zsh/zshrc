@@ -340,4 +340,7 @@ function acp() {
 
 bindkey -v
 
-eval "$(ssh-agent -s)"
+if [ $(pgrep ssh-agent >/dev/null) ]; then
+    eval "$(ssh-agent -s)"
+fi
+
