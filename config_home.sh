@@ -241,7 +241,7 @@ echo "configuring vim..."
 --enable-pythoninterp \
 --with-python-command=/usr/bin/python2.7 \
 --enable-python3interp \
---with-python3-command=/usr/bin/python3.8 \
+--with-python3-command=/usr/bin/python3.9 \
 --with-python-config-dir=$(python2.7-config --configdir) \
 --with-python3-config-dir=$(python3-config --configdir) \
 --enable-luainterp=yes \
@@ -403,7 +403,7 @@ END
 # install pCloud
 echo -e "\n** pcloud installation **\n"
 echo "downloading pcloud..."
-curl -fLo ~/applications/appimages/pcloud --create-dirs https://p-def1.pcloud.com/cBZQDzjb1Z9CfNIgZU0W57Z4ZASUmv7Z2ZZra5ZkZ8ArFVZRzZa5ZFJZBJZuFZlpZmXZaHZbpZAkZm5ZskZm0ZbZh0QTXZ0aWldaF2GSVl2ntml2GDF0cPtSwX/pcloud
+#curl -fLo ~/applications/appimages/pcloud --create-dirs https://p-def1.pcloud.com/cBZQDzjb1Z9CfNIgZU0W57Z4ZASUmv7Z2ZZra5ZkZ8ArFVZRzZa5ZFJZBJZuFZlpZmXZaHZbpZAkZm5ZskZm0ZbZh0QTXZ0aWldaF2GSVl2ntml2GDF0cPtSwX/pcloud
 chmod +x ~/applications/appimages/pcloud
 echo "download completed"
 if [ -f ~/bin/pcloud ]; then
