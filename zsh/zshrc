@@ -238,10 +238,12 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 # ag - the silver searcher (https://github.com/ggreer/the_silver_searcher/wiki)
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 # Setting ag as the default source for fzf
-export FZF_DEFAULT_COMMAND='ag -l -g ""'
+#export FZF_DEFAULT_COMMAND='ag -l -g ""'
+export FZF_DEFAULT_COMMAND="rg --files --hidden --follow --glob '!.git'"
 # Apply the command to CTRL-T as well
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # other default fzf options
+export FZF_DEFAULT_OPTS='--layout=reverse --height 40% --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --border --inline-info'
 #export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
 #export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info --reverse"
 
@@ -283,6 +285,7 @@ cdf() {
 
 #alias tmux="TERM=screen-256color-bce tmux"
 #export TERM="xterm-256color"
+#export TERM="screen-256color"
 
 # Set tmux convenience aliases
 alias edittmuxconf="$EDITOR ~/.tmux.conf"

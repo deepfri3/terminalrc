@@ -1,8 +1,8 @@
 
 # zshrc for local machine
 
-# set theme for local machine
-ZSH_THEME="robbyrussell"
+# load keyboard settings
+source ~/.profile
 
 # autojump (https://github.com/wting/autojump)
 # configured for Debian

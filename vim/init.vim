@@ -28,16 +28,16 @@ Plug 'tpope/vim-dispatch'
 Plug 'mbbill/undotree'
 Plug 'preservim/nerdcommenter'
 Plug 'jiangmiao/auto-pairs'
-Plug 'jremmen/vim-ripgrep'
+Plug 'BurntSushi/ripgrep'
 Plug 'vim-utils/vim-man'
 Plug 'sheerun/vim-polyglot'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'stsewd/fzf-checkout.vim'
-Plug 'rking/ag.vim'
-Plug 'garbas/vim-snipmate'
-Plug 'MarcWeber/vim-addon-mw-utils'
-Plug 'tomtom/tlib_vim'
+"Plug 'garbas/vim-snipmate'
+"Plug 'MarcWeber/vim-addon-mw-utils'
+"Plug 'tomtom/tlib_vim'
+Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 Plug 'benmills/vimux'
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
@@ -79,7 +79,8 @@ let g:gruvbox_invert_selection='0'
 " favorite colorscheme :)
 colorscheme gruvbox
 " font is set by the shell program
-
+hi Normal guibg=NONE ctermbg=NONE
+hi Search cterm=NONE ctermbg=LightMagenta ctermfg=black
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
 
@@ -223,6 +224,8 @@ nnoremap <leader>rp :resize 50<cr>
 nnoremap <leader>seq <C-W>=
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
+inoremap <C-j> <esc>:m .+1<CR>==
+inoremap <C-k> <esc>:m .-2<CR>==
 
 
 " ## CTAGS mappings ##
@@ -233,7 +236,8 @@ if g:running_windows
     map <leader>tag :!ctags -R .<CR><CR>
 else
     " Change to the proj_root directory and execute ctags from proj_root
-    nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R --fields=+iaS --extras=+q .<cr>
+    command! MakeTags !ctags -R .
+    nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R .<cr>
 endif
 " Open the definition in a vertical split
 map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
@@ -243,11 +247,6 @@ map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
 
 " ## Plugin mappings ##
-"
-" ++ VIM APM ++
-"if !g:running_windows
-   "set kscb " vim-apm
-"endif
 "
 " ++ VIM WITH ME ++
 nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
@@ -260,35 +259,6 @@ let g:netrw_banner = 0
 let g:netrw_winsize = 25
 " Toggle netrw in sidebar
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
-"
-" ++ FZF - Fuzzy finder ++
-" This is the default extra key bindings
-let g:fzf_action = {
-            \ 'ctrl-t': 'tab split',
-            \ 'ctrl-x': 'split',
-            \ 'ctrl-v': 'vsplit' }
-" Default fzf layout
-"let g:fzf_layout = { 'down': '50%'}
-let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
-let $FZF_DEFAULT_OPTS='--reverse'
-" Invoke fuzzy finder to find files
-nnoremap <silent> <leader>t :Files <cr>
-"nnoremap <silent> <leader>t :FZF <cr>
-" List buffers
-"nnoremap <silent> <leader>bb :Buffers<cr>
-"nnoremap <silent> <leader>bb :FZFbuf<cr>
-" Simple MRU search - v:oldfiles
-nnoremap <silent> <leader><Enter> :History<cr>
-"nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
-"
-" ++ AG - the silver searcher ++
-let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
-" specify the project root direoctory path for searching
-let g:ag_working_path_mode="r"
-" If 1, highlight the search terms after searching. Default: 0.
-let g:ag_highlight=1
-"Format to recognize the matches. See 'errorformat' for more info.
-let g:ag_format="%f:%l:%c:%m"
 "
 " ++ VIM TODO ++
 nmap <Leader>tu <Plug>BujoChecknormal
@@ -322,6 +292,8 @@ nmap <leader>g] <Plug>(coc-diagnostic-next)
 nmap <silent> <leader>gp <Plug>(coc-diagnostic-prev)
 nmap <silent> <leader>gn <Plug>(coc-diagnostic-next)
 nnoremap <leader>cr :CocRestart
+" search for word on cursor
+nnoremap <leader>prr :CocSearch <C-R>=expand("<cword>")<CR><CR>
 "
 " ++ UNDOTREE ++
 nnoremap <leader>u :UndotreeShow<CR>
@@ -333,11 +305,39 @@ nmap <leader>gs :G<CR>
 nnoremap <leader>gc :GCheckout<CR>
 nnoremap <C-p> :GFiles<CR>
 "
-" ++ RIP GREP ++
+" ++ FZF - Fuzzy finder ++
+" This is the default extra key bindings
+"let g:fzf_action = {
+            "\ 'ctrl-t': 'tab split',
+            "\ 'ctrl-x': 'split',
+            "\ 'ctrl-v': 'vsplit' }
+" Default fzf layout
+"let g:fzf_layout = { 'down': '50%'}
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
+" https://github.com/junegunn/fzf.vim/issues/456
+" Depending where it's installed
+"set rtp+=~/.fzf
+"set rtp+=/usr/local/opt/fzf
+" Invoke fuzzy finder to find files
+nnoremap <silent> <leader>t :Files <cr>
+" List buffers
+nnoremap <silent> <leader>b :Buffers<cr>
+" Simple MRU search - v:oldfiles
+nnoremap <silent> <leader><Enter> :History<cr>
+" Search current buffer
+nnoremap <silent> <leader>bl :BLines<cr>
+" Search all open buffers
+nnoremap <silent> <leader>ba :Lines<cr>
+"
+" ++ RIPGREP ++
+" Use RG for grepping
+set grepprg=rg\ --vimgrep\ --smart-case\ --hidden\ --follow
+let g:rg_command = 'rg --vimgrep -S'
 if executable('rg')
     let g:rg_derive_root='true'
 endif
 let g:vrfr_rg = 'true'
+nnoremap \ :Rg<CR>
 nnoremap <leader>pw :Rg <C-R>=expand("<cword>")<CR><CR>
 nnoremap <leader>ps :Rg<SPACE>
 "
@@ -391,14 +391,23 @@ nmap <leader>' yss'
 vmap <leader>' S'
 "
 " ++ SNIPMATE ++
-let g:snipMate = { 'snippet_version' : 1 }
-imap <C-L> <Plug>snipMateNextOrTrigger
-smap <C-L> <Plug>snipMateNextOrTrigger
-imap <C-K> <Plug>snipMateTrigger
-imap <C-H> <Plug>snipMateBack
-smap <C-H> <Plug>snipMateBack
-imap <C-J> <Plug>snipMateShow
-vmap <C-J> <Plug>snipMateVisual
+"let g:snipMate = { 'snippet_version' : 1 }
+"imap <C-L> <Plug>snipMateNextOrTrigger
+"smap <C-L> <Plug>snipMateNextOrTrigger
+"imap <C-K> <Plug>snipMateTrigger
+"imap <C-H> <Plug>snipMateBack
+"smap <C-H> <Plug>snipMateBack
+"imap <C-J> <Plug>snipMateShow
+"vmap <C-J> <Plug>snipMateVisual
+"" Trigger configuration. You need to change this to something other than <tab> if you use one of the following:
+" - https://github.com/Valloric/YouCompleteMe
+" - https://github.com/nvim-lua/completion-nvim
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+" If you want :UltiSnipsEdit to split your window.
+let g:UltiSnipsEditSplit="vertical"
 "
 " ++ TABULAR ++
 nmap <Leader>a& :Tabularize /&<CR>
@@ -442,7 +451,6 @@ nmap <leader>jj :BuffergatorMruCycleNext<cr>
 " View the entire list of buffers open
 nmap <leader>bb :BuffergatorOpen<cr>
 "
-"
 " ++ DISPATCH ++
 autocmd FileType java let b:dispatch = 'javac %'
 autocmd FileType python let b:dispatch = 'python %'
@@ -460,8 +468,8 @@ nmap <silent> ,/ :nohlsearch<CR>
 vnoremap <silent> * :call VisualSelection('f')<CR>
 vnoremap <silent> # :call VisualSelection('b')<CR>
 " Search for current word using Ag
-nmap <F5> :exec("Ag ".expand("<cword>"))<CR>
-vnoremap <F5> y :exec("Ag ".expand("<C-R>""))<CR>
+nmap <F5> :exec("Rg ".expand("<cword>"))<CR>
+vnoremap <F5> y :exec("Rg ".expand("<C-R>""))<CR>
 
 
 " ## Quickly edit/reload the vimrc file ##
@@ -598,72 +606,6 @@ function! <SID>BufcloseCloseIt()
   endif
 endfunction
 
-function! GoodMatch(items, str, limit, mmode, ispath, crfile, regex)
-  "Create a cache file if not yet exists
-  let cachefile = ctrlp#utils#cachedir().'/matcher.cache'
-
-  if !( filereadable(cachefile) && a:items == readfile(cachefile) )
-    call writefile(a:items, cachefile)
-  endif
-
-  if !filereadable(cachefile)
-    return []
-  endif
-
-  " a:mmode is currently ignored. In the future, we should probably do
-  " something about that. the matcher behaves like "full-line".
-  let cmd = g:path_to_matcher.' --limit '.a:limit.' --manifest '.cachefile.' '
-
-  if !( exists('g:ctrlp_dotfiles') && g:ctrlp_dotfiles )
-    let cmd = cmd.'--no-dotfiles '
-  endif
-
-  let cmd = cmd.a:str
-
-  return split(system(cmd), "\n")
-endfunction
-
-" Fuzzy Finder helper functions
-function! s:buflist()
-  redir => ls
-  silent ls
-  redir END
-  return split(ls, '\n')
-endfunction
-
-function! s:bufopen(e)
-  execute 'buffer' matchstr(a:e, '^[ 0-9]*')
-endfunction
-
-function! s:all_files()
-  return extend(
-  \ filter(copy(v:oldfiles),
-  \        "v:val !~ 'fugitive:\\|NERD_tree\\|^/tmp/\\|.git/'"),
-  \ map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)'))
-endfunction
-
-" List buffers
-command! FZFbuf call fzf#run({
-\   'source':    reverse(<sid>buflist()),
-\   'sink':      function('<sid>bufopen'),
-\   'options':   '+m --ansi --color hl:197,hl+:10',
-\   'up':        '50%'
-\ })<CR>
-
-"Simple MRU search - v:oldfiles
-command! FZFMruSimple call fzf#run({
-\  'source':  v:oldfiles,
-\  'sink':    'e',
-\  'options': '-m -x --ansi --color hl:197,hl+:10',
-\  'up':      '50%'})
-
-" Filtered v:oldfiles and open buffers
-command! FZFMruAll call fzf#run({
-\ 'source':  reverse(s:all_files()),
-\ 'sink':    'edit',
-\ 'options': '-m -x --ansi --color hl:197,hl+:10',
-\ 'up':      '50%' })
-
 " Tags in project
 " This version better handles same tags across different files.
 function! s:tags_sink(line)
@@ -681,7 +623,7 @@ function! s:tags()
     echohl WarningMsg
     echom 'Preparing tags'
     echohl None
-    call system('ctags -R --fields=+iaS --extras=+q .')
+    call system('ctags -R .')
   endif
 
   call fzf#run({
@@ -695,50 +637,130 @@ endfunction
 command! Tags call s:tags()
 nmap <F6> :Tags<CR>
 
+
+"//////////////////////////////////////
+"// UNUSED CODE
+"//////////////////////////////////////
+
+" ++ AG - the silver searcher ++
+"let g:ag_prg="ag --vimgrep --smart-case -p ~/.agignore"
+" specify the project root direoctory path for searching
+"let g:ag_working_path_mode="r"
+" If 1, highlight the search terms after searching. Default: 0.
+"let g:ag_highlight=1
+"Format to recognize the matches. See 'errorformat' for more info.
+"let g:ag_format="%f:%l:%c:%m"
+
+"function! GoodMatch(items, str, limit, mmode, ispath, crfile, regex)
+  ""Create a cache file if not yet exists
+  "let cachefile = ctrlp#utils#cachedir().'/matcher.cache'
+
+  "if !( filereadable(cachefile) && a:items == readfile(cachefile) )
+    "call writefile(a:items, cachefile)
+  "endif
+
+  "if !filereadable(cachefile)
+    "return []
+  "endif
+
+  "" a:mmode is currently ignored. In the future, we should probably do
+  "" something about that. the matcher behaves like "full-line".
+  "let cmd = g:path_to_matcher.' --limit '.a:limit.' --manifest '.cachefile.' '
+
+  "if !( exists('g:ctrlp_dotfiles') && g:ctrlp_dotfiles )
+    "let cmd = cmd.'--no-dotfiles '
+  "endif
+
+  "let cmd = cmd.a:str
+
+  "return split(system(cmd), "\n")
+"endfunction
+
+"nnoremap <silent> <leader>t :FZF <cr>
+
+" Fuzzy Finder helper functions
+"function! s:buflist()
+  "redir => ls
+  "silent ls
+  "redir END
+  "return split(ls, '\n')
+"endfunction
+
+"function! s:bufopen(e)
+  "execute 'buffer' matchstr(a:e, '^[ 0-9]*')
+"endfunction
+
+"function! s:all_files()
+  "return extend(
+  "\ filter(copy(v:oldfiles),
+  "\        "v:val !~ 'fugitive:\\|NERD_tree\\|^/tmp/\\|.git/'"),
+  "\ map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)'))
+"endfunction
+
+" List buffers
+"command! FZFbuf call fzf#run({
+"\   'source':    reverse(<sid>buflist()),
+"\   'sink':      function('<sid>bufopen'),
+"\   'options':   '+m --ansi --color hl:197,hl+:10',
+"\   'up':        '50%'
+"\ })<CR>
+
+"Simple MRU search - v:oldfiles
+"command! FZFMruSimple call fzf#run({
+"\  'source':  v:oldfiles,
+"\  'sink':    'e',
+"\  'options': '-m -x --ansi --color hl:197,hl+:10',
+"\  'up':      '50%'})
+"nnoremap <silent> <leader>b :FZFbuf<cr>
+
+" Filtered v:oldfiles and open buffers
+"command! FZFMruAll call fzf#run({
+"\ 'source':  reverse(s:all_files()),
+"\ 'sink':    'edit',
+"\ 'options': '-m -x --ansi --color hl:197,hl+:10',
+"\ 'up':      '50%' })
+"nnoremap <silent> <Leader><Enter> :FZFMruSimple<cr>
+
 " Narrow ag results within vim
 "   CTRL-X, CTRL-V, CTRL-T to open in a new split, vertical split, tab respectively.
 "   CTRL-A to select all matches and list them in quickfix window
 "   CTRL-D to deselect all
 " Ag without argument will list all the lines
-function! s:ag_to_qf(line)
-  let parts = split(a:line, ':')
-  return {'filename': parts[0], 'lnum': parts[1], 'col': parts[2],
-        \ 'text': join(parts[3:], ':')}
-endfunction
+"function! s:ag_to_qf(line)
+  "let parts = split(a:line, ':')
+  "return {'filename': parts[0], 'lnum': parts[1], 'col': parts[2],
+        "\ 'text': join(parts[3:], ':')}
+"endfunction
 
-function! s:ag_handler(lines)
-  if len(a:lines) < 2 | return | endif
+"function! s:ag_handler(lines)
+  "if len(a:lines) < 2 | return | endif
 
-  let cmd = get({'ctrl-x': 'split',
-               \ 'ctrl-v': 'vertical split',
-               \ 'ctrl-t': 'tabe'}, a:lines[0], 'e')
-  let list = map(a:lines[1:], 's:ag_to_qf(v:val)')
+  "let cmd = get({'ctrl-x': 'split',
+               "\ 'ctrl-v': 'vertical split',
+               "\ 'ctrl-t': 'tabe'}, a:lines[0], 'e')
+  "let list = map(a:lines[1:], 's:ag_to_qf(v:val)')
 
-  let first = list[0]
-  execute cmd escape(first.filename, ' %#\')
-  execute first.lnum
-  execute 'normal!' first.col.'|zz'
+  "let first = list[0]
+  "execute cmd escape(first.filename, ' %#\')
+  "execute first.lnum
+  "execute 'normal!' first.col.'|zz'
 
-  if len(list) > 1
-    call setqflist(list)
-    copen
-    wincmd p
-  endif
-endfunction
+  "if len(list) > 1
+    "call setqflist(list)
+    "copen
+    "wincmd p
+  "endif
+"endfunction
 
-command! -nargs=* Ag call fzf#run({
-\ 'source':  printf('ag --vimgrep -p ~/.agignore --smart-case "%s"',
-\                   escape(empty(<q-args>) ? '^(?=.)' : <q-args>, '"\')),
-\ 'sink*':    function('<sid>ag_handler'),
-\ 'options': '--ansi +x --expect=ctrl-t,ctrl-v,ctrl-x --delimiter : --nth 4.. '.
-\            '--multi --bind ctrl-a:select-all,ctrl-d:deselect-all '.
-\            '--color hl:197,hl+:10',
-\ 'up':    '50%'
-\ })
-
-"//////////////////////////////////////
-"// UNUSED CODE
-"//////////////////////////////////////
+"command! -nargs=* Ag call fzf#run({
+"\ 'source':  printf('ag --vimgrep -p ~/.agignore --smart-case "%s"',
+"\                   escape(empty(<q-args>) ? '^(?=.)' : <q-args>, '"\')),
+"\ 'sink*':    function('<sid>ag_handler'),
+"\ 'options': '--ansi +x --expect=ctrl-t,ctrl-v,ctrl-x --delimiter : --nth 4.. '.
+"\            '--multi --bind ctrl-a:select-all,ctrl-d:deselect-all '.
+"\            '--color hl:197,hl+:10',
+"\ 'up':    '50%'
+"\ })
 
 " ## Tab navigation ##
 "

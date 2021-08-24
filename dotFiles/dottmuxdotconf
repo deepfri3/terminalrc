@@ -122,8 +122,9 @@ bind-key C-j choose-tree
 
 # turn on 256 color support in tmux
 #set -ga terminal-overrides ",*:Tc"
-set -ga terminal-overrides "$TERM:Tc"
-set -g default-terminal "xterm-256color"
+#set -ga terminal-overrides "$TERM:Tc"
+#set-option -g default-terminal "xterm-256color"
+set-option -g default-terminal "screen-256color"
 #https://github.com/tmux/tmux/pull/112
 
 # fiddle with colors of status bar

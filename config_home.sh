@@ -16,13 +16,18 @@ echo "disro=$DISTRO"
 echo -e "\n** Install dependencies **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
-    sudo apt-get update
-    sudo apt-get -y upgrade
-    sudo apt-get install -y ninja-build gettext libtool libtool-bin autoconf \
-        automake cmake g++ pkg-config unzip nodeje npm curl libevent-dev \
-        libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev \
-        libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python3-pip \
-        python3-dev python2-dev neofetch htop bpytop
+    sudo apt update
+    sudo apt -y upgrade
+    sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags
+    #https://github.com/nodesource/distributions/blob/master/README.md#deb
+    curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    sudo snap install bpytop
+    pushd ~/Downloads
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+    sudo python2.7 get-pip.py
+    pip2 --version
+    popd
 elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
     #Arch Linux
     sudo pacman -S base-devel cmake unzip ninja
@@ -65,14 +70,14 @@ fi
 # i3 installation and configuration
 echo -e "\n** i3 installation configuration started **\n"
 if [ $DISTRO == "Ubuntu" ]; then
-    if [ -f ~/Downloads/keyring.deb ]; then
-        pushd ~/Downloads
-        /usr/lib/apt/apt-helper download-file https://debian.sur5r.net/i3/pool/main/s/sur5r-keyring/sur5r-keyring_2021.02.02_all.deb keyring.deb SHA256:cccfb1dd7d6b1b6a137bb96ea5b5eef18a0a4a6df1d6c0c37832025d2edaa710
-        dpkg -i ./keyring.deb
-        echo "deb http://debian.sur5r.net/i3/ $(grep '^DISTRIB_CODENAME=' /etc/lsb-release | cut -f2 -d=) universe" >> /etc/apt/sources.list.d/sur5r-i3.list
-        sudo apt-get update
+    if [ ! -f ~/Downloads/keyring.deb ]; then
+        #pushd ~/Downloads
+        #https://i3wm.org/docs/repositories.html
+        #/usr/lib/apt/apt-helper download-file https://debian.sur5r.net/i3/pool/main/s/sur5r-keyring/sur5r-keyring_2021.02.02_all.deb keyring.deb SHA256:cccfb1dd7d6b1b6a137bb96ea5b5eef18a0a4a6df1d6c0c37832025d2edaa710
+        #sudo dpkg -i ./keyring.deb
+        #echo "deb [arch=amd64] http://debian.sur5r.net/i3/ $(grep '^DISTRIB_CODENAME=' /etc/lsb-release | cut -f2 -d=) universe" >> /etc/apt/sources.list.d/sur5r-i3.list
         sudo apt install -y i3 i3lock i3lock-fancy rofi
-        popd
+        #popd
     fi
     if [ ! -d ~/.config/i3 ]; then
         echo "~/.config/i3 doesn't exist...create it."
@@ -184,8 +189,8 @@ pushd ~/repositories/tmux
 echo "updating tmux..."
 git pull
 echo "update complete"
-echo "tmux configure..."
 sh autogen.sh
+echo "tmux configure..."
 ./configure --prefix=/home/bakerg/applications > log_configure.txt
 [ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "tmux clean..."
@@ -224,8 +229,6 @@ if [ ! -d ~/repositories/vim ]; then
     curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
         https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     echo -e "install modern vim dependencies..."
-    # python 3 support
-    pip install python-config
 fi
 pushd ~/repositories/vim
 echo "updating vim..."
@@ -240,9 +243,9 @@ echo "configuring vim..."
 --with-tlib=ncurses \
 --enable-pythoninterp \
 --with-python-command=/usr/bin/python2.7 \
---enable-python3interp \
---with-python3-command=/usr/bin/python3.9 \
 --with-python-config-dir=$(python2.7-config --configdir) \
+--enable-python3interp \
+--with-python3-command=/usr/bin/python3.8 \
 --with-python3-config-dir=$(python3-config --configdir) \
 --enable-luainterp=yes \
 --enable-rubyinterp=yes \
@@ -268,11 +271,11 @@ if [ -f ~/bin/vim ]; then
     rm ~/bin/vim
 fi
 ln -s ~/applications/bin/vim ~/bin/vim
-if [ -f ~/bin/gvim ]; then
-    echo "~/bin/gvim exists...remove it."
-    rm ~/bin/gvim
-fi
-ln -s ~/applications/bin/gvim ~/bin/gvim
+#if [ -f ~/bin/gvim ]; then
+#    echo "~/bin/gvim exists...remove it."
+#    rm ~/bin/gvim
+#fi
+#ln -s ~/applications/bin/gvim ~/bin/gvim
 if [ -f ~/.vimrc ]; then
     echo "~/.vimrc exists...remove it."
     rm ~/.vimrc
@@ -295,7 +298,7 @@ git pull
 echo "update complete"
 echo "make neovim..."
 echo "neovim clean..."
-make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release clean > /dev/null
+make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release distclean > /dev/null
 [ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "neovim build..."
 make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release all > /dev/null
@@ -419,6 +422,7 @@ if [ -f ~/.config/autostart/pcloud.desktop ]; then
     rm ~/.config/autostart/pcloud.desktop
 fi
 ln -s $basedir/configuration/pcloud-autostart.desktop ~/.config/autostart/pcloud.desktop
+cp $basedir/configuration/pcloud.png ~/applications/appimages
 echo -e "\n** pcloud installation completed  **\n"
 
 # install UHK
@@ -429,6 +433,7 @@ if [ -f ~/bin/uhk ]; then
 fi
 ln -s ~/applications/appimages/uhk ~/bin/uhk
 cp $basedir/configuration/uhk.desktop ~/.local/share/applications
+cp $basedir/configuration/uhk.jpeg ~/applications/appimages
 echo -e "\n** UHK installation completed  **\n"
 
 # Misc
@@ -505,8 +510,6 @@ if which fc-cache >/dev/null 2>&1 ; then
     echo "Resetting font cache, this may take a moment..."
     fc-cache -f -v ~/.local/share/fonts
 fi
-pause
-exit
 
 :<<'END'
 if [ ! -d ~/Downloads/fonts ]; then
@@ -528,3 +531,6 @@ fi
 echo -e "\nswitch to zsh:"
 echo -e "\n\tchsh -s \$(which zsh)\n"
 END
+
+pause
+exit

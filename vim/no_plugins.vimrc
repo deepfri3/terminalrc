@@ -19,6 +19,7 @@ set number " show line numbers
 set relativenumber " show line numbers
 set hidden " preserver buffers
 set nowrap " dont wrap lines
+set noerrorbells
 set linebreak "wrap lines at convenient location
 set showmatch " When a bracket is inserted, briefly jump to the matching
               " one. The jump is only done if the match can be seen on the
@@ -29,12 +30,16 @@ set tabstop=4 softtabstop=4 " tab is 4 spaces
 set shiftwidth=4 " number of spaces to use for autoindenting
 set expandtab " use spaces instead of tabs
 set smartindent " smart indent
-set backspace=indent,eol,start
+"set backspace=indent,eel,start
+set backspace=2 " Backspace deletes like most programs in insert mode
               " allow backspacing over everything in insert mode
 set smartcase " ignore case if search pattern is all lower-case
 set incsearch " show search matches as you type
 set hlsearch  " highlight search terms
 set scrolloff=8
+set spelllang=en     " spelling in english
+" correct spelling on previous word
+"set spell spelllang=en_gb
 
 " Open new split panes to right and bottom, which feels more
 " natural than Vim’s default:
@@ -159,6 +164,22 @@ nnoremap <leader>rp :resize 50<cr>
 nnoremap <leader>seq <C-W>=
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
+inoremap <C-j> <esc>:m .+1<CR>==
+inoremap <C-k> <esc>:m .-2<CR>==
+
+noremap Y y$
+
+nnoremap n nzzzv
+nnoremap N Nzzzv
+nnoremap J mzJ`z
+
+inoremap , ,<c-g>u
+inoremap . .<c-g>u
+inoremap ! !<c-g>u
+inoremap ? ?<c-g>u
+
+nnoremap <expr> k (v:count > 5 ? "m'" . v:count : "") . 'k'
+nnoremap <expr> j (v:count > 5 ? "m'" . v:count : "") . 'j'
 
 
 " ## CTAGS mappings ##
