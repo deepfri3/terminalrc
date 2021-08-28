@@ -11,10 +11,10 @@ A collection of `.vimrc` and other various configurations for an awesome termina
 * zsh
 * tmux
 * (n)vim
-* fonts
-* base-16 _for that sexy look!_
+* nerd fonts
+* base-16 and gruvbox _for that sexy look!_
 
 Plus the helpers!
 
-* ag, autojump, fzf
+* ripgrep, oh my zsh!, ag, autojump, fzf
 
