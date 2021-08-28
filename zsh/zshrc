@@ -285,7 +285,7 @@ cdf() {
 
 #alias tmux="TERM=screen-256color-bce tmux"
 #export TERM="xterm-256color"
-#export TERM="screen-256color"
+export TERM="screen-256color"
 
 # Set tmux convenience aliases
 alias edittmuxconf="$EDITOR ~/.tmux.conf"

@@ -71,13 +71,16 @@ fi
 echo -e "\n** i3 installation configuration started **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     if [ ! -f ~/Downloads/keyring.deb ]; then
-        #pushd ~/Downloads
-        #https://i3wm.org/docs/repositories.html
-        #/usr/lib/apt/apt-helper download-file https://debian.sur5r.net/i3/pool/main/s/sur5r-keyring/sur5r-keyring_2021.02.02_all.deb keyring.deb SHA256:cccfb1dd7d6b1b6a137bb96ea5b5eef18a0a4a6df1d6c0c37832025d2edaa710
-        #sudo dpkg -i ./keyring.deb
-        #echo "deb [arch=amd64] http://debian.sur5r.net/i3/ $(grep '^DISTRIB_CODENAME=' /etc/lsb-release | cut -f2 -d=) universe" >> /etc/apt/sources.list.d/sur5r-i3.list
+        echo "Do the following manually:"
+        echo "pushd ~/Downloads"
+        echo "https://i3wm.org/docs/repositories.html"
+        echo "/usr/lib/apt/apt-helper download-file https://debian.sur5r.net/i3/pool/main/s/sur5r-keyring/sur5r-keyring_2021.02.02_all.deb keyring.deb SHA256:cccfb1dd7d6b1b6a137bb96ea5b5eef18a0a4a6df1d6c0c37832025d2edaa710"
+        echo "#sudo dpkg -i ./keyring.deb"
+        echo "\"deb [arch=amd64] http://debian.sur5r.net/i3/ $(grep '^DISTRIB_CODENAME=' /etc/lsb-release | cut -f2 -d=) universe\" >> /etc/apt/sources.list.d/sur5r-i3.list"
+        echo "sudo apt update"
+        echo "popd"
+        pause
         sudo apt install -y i3 i3lock i3lock-fancy rofi
-        #popd
     fi
     if [ ! -d ~/.config/i3 ]; then
         echo "~/.config/i3 doesn't exist...create it."
@@ -234,18 +237,24 @@ pushd ~/repositories/vim
 echo "updating vim..."
 git pull
 echo "update complete"
+echo "vim clean..."
+make distclean > /dev/null
+[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "configuring vim..."
 ./configure --prefix=/home/bakerg/applications \
 --with-features=huge \
 --disable-nls \
+--with-x \
+--enable-gtk2-check \
+--enable-gui=auto \
 --enable-multibyte=yes \
 --enable-cscope=yes \
 --with-tlib=ncurses \
 --enable-pythoninterp \
---with-python-command=/usr/bin/python2.7 \
+--with-python-command=/usr/bin/python \
 --with-python-config-dir=$(python2.7-config --configdir) \
 --enable-python3interp \
---with-python3-command=/usr/bin/python3.8 \
+--with-python3-command=/usr/bin/python3 \
 --with-python3-config-dir=$(python3-config --configdir) \
 --enable-luainterp=yes \
 --enable-rubyinterp=yes \
@@ -254,9 +263,6 @@ echo "configuring vim..."
 --enable-fontset=yes > log_configure.txt
 [ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "vim configured"
-echo "vim clean..."
-make clean > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "vim build..."
 make > /dev/null
 [ $? -eq 0 ] && echo "OK" || echo "ERROR"
@@ -271,11 +277,11 @@ if [ -f ~/bin/vim ]; then
     rm ~/bin/vim
 fi
 ln -s ~/applications/bin/vim ~/bin/vim
-#if [ -f ~/bin/gvim ]; then
-#    echo "~/bin/gvim exists...remove it."
-#    rm ~/bin/gvim
-#fi
-#ln -s ~/applications/bin/gvim ~/bin/gvim
+if [ -f ~/bin/gvim ]; then
+    echo "~/bin/gvim exists...remove it."
+    rm ~/bin/gvim
+fi
+ln -s ~/applications/bin/gvim ~/bin/gvim
 if [ -f ~/.vimrc ]; then
     echo "~/.vimrc exists...remove it."
     rm ~/.vimrc
@@ -382,9 +388,10 @@ if [ $DISTRO == "Ubuntu" ]; then
     # fzf - fuzzy finder (https://github.com/junegunn/fzf)
     sudo apt-get install -y fzf
     # configured for Debian
-    # add to terminalrc
-    #source /usr/share/doc/fzf/examples/key-bindings.zsh
-    #source /usr/share/doc/fzf/examples/completion.zsh
+    echo "add to terminalrc:"
+    echo "source /usr/share/doc/fzf/examples/key-bindings.zsh"
+    echo "source /usr/share/doc/fzf/examples/completion.zsh"
+    pause
 fi
 echo "install done"
 :<<'END'
@@ -405,10 +412,12 @@ END
 
 # install pCloud
 echo -e "\n** pcloud installation **\n"
-echo "downloading pcloud..."
-#curl -fLo ~/applications/appimages/pcloud --create-dirs https://p-def1.pcloud.com/cBZQDzjb1Z9CfNIgZU0W57Z4ZASUmv7Z2ZZra5ZkZ8ArFVZRzZa5ZFJZBJZuFZlpZmXZaHZbpZAkZm5ZskZm0ZbZh0QTXZ0aWldaF2GSVl2ntml2GDF0cPtSwX/pcloud
-chmod +x ~/applications/appimages/pcloud
-echo "download completed"
+if [ ! -f ~/bin/pcloud ]; then
+    echo "Go download pcloud appimage to ~/applications/appimages"
+    pause
+    chmod +x ~/applications/appimages/pcloud
+    echo "download completed"
+fi
 if [ -f ~/bin/pcloud ]; then
     echo "~/bin/pcloud exists...remove it."
     rm ~/bin/pcloud
@@ -427,6 +436,11 @@ echo -e "\n** pcloud installation completed  **\n"
 
 # install UHK
 echo -e "\n** UHK installation **\n"
+if [ ! -f ~/applications/appimages/uhk ]; then
+    echo "Go download latest UHK ~/applications/appimages"
+    pause
+    chmod +x ~/applications/appimages/uhk
+fi
 if [ -f ~/bin/uhk ]; then
     echo "~/bin/uhk exists...remove it."
     rm ~/bin/uhk
