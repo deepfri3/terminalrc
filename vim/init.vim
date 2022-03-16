@@ -30,15 +30,9 @@ Plug 'preservim/nerdcommenter'
 Plug 'jiangmiao/auto-pairs'
 Plug 'BurntSushi/ripgrep'
 Plug 'vim-utils/vim-man'
-Plug 'sheerun/vim-polyglot'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'stsewd/fzf-checkout.vim'
-"Plug 'garbas/vim-snipmate'
-"Plug 'MarcWeber/vim-addon-mw-utils'
-"Plug 'tomtom/tlib_vim'
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
 Plug 'benmills/vimux'
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
 if !g:running_windows
@@ -75,7 +69,7 @@ if exists('+termguicolors')
     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
 endif
-let g:gruvbox_invert_selection='0'
+let g:gruvbox_invert_selection='1'
 " favorite colorscheme :)
 colorscheme gruvbox
 " font is set by the shell program

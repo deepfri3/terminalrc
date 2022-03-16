@@ -44,7 +44,7 @@ ZSH_THEME="robbyrussell"
 # DISABLE_LS_COLORS="true"
 
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
 # ENABLE_CORRECTION="true"
@@ -166,19 +166,14 @@ export ZSH=$HOME/.oh-my-zsh
 
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
-# Set PATH
-export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
-# Add user $HOME/bin to PATH
-export PATH=$HOME/bin:$PATH
-#ZSH_TMUX_AUTOSTART=true
-ZSH_TMUX_AUTOSTART_ONCE=true
 
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions per-directory-history git-extras tmux cp)
+#plugins=(git zsh-autosuggestions per-directory-history git-extras tmux cp)
+plugins=(zsh-autosuggestions)
 
 source $ZSH/oh-my-zsh.sh
 
