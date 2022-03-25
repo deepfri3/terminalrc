@@ -16,8 +16,7 @@ echo "disro=$DISTRO"
 echo -e "\n** Install dependencies **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
-    sudo apt update
-    sudo apt -y upgrade
+    sudo apt update && sudo apt -y upgrade
     sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags
     #https://github.com/nodesource/distributions/blob/master/README.md#deb
     curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
@@ -33,7 +32,6 @@ elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
     sudo pacman -S base-devel cmake unzip ninja
 fi
 echo -e "\n** Installation of dependencies completed **\n"
-
 
 echo -e "\n** Determine desktop environment **\n"
 if [ "$XDG_CURRENT_DESKTOP" = "" ]

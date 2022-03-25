@@ -35,6 +35,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'stsewd/fzf-checkout.vim'
 Plug 'benmills/vimux'
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
+Plug 'rust-lang/rust.vim'
 if !g:running_windows
     Plug 'ThePrimeagen/vim-apm'
 endif
@@ -477,6 +478,9 @@ nmap <leader>bb :BuffergatorOpen<cr>
 autocmd FileType java let b:dispatch = 'javac %'
 autocmd FileType python let b:dispatch = 'python %'
 autocmd FileType cpp let b:dispatch = 'g++ % -o %.o'
+"
+" ++ RUST ++
+let g:rustfm_autosave = 1
 
 
 " ## Search function mappings ##
