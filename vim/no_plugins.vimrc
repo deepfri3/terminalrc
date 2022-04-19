@@ -64,6 +64,7 @@ set showcmd              " Show incomplete cmds down the bottom
 set showmode             " Show current mode down the bottom
 set gcr=a:blinkon0       " Disable cursor blink
 set cmdheight=2          " Give more space for displaying messages.
+set pastetoggle=<F2>
 
 " Search down into subfolders
 " Provides tab-completion for all file-related tasks
@@ -204,6 +205,25 @@ function! ToggleRel()
     endif
 endfunction
 nnoremap <leader>r :call ToggleRel()<CR>
+
+
+" ## GIT ##
+"
+" add all files
+command! GAddAll !git add -A
+" add tracked files
+command! GAdd !git add -u
+" Commit with a message
+function! GitAddCommitWithMessageAndPush(option)
+    let l:option = a:option
+    let curline = getline('.')
+    call inputsave()
+    let l:msg = input('Enter commit message: ')
+    call inputrestore()
+    execute '!git add -'.a:option.' && git commit -m "'.l:msg.'" && git push'
+endfunction
+command! -nargs=* GCommit call GitAddCommitWithMessageAndPush()
+
 
 " ## CTAGS mappings ##
 "
