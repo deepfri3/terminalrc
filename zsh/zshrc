@@ -173,7 +173,7 @@ export ZSH=$HOME/.oh-my-zsh
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 #plugins=(git zsh-autosuggestions per-directory-history git-extras tmux cp)
-plugins=(zsh-autosuggestions)
+plugins=(zsh-autosuggestions per-directory-history git cp rust)
 
 source $ZSH/oh-my-zsh.sh
 
