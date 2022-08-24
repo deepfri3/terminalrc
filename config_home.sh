@@ -17,10 +17,10 @@ echo -e "\n** Install dependencies **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
     sudo apt update && sudo apt -y upgrade
-    sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags
+    sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags
     #https://github.com/nodesource/distributions/blob/master/README.md#deb
-    curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
-    sudo apt-get install -y nodejs
+    #curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
+    #sudo apt-get install -y nodejs
     sudo snap install bpytop
     pushd ~/Downloads
     curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
@@ -249,7 +249,7 @@ echo "configuring vim..."
 --enable-cscope=yes \
 --with-tlib=ncurses \
 --enable-pythoninterp \
---with-python-command=/usr/bin/python \
+--with-python-command=/usr/bin/python2 \
 --with-python-config-dir=$(python2.7-config --configdir) \
 --enable-python3interp \
 --with-python3-command=/usr/bin/python3 \
