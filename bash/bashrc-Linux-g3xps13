@@ -1,2 +1,3 @@
 
 # bashrc for local machine
+. "$HOME/.cargo/env"

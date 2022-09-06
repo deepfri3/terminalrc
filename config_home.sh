@@ -17,11 +17,8 @@ echo -e "\n** Install dependencies **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
     sudo apt update && sudo apt -y upgrade
-    sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags
-    #https://github.com/nodesource/distributions/blob/master/README.md#deb
-    #curl -fsSL https://deb.nodesource.com/setup_current.x | sudo -E bash -
-    #sudo apt-get install -y nodejs
-    sudo snap install bpytop
+    sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags okular
+    sudo snap install bpytop vlc
     pushd ~/Downloads
     curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
     sudo python2.7 get-pip.py
@@ -48,8 +45,6 @@ if [ $desktop == "gnome" ]; then
         echo "cloning gnome base-16 theme..."
         git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
         #install desired base-16 themes
-        ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark-256.sh
-        ~/.config/base16-gnome-terminal/color-scripts/base16-default-dark.sh
         ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard-256.sh
         ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
     fi
@@ -162,7 +157,7 @@ echo -e "\n** base16 shell configuration completed **\n"
 echo -e "\n** zsh configuration start **\n"
 if [ ! -d ~/.oh-my-zsh ]; then
     echo "go download oh my zsh!..."
-    wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 fi
 pushd ~/.oh-my-zsh

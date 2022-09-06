@@ -289,11 +289,17 @@ nmap <Leader>th <Plug>BujoAddnormal
 let g:bujo#todo_file_path = $HOME . "/.cache/bujo"
 "
 " ++ COC ++
-inoremap <buffer> <silent><expr> <TAB>
-            \ pumvisible() ? "\<C-n>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
-inoremap <buffer> <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+set signcolumn=yes
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+" Make <CR> to accept selected completion item or notify coc.nvim to format
+" <C-g>u breaks current undo, please make your own choice.
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
 function! s:check_back_space() abort
   let col = col('.') - 1
@@ -301,7 +307,12 @@ function! s:check_back_space() abort
 endfunction
 
 command! -nargs=0 Prettier :CocCommand prettier.formatFile
-inoremap <buffer> <silent><expr> <C-space> coc#refresh()
+" Use <c-space> to trigger completion.
+if has('nvim')
+  inoremap <silent><expr> <c-space> coc#refresh()
+else
+  inoremap <silent><expr> <c-@> coc#refresh()
+endif
 
 " GoTo code navigation.
 nnoremap <leader>prw :CocSearch <C-R>=expand("<cword>")<CR><CR>
@@ -500,8 +511,8 @@ vnoremap <F5> y :exec("Rg ".expand("<C-R>""))<CR>
 
 " ## Quickly edit/reload the vimrc file ##
 " Works for both Linux/Windows
-nmap <silent> <leader>ev :e $MYVIMRC<CR>
-nmap <silent> <leader>sv :so $MYVIMRC<CR>
+nmap <silent> <leader>ev :e ~/.config/nvim/init.vim<CR>
+nmap <silent> <leader>sv :so ~/.config/nvim/init.vim<CR>
 
 
 " ## Editing, Copying, Pasting, Files ##
