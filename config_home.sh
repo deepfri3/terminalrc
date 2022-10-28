@@ -18,7 +18,8 @@ if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
     sudo apt update && sudo apt -y upgrade
     sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags okular
-    sudo snap install bpytop vlc
+    sudo snap install bpytop
+    sudo snap install vlc
     pushd ~/Downloads
     curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
     sudo python2.7 get-pip.py
@@ -507,10 +508,8 @@ curl -fLo "JetBrains Regular Nerd Font Complete Mono.ttf" \
 #curl -fLo "JetBrains Bold Nerd Font Complete.ttf" \
     #https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Bold/complete/JetBrains%20Mono%20Bold%20Nerd%20Font%20Complete.ttf
 #Ubuntu
-curl -fLo "Ubuntu Regular Nerd Font Complete Mono.ttf" \
-    https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Ubuntu/Regular/complete/Ubuntu%20Nerd%20Font%20Complete%20Mono.ttf
-#curl -fLo "Ubuntu Regular Nerd Font Complete.ttf" \
-    #https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Ubuntu/Regular/complete/Ubuntu%20Nerd%20Font%20Complete.ttf
+curl -fLo "Ubuntu Regular Nerd Font Complete.ttf" \
+    https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Ubuntu/Regular/complete/Ubuntu%20Nerd%20Font%20Complete.ttf
 popd
 # Reset font cache on Linux
 if which fc-cache >/dev/null 2>&1 ; then

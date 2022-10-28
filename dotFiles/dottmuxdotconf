@@ -197,17 +197,16 @@ unbind Down
 bind Down last-window \; swap-pane -s tmp.1 \; kill-window -t tmp
 
 #if run as "tmux attach", can create a session if one des not already exist
-new-session -n $HOST
+#new-session -n $HOST
 
 # List of plugins
 # Supports `github_username/repo` or full git repo URLs
-set -g @tpm_plugins ' \
-  tmux-plugins/tpm \
-  tmux-plugins/tmux-sensible \
-  tmux-plugins/tmux-resurrect \
-  tmux-plugins/tmux-continuum \
-  tmux-plugins/tmux-yank \
-  jabirali/tmux-tilish'
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'jabirali/tmux-tilish'
 # Other examples:
 # github_username/plugin_name    \
 # git@github.com/user/plugin     \
@@ -219,4 +218,4 @@ if "test ! -d ~/.tmux/plugins/tpm" \
 
 # Initializes TMUX plugin manager.
 # Keep this line at the very bottom of tmux.conf.
-run -b  ~/.tmux/plugins/tpm/tpm
+run  -b ~/.tmux/plugins/tpm/tpm
