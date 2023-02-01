@@ -24,7 +24,8 @@ bind c new-window -c "#{pane_current_path}"
 set -g status-bg black
 set -g status-fg white
 set -g status-left ""
-set -g status-right "#[fg=green]#H"
+#set -g status-right "#[fg=green]#H"
+set -g status-right '#{prefix_highlight} | %a %Y-%m-%d %H:%M'
 
 # Split windows (new panes) with current path
 unbind % # Remove default binding since we’re replacing
@@ -151,7 +152,7 @@ set -g status-position top
 set -g status-left-length 40
 set -g status-left "#[fg=green]\"#S\" #W(#I):#P"
 set -g status-right-length 60
-set -g status-right "#[fg=green] #h | %d %b %Y | %l:%M %p | #(date -u | awk '{print $4}')"
+set -g status-right "#{prefix_highlight} #[fg=green] #h | %d %b %Y | %l:%M %p | #(date -u | awk '{print $4}')"
 set -g status-justify centre
 
 # window behaviors
@@ -159,6 +160,9 @@ setw -g automatic-rename off
 setw -g monitor-activity on
 set -g visual-activity off
 set -g visual-bell off
+
+# Explicity set the tpm manager path
+set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.tmux/plugins/tpm'
 
 # navigate using vim-style keys
 # Note: for tmux yank
@@ -197,16 +201,27 @@ unbind Down
 bind Down last-window \; swap-pane -s tmp.1 \; kill-window -t tmp
 
 #if run as "tmux attach", can create a session if one des not already exist
-#new-session -n $HOST
+new-session -n $HOST
 
 # List of plugins
 # Supports `github_username/repo` or full git repo URLs
-set -g @plugin 'tmux-plugins/tpm'
-set -g @plugin 'tmux-plugins/tmux-sensible'
-set -g @plugin 'tmux-plugins/tmux-resurrect'
-set -g @plugin 'tmux-plugins/tmux-continuum'
-set -g @plugin 'tmux-plugins/tmux-yank'
-set -g @plugin 'jabirali/tmux-tilish'
+#set -g @plugin 'tmux-plugins/tpm'
+#set -g @plugin 'tmux-plugins/tmux-sensible'
+#set -g @plugin 'tmux-plugins/tmux-resurrect'
+#set -g @plugin 'tmux-plugins/tmux-continuum'
+#set -g @plugin 'tmux-plugins/tmux-yank'
+#set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
+#set -g @plugin 'jabirali/tmux-tilish'
+# List of plugins
+set -g @tpm_plugins '            \
+    tmux-plugins/tpm             \
+    tmux-plugins/tmux-sensible   \
+    tmux-plugins/tmux-resurrect  \
+    tmux-plugins/tmux-continuum  \
+    tmux-plugins/tmux-prefix-highlight \
+    jabirali/tmux-tilish         \
+    arcticicestudio/nord-tmux    \
+'
 # Other examples:
 # github_username/plugin_name    \
 # git@github.com/user/plugin     \
@@ -218,4 +233,4 @@ if "test ! -d ~/.tmux/plugins/tpm" \
 
 # Initializes TMUX plugin manager.
 # Keep this line at the very bottom of tmux.conf.
-run  -b ~/.tmux/plugins/tpm/tpm
+run -b ~/.tmux/plugins/tpm/tpm

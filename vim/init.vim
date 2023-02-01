@@ -36,9 +36,6 @@ Plug 'stsewd/fzf-checkout.vim'
 Plug 'benmills/vimux'
 Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
 Plug 'rust-lang/rust.vim'
-if !g:running_windows
-    Plug 'ThePrimeagen/vim-apm'
-endif
 
 " on-demand loading
 Plug 'majutsushi/tagbar', { 'on':  'TagbarToggle' }
@@ -49,6 +46,7 @@ Plug 'jeetsukumaran/vim-buffergator', { 'on':  'BuffergatorOpen' }
 Plug 'chriskempson/base16-vim'
 Plug 'gruvbox-community/gruvbox'
 Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 
 call plug#end()
 
@@ -91,10 +89,25 @@ set showmatch " When a bracket is inserted, briefly jump to the matching
               " screen. The time to show the match can be set with
               " 'matchtime'.
 
-set tabstop=4 softtabstop=4 " tab is 4 spaces
+" virtual tabstops using spaces
+set tabstop=4
+set softtabstop=4 " tab is 4 spaces
 set shiftwidth=4 " number of spaces to use for autoindenting
 set expandtab " use spaces instead of tabs
 set smartindent " smart indent
+" allow toggling between local and default mode
+function TabToggle()
+    if &expandtab
+        set softtabstop=4
+        set shiftwidth=4
+        set noexpandtab
+    else
+        set softtabstop=4
+        set shiftwidth=4
+        set expandtab
+    endif
+endfunction
+nmap <F9> mz:execute TabToggle()<CR>'z
 set backspace=indent,eol,start
               " allow backspacing over everything in insert mode
 set smartcase " ignore case if search pattern is all lower-case
@@ -104,8 +117,8 @@ set scrolloff=8
 
 " Open new split panes to right and bottom, which feels more
 " natural than Vim’s default:
-"set splitbelow
-"set splitright
+set splitbelow
+set splitright
 
 set autoread  " reload files edited outside of vim
 set autowrite " write file when switching between buffers
@@ -270,10 +283,6 @@ map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 
 
 " ## Plugin mappings ##
-"
-" ++ VIM WITH ME ++
-nnoremap <leader>vwm :colorscheme gruvbox<bar>:set background=dark<CR>
-nmap <leader>vtm :highlight Pmenu ctermbg=gray guibg=gray
 "
 " ++ VIM EXPLORER ++
 let loaded_matchparen = 1
@@ -492,6 +501,10 @@ autocmd FileType cpp let b:dispatch = 'g++ % -o %.o'
 "
 " ++ RUST ++
 let g:rustfm_autosave = 1
+"
+" ++ AIRLINE ++
+let g:airline_theme='gruvbox'
+
 
 
 " ## Search function mappings ##

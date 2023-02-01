@@ -41,3 +41,5 @@ alias g++='g++ -Wall -g -O0 -std=c++17'
 
 # Set JAVA_HOME to Corretto 11
 export JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto
+
+export PATH=$PATH:~/.local/bin
