@@ -18,6 +18,13 @@ alias editi3status="$EDITOR ~/.config/i3status/config"
 
 alias wireless="nmcli"
 
+alias g++='g++ -Wall -g -O0 -std=c++17'
+alias save=~/.tmux/plugins/tpm/tmux-resurrect/scripts/save.sh
+alias restore=~/.tmux/plugins/tpm/tmux-resurrect/scripts/restore.sh
+alias tpm=~/.tmux/plugins/tpm/tpm
+alias szrc='source ~/.zshrc'
+alias strc='tmux souce ~/.tmux.conf'
+
 # Put this function to your .bashrc file.
 # Usage: mv oldfilename
 # If you call mv without the second parameter it will prompt you to edit the filename on command line.
@@ -37,9 +44,10 @@ function mv() {
   command mv -v -- "$1" "$newfilename"
 }
 
-alias g++='g++ -Wall -g -O0 -std=c++17'
 
 # Set JAVA_HOME to Corretto 11
 export JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto
 
 export PATH=$PATH:~/.local/bin
+
+

@@ -20,11 +20,14 @@ set -s escape-time 0
 # open new windows with current path
 bind c new-window -c "#{pane_current_path}"
 
+#if run as "tmux attach", can create a session if one des not already exist
+#new-session -n $HOST
+
 # Set status bar
 set -g status-bg black
 set -g status-fg white
 set -g status-left ""
-#set -g status-right "#[fg=green]#H"
+set -g status-right "#[fg=green]#H"
 set -g status-right '#{prefix_highlight} | %a %Y-%m-%d %H:%M'
 
 # Split windows (new panes) with current path
@@ -122,10 +125,10 @@ bind-key b break-pane -d
 bind-key C-j choose-tree
 
 # turn on 256 color support in tmux
-set -ga terminal-overrides ",*:Tc"
-set -ga terminal-overrides "$TERM:Tc"
+#set -ga terminal-overrides ",*:Tc"
+#set -ga terminal-overrides "$TERM:Tc"
 #set-option -g default-terminal "xterm-256color"
-set-option -g default-terminal "screen-256color"
+#set-option -g default-terminal "screen-256color"
 #set-option -g default-terminal "$TERM"
 #https://github.com/tmux/tmux/pull/112
 
@@ -148,15 +151,15 @@ set -g pane-active-border-style fg=green,bg=default
 set -g message-style fg=white,bg=colour22
 
 # configure contents of status bar
-set -g status-position top
+set -g status-position bottom
 set -g status-left-length 40
-set -g status-left "#[fg=green]\"#S\" #W(#I):#P"
+set -g status-left "#[fg=green]\"#S\" #W(#I):#P | "
 set -g status-right-length 60
 set -g status-right "#{prefix_highlight} #[fg=green] #h | %d %b %Y | %l:%M %p | #(date -u | awk '{print $4}')"
-set -g status-justify centre
+set -g status-justify left
 
 # window behaviors
-setw -g automatic-rename off
+setw -g automatic-rename on
 setw -g monitor-activity on
 set -g visual-activity off
 set -g visual-bell off
@@ -179,49 +182,51 @@ bind P paste-buffer
 # Begin selection in copy mode.
 bind-key -T copy-mode-vi v send-keys -X begin-selection
 bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
-bind-key -T copy-mode-vi 'C-v' send-keys -X rectangle-toggle
-# copy to the system clipboard
+bind-key -T copy-mode-vi V send-keys -X rectangle-toggle
+# copy to the system clipboard using xclip
 unbind -T copy-mode-vi Enter
-bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel 'xclip -se c -i'
-bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel 'xclip -se c -i'
+#bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel 'xclip -se c -i'
+bind-key -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel 'xsel -b -i'
+#bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel 'xclip -se c -i'
+bind-key -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel 'xsel -b -i'
+
+# buffer
+bind Space choose-buffer
 
 # Continuum - Automatic restore
 # Last saved environment is automatically restored when tmux is started.
-set -g @continuum-restore 'on'
+set -g @continuum-restore 'off'
 # Tmux is automatically started after the computer/server is turned on.
-set -g @continuum-boot 'on'
+#set -g @continuum-boot 'on'
 # default resurrect dir
 set -g @resurrect-dir '~/.tmux/resurrect'
 
 # set up aliases for temporarily maximizing panes
 unbind Up
 bind Up new-window -d -n tmp \; swap-pane -s tmp.1 \; select-window -t tmp
-
 unbind Down
 bind Down last-window \; swap-pane -s tmp.1 \; kill-window -t tmp
 
-#if run as "tmux attach", can create a session if one des not already exist
-new-session -n $HOST
-
 # List of plugins
 # Supports `github_username/repo` or full git repo URLs
-#set -g @plugin 'tmux-plugins/tpm'
-#set -g @plugin 'tmux-plugins/tmux-sensible'
-#set -g @plugin 'tmux-plugins/tmux-resurrect'
-#set -g @plugin 'tmux-plugins/tmux-continuum'
-#set -g @plugin 'tmux-plugins/tmux-yank'
-#set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
-#set -g @plugin 'jabirali/tmux-tilish'
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-prefix-highlight'
+#set -g @plugin 'jabirali/tmux-tilish' #https://github.com/jabirali/tmux-tilish
+#set -g @plugin 'arcticicestudio/nord-tmux' #https://www.nordtheme.com/docs/ports/tmux
 # List of plugins
-set -g @tpm_plugins '            \
-    tmux-plugins/tpm             \
-    tmux-plugins/tmux-sensible   \
-    tmux-plugins/tmux-resurrect  \
-    tmux-plugins/tmux-continuum  \
-    tmux-plugins/tmux-prefix-highlight \
-    jabirali/tmux-tilish         \
-    arcticicestudio/nord-tmux    \
-'
+#set -g @tpm_plugins '            \
+    #tmux-plugins/tpm             \
+    #tmux-plugins/tmux-sensible   \
+    #tmux-plugins/tmux-resurrect  \
+    #tmux-plugins/tmux-continuum  \
+    #tmux-plugins/tmux-prefix-highlight \
+    #jabirali/tmux-tilish         \
+    #arcticicestudio/nord-tmux    \
+#'
 # Other examples:
 # github_username/plugin_name    \
 # git@github.com/user/plugin     \
@@ -233,4 +238,5 @@ if "test ! -d ~/.tmux/plugins/tpm" \
 
 # Initializes TMUX plugin manager.
 # Keep this line at the very bottom of tmux.conf.
-run -b ~/.tmux/plugins/tpm/tpm
+run -b "~/.tmux/plugins/tpm/tpm"
+

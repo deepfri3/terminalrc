@@ -498,6 +498,7 @@ nmap <leader>bb :BuffergatorOpen<cr>
 autocmd FileType java let b:dispatch = 'javac %'
 autocmd FileType python let b:dispatch = 'python %'
 autocmd FileType cpp let b:dispatch = 'g++ % -o %.o'
+autocmd FileType rs let b:dispatch = 'rustc %'
 "
 " ++ RUST ++
 let g:rustfm_autosave = 1
