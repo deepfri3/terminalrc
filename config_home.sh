@@ -17,7 +17,44 @@ echo -e "\n** Install dependencies **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     #Ubuntu / Debian
     sudo apt update && sudo apt -y upgrade
-    sudo apt install -y ninja-build gettext libtool libtool-bin autoconf automake cmake make g++ pkg-config unzip npm curl libevent-dev libncurses-dev bison byacc vim-gtk3 libgtk2.0-dev libx11-dev libxt-dev libgtk-3-dev perl libperl-dev ruby ruby-dev python-pip-whl python python3-pip python3-dev python2.7 python-dev neofetch htop automake autotools-dev xsel xclip ripgrep ctags okular
+    sudo apt install -y \
+        ninja-build gettext \
+        libtool \
+        libtool-bin \
+        autoconf \
+        automake \
+        cmake \
+        make \
+        g++ \
+        pkg-config \
+        unzip \
+        npm \
+        curl \
+        libevent-dev \
+        libncurses-dev \
+        bison \
+        byacc \
+        vim-gtk3 \
+        libgtk2.0-dev \
+        libx11-dev \
+        libxt-dev \
+        libgtk-3-dev \
+        perl \
+        libperl-dev \
+        ruby \
+        ruby-dev \
+        python-pip-whl \
+        python \
+        python3-pip \
+        python3-dev \
+        neofetch \
+        htop \
+        autotools-dev \
+        xsel \
+        xclip \
+        ripgrep \
+        ctags \
+        okular
     sudo snap install bpytop
     sudo snap install vlc
 elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
