@@ -1,15 +1,30 @@
-" No plugins vim config
+" vim config
 " Created: 5/17/2021
 " Author: George Baker
 
 " Startup
-" enter the current millenium
 set nocompatible
 
-" enable syntax and plugins (for netrw)
-syntax enable
-filetype plugin on
+call plug#begin()
 
+" On-demand loading
+Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
+
+Plug 'gruvbox-community/gruvbox'
+Plug 'chriskempson/base16-vim'
+
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-dispatch'
+Plug 'tpope/vim-surround'
+
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+
+call plug#end()
+
+set background=dark
+colorscheme gruvbox
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
 
@@ -30,7 +45,7 @@ set tabstop=4 softtabstop=4 " tab is 4 spaces
 set shiftwidth=4 " number of spaces to use for autoindenting
 set expandtab " use spaces instead of tabs
 set smartindent " smart indent
-"set backspace=indent,eel,start
+"set backspace=indent,eol,start
 set backspace=2 " Backspace deletes like most programs in insert mode
               " allow backspacing over everything in insert mode
 set smartcase " ignore case if search pattern is all lower-case
@@ -305,7 +320,7 @@ nmap <silent> <leader>sv :so ~/.vimrc<CR>
 " ## Formatting ##
 "
 " Show tabs and whitespace when needed
-set listchars=tab:>-,trail:!,eol:$
+set listchars=tab:>-,trail:!,eol:$,nbsp:^
 nmap <silent> <leader>s :set nolist!<CR>
 " remove end of line spaces;
 nmap <silent> <leader>dt :%s/\s\+$//e<cr>

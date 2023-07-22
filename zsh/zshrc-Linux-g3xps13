@@ -24,6 +24,7 @@ alias restore=~/.tmux/plugins/tpm/tmux-resurrect/scripts/restore.sh
 alias tpm=~/.tmux/plugins/tpm/tpm
 alias szrc='source ~/.zshrc'
 alias strc='tmux souce ~/.tmux.conf'
+export PATH=”$PATH:$HOME/.cargo/bin”
 
 # Put this function to your .bashrc file.
 # Usage: mv oldfilename

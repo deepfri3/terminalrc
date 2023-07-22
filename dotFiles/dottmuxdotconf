@@ -3,6 +3,16 @@
 #https://gist.github.com/MohamedAlaa/2961058
 #https://github.com/tmux-plugins/tmux-sensible
 
+# turn on 256 color support in tmux
+#set -ga terminal-overrides ",*:Tc"
+#set -ga terminal-overrides "$TERM:Tc"
+#set-option -g default-terminal "xterm-256color"
+#set-option -g default-terminal "screen-256color"
+#set-option -g default-terminal "$TERM"
+#https://github.com/tmux/tmux/pull/112
+set-option -g mouse on
+setw -g mode-keys vi
+
 # C-b is not acceptable -- Vim uses it
 set-option -g prefix C-q
 # send the prefix to client inside window
@@ -124,14 +134,6 @@ bind -r L resize-pane -R 5
 bind-key b break-pane -d
 bind-key C-j choose-tree
 
-# turn on 256 color support in tmux
-#set -ga terminal-overrides ",*:Tc"
-#set -ga terminal-overrides "$TERM:Tc"
-#set-option -g default-terminal "xterm-256color"
-#set-option -g default-terminal "screen-256color"
-#set-option -g default-terminal "$TERM"
-#https://github.com/tmux/tmux/pull/112
-
 # fiddle with colors of status bar
 set -g status-fg white
 set -g status-bg colour234
@@ -172,8 +174,6 @@ set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.tmux/plugins/tpm'
 set -g @shell_mode 'vi'
 
 # copy/paste using vim-style keys
-set-option -g mouse on
-setw -g mode-keys vi
 set-option -s set-clipboard off
 unbind [
 bind Escape copy-mode

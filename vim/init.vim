@@ -1,4 +1,4 @@
-" George Baker's Vim config
+" George Baker's (n)vim config
 " Since: 2012
 
 " Startup
@@ -27,20 +27,13 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-dispatch'
 Plug 'mbbill/undotree'
 Plug 'preservim/nerdcommenter'
-Plug 'jiangmiao/auto-pairs'
 Plug 'BurntSushi/ripgrep'
-Plug 'vim-utils/vim-man'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'stsewd/fzf-checkout.vim'
-Plug 'benmills/vimux'
-Plug 'theprimeagen/vim-be-good', {'do': './install.sh'}
-Plug 'rust-lang/rust.vim'
 
 " on-demand loading
 Plug 'majutsushi/tagbar', { 'on':  'TagbarToggle' }
 Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
-Plug 'jeetsukumaran/vim-buffergator', { 'on':  'BuffergatorOpen' }
 
 " Colors
 Plug 'chriskempson/base16-vim'
@@ -70,6 +63,7 @@ if exists('+termguicolors')
 endif
 let g:gruvbox_invert_selection='1'
 " favorite colorscheme :)
+set background=dark
 colorscheme gruvbox
 " font is set by the shell program
 hi Normal guibg=NONE ctermbg=NONE
@@ -105,11 +99,9 @@ function TabToggle()
         set softtabstop=4
         set shiftwidth=4
         set expandtab
-    endif
+    end
 endfunction
 nmap <F9> mz:execute TabToggle()<CR>'z
-set backspace=indent,eol,start
-              " allow backspacing over everything in insert mode
 set smartcase " ignore case if search pattern is all lower-case
 set incsearch " show search matches as you type
 set hlsearch  " highlight search terms
@@ -117,8 +109,8 @@ set scrolloff=8
 
 " Open new split panes to right and bottom, which feels more
 " natural than Vim’s default:
-set splitbelow
-set splitright
+"set splitbelow
+"set splitright
 
 set autoread  " reload files edited outside of vim
 set autowrite " write file when switching between buffers
@@ -292,11 +284,6 @@ let g:netrw_winsize = 25
 " Toggle netrw in sidebar
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 "
-" ++ VIM TODO ++
-nmap <Leader>tu <Plug>BujoChecknormal
-nmap <Leader>th <Plug>BujoAddnormal
-let g:bujo#todo_file_path = $HOME . "/.cache/bujo"
-"
 " ++ COC ++
 set signcolumn=yes
 inoremap <silent><expr> <TAB>
@@ -433,25 +420,6 @@ nmap <leader>' yss'
 " Surround selection with single quote:
 vmap <leader>' S'
 "
-" ++ SNIPMATE ++
-"let g:snipMate = { 'snippet_version' : 1 }
-"imap <C-L> <Plug>snipMateNextOrTrigger
-"smap <C-L> <Plug>snipMateNextOrTrigger
-"imap <C-K> <Plug>snipMateTrigger
-"imap <C-H> <Plug>snipMateBack
-"smap <C-H> <Plug>snipMateBack
-"imap <C-J> <Plug>snipMateShow
-"vmap <C-J> <Plug>snipMateVisual
-"" Trigger configuration. You need to change this to something other than <tab> if you use one of the following:
-" - https://github.com/Valloric/YouCompleteMe
-" - https://github.com/nvim-lua/completion-nvim
-let g:UltiSnipsExpandTrigger="<tab>"
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
-
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit="vertical"
-"
 " ++ TABULAR ++
 nmap <Leader>a& :Tabularize /&<CR>
 vmap <Leader>a& :Tabularize /&<CR>
@@ -505,7 +473,6 @@ let g:rustfm_autosave = 1
 "
 " ++ AIRLINE ++
 let g:airline_theme='gruvbox'
-
 
 
 " ## Search function mappings ##
