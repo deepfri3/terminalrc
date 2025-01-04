@@ -213,10 +213,9 @@ export LC_ALL="en_US.UTF-8"
 # Set PATH
 export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
 # Add user $HOME/bin to PATH
-export PATH=$HOME/bin:$PATH
+export PATH=$HOME/.local/bin:$PATH
 
 # set default editor
-alias vim=~/bin/nvim
 export VISUAL=vim
 export EDITOR=$VISUAL
 # My vimrc
@@ -229,6 +228,8 @@ alias gdb="gdb -quiet -fullname"
 # autojump (https://github.com/wting/autojump)
 #export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ;} history -a"
 #[[ -s ~/.autojump/etc/profile.d/autojump.sh ]] && source ~/.autojump/etc/profile.d/autojump.sh
+# configured for Debian
+[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
 
 #base16 colorscheme support
 #https://github.com/chriskempson/base16-shell
@@ -237,6 +238,8 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 
 # fzf - fuzzy finder (https://github.com/junegunn/fzf)
 # ag - the silver searcher (https://github.com/ggreer/the_silver_searcher/wiki)
+source /usr/share/doc/fzf/examples/key-bindings.zsh
+source /usr/share/doc/fzf/examples/completion.zsh
 #[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 # Setting ag as the default source for fzf
 #export FZF_DEFAULT_COMMAND='ag -l -g ""'

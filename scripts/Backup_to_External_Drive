@@ -1,0 +1,4 @@
+#!/bin/bash
+
+#rsync --numeric-ids --progress --recursive --update --delete -ahvvz --exclude '~/pCloudDrive/Crypto\ Folder/*' ~/pCloudDrive/* /media/bakerg/Seagate\ Backup\ Plus\ Drive/Backups/pCloud 2> ~/rsync_error_log.txt
+rsync --numeric-ids --progress --recursive --update --delete -ahvvz ~/pCloudDrive/* /media/bakerg/Seagate\ Backup\ Plus\ Drive/Backups/pCloud 2> ~/rsync_error_log.txt

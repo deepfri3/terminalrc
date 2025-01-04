@@ -14,53 +14,51 @@ echo "disro=$DISTRO"
 
 # install dependencies
 echo -e "\n** Install dependencies **\n"
-if [ $DISTRO == "Ubuntu" ]; then
-    #Ubuntu / Debian
-    sudo apt update && sudo apt -y upgrade
-    sudo apt install -y \
-        ninja-build gettext \
-        libtool \
-        libtool-bin \
-        autoconf \
-        automake \
-        cmake \
-        make \
-        g++ \
-        pkg-config \
-        unzip \
-        npm \
-        curl \
-        libevent-dev \
-        libncurses-dev \
-        bison \
-        byacc \
-        vim-gtk3 \
-        libgtk2.0-dev \
-        libx11-dev \
-        libxt-dev \
-        libgtk-3-dev \
-        perl \
-        libperl-dev \
-        ruby \
-        ruby-dev \
-        python-pip-whl \
-        python \
-        python3-pip \
-        python3-dev \
-        neofetch \
-        htop \
-        autotools-dev \
-        xsel \
-        xclip \
-        ripgrep \
-        ctags \
-        okular
-    sudo snap install bpytop
-    sudo snap install vlc
-elif [ $DISTRO == "Arch" || $DISTRO == "Manjaro" ]; then
-    #Arch Linux
-    sudo pacman -S base-devel cmake unzip ninja
-fi
+#Ubuntu / Debian
+sudo apt update && sudo apt -y upgrade
+sudo apt install -y \
+    ninja-build \
+    gettext \
+    libtool \
+    libtool-bin \
+    autoconf \
+    automake \
+    cmake \
+    make \
+    g++ \
+    pkg-config \
+    unzip \
+    npm \
+    curl \
+    libevent-dev \
+    libncurses-dev \
+    bison \
+    byacc \
+    vim-gtk3 \
+    libgtk2.0-dev \
+    libx11-dev \
+    libxt-dev \
+    libgtk-3-dev \
+    perl \
+    libperl-dev \
+    ruby \
+    ruby-dev \
+    python3-pip \
+    python3-dev \
+    neofetch \
+    htop \
+    autotools-dev \
+    xsel \
+    xclip \
+    ripgrep \
+    okular \
+    autojump \
+    universal-ctags \
+    silversearcher-ag
+    #python-pip-whl \
+    #python \
+sudo snap install bpytop
+sudo snap install vlc
 echo -e "\n** Installation of dependencies completed **\n"
 
 echo -e "\n** Determine desktop environment **\n"
@@ -78,17 +76,30 @@ if [ $desktop == "gnome" ]; then
         echo "cloning gnome base-16 theme..."
         git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
         #install desired base-16 themes
-        ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
+        ~/.config/base16-
+        gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
+    fi
+
+    if [ ! -d ~/.themes ]; then
+        mkdir -p ~/repositories
+        git clone https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git ~/repositories/gnome-gruvbox-theme
+        mkdir -p ~/.themes
+        mkdir -p ~/.icons
+        cp ~/repositories/gnome-gruvbox-theme/themes/* ~/.themes
+        cp ~/repositories/gnome-gruvbox-theme/icons/* ~/.icons
+        mkdir -p ~/.local/share/gedit/styles
+        cp ~/repositories/gnome-gruvbox-theme/extras/text-editor/* ~/.local/share/gedit/styles
     fi
 fi
 
-if [ ! -d ~/bin ]; then
-    echo "~/bin doesn't exist...create it."
-    mkdir ~/bin
+
+if [ ! -d ~/.local/bin ]; then
+    echo "~/.local/bin doesn't exist...create it."
+    mkdir -p ~/.local/bin
 fi
-if [ ! -d ~/applications ]; then
-    echo "~/applications doesn't exist...create it."
-    mkdir ~/applications
+if [ ! -d ~/.local/applications ]; then
+    echo "~/.local/applications doesn't exist...create it."
+    mkdir -p ~/.local/applications
 fi
 
 
@@ -171,7 +182,7 @@ echo "updating bash-git-prompt"
 git pull
 echo "update complete"
 popd
-echo -e "\n** bash-git-promt configuration completed **\n"
+echo -e "\n** bash-git-prompt configuration completed **\n"
 
 echo -e "\n** base16 shell configuration started **\n"
 # add base16-shell (https://github.com/chriskempson/base16-shell)
@@ -219,7 +230,7 @@ git pull
 echo "update complete"
 sh autogen.sh
 echo "tmux configure..."
-./configure --prefix=/home/bakerg/applications > log_configure.txt
+./configure --prefix=${HOME}/.local > log_configure.txt
 [ $? -eq 0 ] && echo "OK" || echo "ERROR"
 echo "tmux clean..."
 make clean > /dev/null
@@ -230,11 +241,11 @@ make > /dev/null
 echo "tmux install..."
 make install > /dev/null
 [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-if [ -f ~/bin/tmux ]; then
-    echo "~/bin/tmux exists...remove it."
-    rm ~/bin/tmux
-fi
-ln -s ~/applications/bin/tmux ~/bin/tmux
+#if [ -f ~/bin/tmux ]; then
+#    echo "~/bin/tmux exists...remove it."
+#    rm ~/bin/tmux
+#fi
+#ln -s ~/applications/bin/tmux ~/bin/tmux
 echo "tmux installed"
 popd
 if [ -f ~/.tmux.conf ]; then
@@ -259,57 +270,59 @@ if [ ! -d ~/repositories/vim ]; then
     echo -e "install modern vim dependencies..."
 fi
 pushd ~/repositories/vim
-echo "updating vim..."
-git pull
-echo "update complete"
-echo "vim clean..."
-make distclean > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "configuring vim..."
-./configure --prefix=/home/bakerg/applications \
---with-features=huge \
---disable-nls \
---with-x \
---enable-gtk2-check \
---enable-gui=auto \
---enable-multibyte=yes \
---enable-cscope=yes \
---with-tlib=ncurses \
---enable-pythoninterp \
---with-python-command=/usr/bin/python2.7 \
---enable-python3interp \
---with-python3-command=/usr/bin/python3 \
---with-python3-config-dir=$(python3-config --configdir) \
---enable-luainterp=yes \
---enable-rubyinterp=yes \
---enable-perlinterp=yes \
---with-ruby-command=/usr/bin/ruby \
---enable-fontset=yes > log_configure.txt
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "vim configured"
-echo "vim build..."
-make > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "make done"
-echo "vim install"
-make install > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "install done"
+    echo "updating vim..."
+    git pull
+    echo "update complete"
+    echo "vim clean..."
+    make distclean > /dev/null
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "configuring vim..."
+    ./configure --prefix=${HOME}/.local \
+    --with-features=huge \
+    --disable-nls \
+    --with-x \
+    --enable-gtk2-check \
+    --enable-gui=auto \
+    --enable-multibyte=yes \
+    --enable-cscope=yes \
+    --with-tlib=ncurses \
+    --enable-pythoninterp \
+    --with-python-command=/usr/bin/python2.7 \
+    --enable-python3interp \
+    --with-python3-command=/usr/bin/python3 \
+    --with-python3-config-dir=$(python3-config --configdir) \
+    --enable-luainterp=yes \
+    --enable-rubyinterp=yes \
+    --enable-perlinterp=yes \
+    --with-ruby-command=/usr/bin/ruby \
+    --enable-fontset=yes > log_configure.txt
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "vim configured"
+    echo "vim build..."
+    make > /dev/null
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "make done"
+    echo "vim install"
+    make install > /dev/null
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "install done"
 popd
+:<<'END'
 if [ -f ~/bin/vim ]; then
     echo "~/bin/vim exists...remove it."
     rm ~/bin/vim
 fi
-ln -s ~/applications/bin/vim ~/bin/vim
+ln -s ~/.local/bin/vim ~/bin/vim
 if [ -f ~/bin/gvim ]; then
     echo "~/bin/gvim exists...remove it."
     rm ~/bin/gvim
 fi
-ln -s ~/applications/bin/gvim ~/bin/gvim
+ln -s ~/.local/bin/gvim ~/bin/gvim
 if [ -f ~/.vimrc ]; then
     echo "~/.vimrc exists...remove it."
     rm ~/.vimrc
 fi
+END
 ln -s $basedir/vim/no_plugins.vimrc ~/.vimrc
 echo -e "\n** vim install and configuration completed **\n"
 
@@ -323,27 +336,27 @@ if [ ! -d ~/respositories/neovim ]; then
        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
 fi
 pushd ~/repositories/neovim
-echo "updating neovim..."
-git pull
-echo "update complete"
-echo "make neovim..."
-echo "neovim clean..."
-make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release distclean > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "neovim build..."
-make CMAKE_INSTALL_PREFIX=/home/bakerg/applications CMAKE_BUILD_TYPE=Release all > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "neovim compiled."
-echo "install neovim"
-make install > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "install done"
+    echo "updating neovim..."
+    git pull
+    echo "update complete"
+    echo "make neovim..."
+    echo "neovim clean..."
+    make CMAKE_INSTALL_PREFIX=${HOME}/.local CMAKE_BUILD_TYPE=Release distclean > /dev/null
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "neovim build..."
+    make CMAKE_INSTALL_PREFIX=${HOME}/.local CMAKE_BUILD_TYPE=Release all > /dev/null
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "neovim compiled."
+    echo "install neovim"
+    make install > /dev/null
+    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
+    echo "install done"
 popd
-if [ -f ~/bin/nvim ]; then
-    echo "~/bin/nvim exists...remove it."
-    rm ~/bin/nvim
-fi
-ln -s ~/applications/bin/nvim ~/bin/nvim
+#if [ -f ~/bin/nvim ]; then
+#    echo "~/bin/nvim exists...remove it."
+#    rm ~/bin/nvim
+#fi
+#ln -s ~/applications/bin/nvim ~/bin/nvim
 mkdir -p ~/.config/nvim
 mkdir -p ~/.local/share/nvim/site/plugged
 if [ -f ~/.config/nvim/init.vim ]; then
@@ -354,6 +367,7 @@ ln -s $basedir/vim/init.vim ~/.config/nvim/init.vim
 echo "neovim setup completed"
 
 
+:<<'END'
 # install autojump
 # https://github.com/wting/autojump
 echo -e "\n** install autojump **\n"
@@ -365,7 +379,6 @@ if [ $DISTRO == "Ubuntu" ]; then
     #[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
 fi
 echo "install done"
-:<<'END'
 if [ ! -d ~/applications/autojump ]; then
     echo "cloning autojump..."
     git clone git://github.com/wting/autojump.git ~/applications/autojump
@@ -381,6 +394,7 @@ echo "install done"
 popd
 END
 
+:<<'END'
 # install ag the silver searcher
 # https://github.com/ggreer/the_silver_searcher
 echo -e "\n** install ag - the sliver searcher **\n"
@@ -388,7 +402,6 @@ if [ $DISTRO == "Ubuntu" ]; then
     sudo apt-get install -y silversearcher-ag
 fi
 echo "install done"
-:<<'END'
 if [ ! -d ~/applications/the_silver_searcher ]; then
     echo "cloning ag..."
     git clone https://github.com/ggreer/the_silver_searcher.git ~/applications/the_silver_searcher
@@ -407,6 +420,7 @@ ln ~/Downloads/the_silver_searcher/ag ~/bin/ag
 echo "install done"
 END
 
+:<<'END'
 echo -e "\n** install fzf **\n"
 if [ $DISTRO == "Ubuntu" ]; then
     # fzf - fuzzy finder (https://github.com/junegunn/fzf)
@@ -418,7 +432,6 @@ if [ $DISTRO == "Ubuntu" ]; then
     pause
 fi
 echo "install done"
-:<<'END'
 # https://github.com/junegunn/fzf
 if [ ! -d ~/applications/fzf ]; then
     echo "cloning fzf..."
@@ -436,17 +449,17 @@ END
 
 # install pCloud
 echo -e "\n** pcloud installation **\n"
-if [ ! -f ~/bin/pcloud ]; then
-    echo "Go download pcloud appimage to ~/applications/appimages"
+if [ ! -f ~/.local/bin/pcloud ]; then
+    echo "Go download pcloud appimage to ~/.local/applications/appimages"
     pause
-    chmod +x ~/applications/appimages/pcloud
+    chmod +x ~/.local/applications/appimages/pcloud
     echo "download completed"
 fi
-if [ -f ~/bin/pcloud ]; then
-    echo "~/bin/pcloud exists...remove it."
-    rm ~/bin/pcloud
+if [ -f ~/.local/bin/pcloud ]; then
+    echo "~/.local/bin/pcloud exists...remove it."
+    rm ~/.local/bin/pcloud
 fi
-ln -s ~/applications/appimages/pcloud ~/bin/pcloud
+ln -s ~/.local/applications/appimages/pcloud ~/.local/bin/pcloud
 if [ -f ~/.local/share/applications/pcloud.desktop ]; then
     rm ~/.local/share/applications/pcloud.desktop
 fi
@@ -455,23 +468,23 @@ if [ -f ~/.config/autostart/pcloud.desktop ]; then
     rm ~/.config/autostart/pcloud.desktop
 fi
 ln -s $basedir/configuration/pcloud-autostart.desktop ~/.config/autostart/pcloud.desktop
-cp $basedir/configuration/pcloud.png ~/applications/appimages
+cp $basedir/configuration/pcloud.png ~/.local/applications/appimages
 echo -e "\n** pcloud installation completed  **\n"
 
 # install UHK
 echo -e "\n** UHK installation **\n"
-if [ ! -f ~/applications/appimages/uhk ]; then
-    echo "Go download latest UHK ~/applications/appimages"
+if [ ! -f ~/.local/applications/appimages/uhk ]; then
+    echo "Go download latest UHK ~/.local/applications/appimages"
     pause
-    chmod +x ~/applications/appimages/uhk
+    chmod +x ~/.local/applications/appimages/uhk
 fi
-if [ -f ~/bin/uhk ]; then
-    echo "~/bin/uhk exists...remove it."
-    rm ~/bin/uhk
+if [ -f ~/.local/bin/uhk ]; then
+    echo "~/.local/bin/uhk exists...remove it."
+    rm ~/.local/bin/uhk
 fi
-ln -s ~/applications/appimages/uhk ~/bin/uhk
+ln -s ~/.local/applications/appimages/uhk ~/.local/bin/uhk
 cp $basedir/configuration/uhk.desktop ~/.local/share/applications
-cp $basedir/configuration/uhk.jpeg ~/applications/appimages
+cp $basedir/configuration/uhk.jpeg ~/.local/applications/appimages
 echo -e "\n** UHK installation completed  **\n"
 
 # Misc
@@ -503,19 +516,21 @@ echo -e "\n** configure fonts **\n"
 if [ ! -d ~/.local/share/fonts ]; then
     mkdir -p ~/.local/share/fonts
 fi
+
 # goto fonts directory and download...
 pushd ~/.local/share/fonts
-echo -e "Downloading Source Code Pro\n"
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Regular/SauceCodeProNerdFont-Regular.ttf
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Regular/SauceCodeProNerdFontMono-Regular.ttf
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Medium/SauceCodeProNerdFont-Medium.ttf
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Medium/SauceCodeProNerdFontMono-Medium.ttf
-echo -e "Downloading Fira Code\n"
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Regular/FiraCodeNerdFont-Regular.ttf
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Regular/FiraCodeNerdFontMono-Regular.ttf
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Medium/FiraCodeNerdFont-Medium.ttf
-curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Medium/FiraCodeNerdFontMono-Medium.ttf
+    echo -e "Downloading Source Code Pro\n"
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Regular/SauceCodeProNerdFont-Regular.ttf
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Regular/SauceCodeProNerdFontMono-Regular.ttf
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Medium/SauceCodeProNerdFont-Medium.ttf
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Medium/SauceCodeProNerdFontMono-Medium.ttf
+    echo -e "Downloading Fira Code\n"
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Regular/FiraCodeNerdFont-Regular.ttf
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Regular/FiraCodeNerdFontMono-Regular.ttf
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Medium/FiraCodeNerdFont-Medium.ttf
+    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Medium/FiraCodeNerdFontMono-Medium.ttf
 popd
+
 # Reset font cache on Linux
 if which fc-cache >/dev/null 2>&1 ; then
     echo "Resetting font cache, this may take a moment..."

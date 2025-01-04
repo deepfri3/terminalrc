@@ -4,14 +4,6 @@
 # load keyboard settings
 source ~/.profile
 
-# autojump (https://github.com/wting/autojump)
-# configured for Debian
-[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
-
-# fzf - fuzzy finder (https://github.com/junegunn/fzf)
-source /usr/share/doc/fzf/examples/key-bindings.zsh
-source /usr/share/doc/fzf/examples/completion.zsh
-
 # Set i3 convenience aliases
 alias editi3config="$EDITOR ~/.config/i3/config"
 alias editi3status="$EDITOR ~/.config/i3status/config"
@@ -48,7 +40,4 @@ function mv() {
 
 # Set JAVA_HOME to Corretto 11
 export JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto
-
-export PATH=$PATH:~/.local/bin
-
 

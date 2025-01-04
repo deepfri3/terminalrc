@@ -135,7 +135,7 @@ set noerrorbells         " don't beep
 set showcmd              " Show incomplete cmds down the bottom
 set showmode             " Show current mode down the bottom
 set gcr=a:blinkon0       " Disable cursor blink
-set cmdheight=2          " Give more space for displaying messages.
+"set cmdheight=2          " Give more space for displaying messages.
 
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 " delays and poor user experience.

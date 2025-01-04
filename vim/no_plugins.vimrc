@@ -78,7 +78,7 @@ set history=1000         " remember more commands and search history
 set showcmd              " Show incomplete cmds down the bottom
 set showmode             " Show current mode down the bottom
 set gcr=a:blinkon0       " Disable cursor blink
-set cmdheight=2          " Give more space for displaying messages.
+"set cmdheight=2          " Give more space for displaying messages.
 set pastetoggle=<F2>
 
 " Search down into subfolders
@@ -244,7 +244,9 @@ command! -nargs=* GCommit call GitAddCommitWithMessageAndPush()
 "
 " build ctags for current directory
 command! MakeTags !ctags -R .
-nnoremap <F11> :call ProjRoot()<cr> MakeTags
+" Change to the proj_root directory and execute ctags from proj_root
+"nnoremap <F11> :call ProjRoot()<cr> MakeTags
+nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R .<cr>
 " C-] - go to definition = Ctrl-Left_MouseClick - Go to definition
 " C-T - Jump back from the definition.(or :pop) = Ctrl-Right_MouseClick - Jump back from definition
 " C-W C-] - Open the definition in a horizontal split
@@ -270,6 +272,101 @@ map <leader>tp :tprevious<cr>
 map <leader>tf :tfirst<cr>
 ":tlast 	  - Jump to last matching tag. (Also short form :tl)
 map <leader>tl :tlast<cr>
+
+" ## Plugin mappings ##
+"
+" ++ VIM EXPLORER ++
+let loaded_matchparen = 1
+let g:netrw_browse_split = 2
+let g:netrw_banner = 0
+let g:netrw_winsize = 25
+" Toggle netrw in sidebar
+nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
+"
+" ++ FUGITIVE ++
+nmap <leader>gj :diffget //3<CR>
+nmap <leader>gf :diffget //2<CR>
+nmap <leader>gs :G<CR>
+nnoremap <leader>gc :GCheckout<CR>
+nnoremap <C-p> :GFiles<CR>
+"
+" ++ FZF - Fuzzy finder ++
+" This is the default extra key bindings
+"let g:fzf_action = {
+            "\ 'ctrl-t': 'tab split',
+            "\ 'ctrl-x': 'split',
+            "\ 'ctrl-v': 'vsplit' }
+" Default fzf layout
+"let g:fzf_layout = { 'down': '50%'}
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
+" https://github.com/junegunn/fzf.vim/issues/456
+" Depending where it's installed
+"set rtp+=~/.fzf
+"set rtp+=/usr/local/opt/fzf
+" Invoke fuzzy finder to find files
+nnoremap <silent> <leader>t :Files <cr>
+" List buffers
+nnoremap <silent> <leader>b :Buffers<cr>
+" Simple MRU search - v:oldfiles
+nnoremap <silent> <leader><Enter> :History<cr>
+" Search current buffer
+nnoremap <silent> <leader>bl :BLines<cr>
+" Search all open buffers
+nnoremap <silent> <leader>ba :Lines<cr>
+"
+" ++ RIPGREP ++
+" Use RG for grepping
+set grepprg=rg\ --vimgrep\ --smart-case\ --hidden\ --follow
+let g:rg_command = 'rg --vimgrep -S'
+if executable('rg')
+    let g:rg_derive_root='true'
+endif
+let g:vrfr_rg = 'true'
+nnoremap \ :Rg<CR>
+nnoremap <leader>pw :Rg <C-R>=expand("<cword>")<CR><CR>
+nnoremap <leader>ps :Rg<SPACE>
+"
+" ++ NERDTREE ++
+" NERDTree ignore files
+let g:NERDTreeIgnore=['\.vim$', '\~$','\.cat$','\.agignore$']
+" Automatically centers on cursor focus
+let g:NERDTreeAutoCenter=1
+" Pretty colors!
+let g:NERDChristmasTree=1
+" Open NERDTree positions
+let g:NERDTreeWinPos='left'
+" Closes the tree window after opening a file.
+let g:NERDTreeQuitOnOpen=1
+" Toggle NERDTree Open/Close
+nmap <F8> :NERDTreeToggle<CR>
+"
+" ++ SURROUND ++
+" Surround line with Parens:
+nmap <leader>) yss)
+nmap <leader>( yss(
+" Surround selection with Parens:
+vmap <leader>) S)
+vmap <leader>( S(
+" Surround line with brackets:
+nmap <leader>] yss]
+nmap <leader>[ yss[
+" Surround selection with brackets:
+vmap <leader>] S]
+vmap <leader>[ S[
+" Surround line with quotes:
+nmap <leader>" yss"
+" Surround selection with quotes:
+vmap <leader>" S"
+" Surround line with single quote:
+nmap <leader>' yss'
+" Surround selection with single quote:
+vmap <leader>' S'
+"
+" ++ DISPATCH ++
+autocmd FileType java let b:dispatch = 'javac %'
+autocmd FileType python let b:dispatch = 'python %'
+autocmd FileType cpp let b:dispatch = 'g++ % -o %.o'
+autocmd FileType rs let b:dispatch = 'rustc %'
 
 
 " ## Editing, Copying, Pasting, Files ##

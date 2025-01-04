@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=balenaEtcher
-Comment=Create bootable USB from images
-Exec=/home/bakerg/bin/balenaEtcher
-Terminal=false
-Type=Application
-Categories=Development

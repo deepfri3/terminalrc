@@ -1,15 +1,30 @@
-" No plugins vim config
+" vim config
 " Created: 5/17/2021
 " Author: George Baker
 
 " Startup
-" enter the current millenium
 set nocompatible
 
-" enable syntax and plugins (for netrw)
-syntax enable
-filetype plugin on
+call plug#begin()
 
+" On-demand loading
+Plug 'preservim/nerdtree', { 'on': 'NERDTreeToggle' }
+
+Plug 'gruvbox-community/gruvbox'
+Plug 'chriskempson/base16-vim'
+
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-dispatch'
+Plug 'tpope/vim-surround'
+
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
+
+
+call plug#end()
+
+set background=dark
+colorscheme gruvbox
 set colorcolumn=80 " highlights column 80
 highlight ColorColumn ctermbg=0 guibg=gray14
 
@@ -19,6 +34,7 @@ set number " show line numbers
 set relativenumber " show line numbers
 set hidden " preserver buffers
 set nowrap " dont wrap lines
+set noerrorbells
 set linebreak "wrap lines at convenient location
 set showmatch " When a bracket is inserted, briefly jump to the matching
               " one. The jump is only done if the match can be seen on the
@@ -29,12 +45,16 @@ set tabstop=4 softtabstop=4 " tab is 4 spaces
 set shiftwidth=4 " number of spaces to use for autoindenting
 set expandtab " use spaces instead of tabs
 set smartindent " smart indent
-set backspace=indent,eol,start
+"set backspace=indent,eol,start
+set backspace=2 " Backspace deletes like most programs in insert mode
               " allow backspacing over everything in insert mode
 set smartcase " ignore case if search pattern is all lower-case
 set incsearch " show search matches as you type
 set hlsearch  " highlight search terms
 set scrolloff=8
+set spelllang=en     " spelling in english
+" correct spelling on previous word
+"set spell spelllang=en_gb
 
 " Open new split panes to right and bottom, which feels more
 " natural than Vim’s default:
@@ -58,7 +78,8 @@ set history=1000         " remember more commands and search history
 set showcmd              " Show incomplete cmds down the bottom
 set showmode             " Show current mode down the bottom
 set gcr=a:blinkon0       " Disable cursor blink
-set cmdheight=2          " Give more space for displaying messages.
+"set cmdheight=2          " Give more space for displaying messages.
+set pastetoggle=<F2>
 
 " Search down into subfolders
 " Provides tab-completion for all file-related tasks
@@ -159,14 +180,16 @@ nnoremap <leader>rp :resize 50<cr>
 nnoremap <leader>seq <C-W>=
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
+inoremap <C-j> <esc>:m .+1<CR>==
+inoremap <C-k> <esc>:m .-2<CR>==
 
 " Copy to end of the line
-nnoremap Y y$
+noremap Y y$
 
 " Keeping it centered
 nnoremap n nzzzv
 nnoremap N Nzzzv
-nnoremap J mzJ`z
+"nnoremap J mzJ`z
 
 " undo delimiters
 inoremap , ,<c-g>u
@@ -177,8 +200,8 @@ inoremap ? ?<c-g>u
 nnoremap <expr> k (v:count > 5 ? "m'" . v:count : "") . 'k'
 nnoremap <expr> j (v:count > 5 ? "m'" . v:count : "") . 'j'
 
-" delete and paste register from visual mode
-vnoremap <leader>p "_dP
+" greatest remap ever
+xnoremap <leader>p "_dP
 
 " next greatest remap ever : asbjornHaland
 nnoremap <leader>y "+y
@@ -199,11 +222,31 @@ endfunction
 nnoremap <leader>r :call ToggleRel()<CR>
 
 
+" ## GIT ##
+"
+" add all files
+command! GAddAll !git add -A
+" add tracked files
+command! GAdd !git add -u
+" Commit with a message
+function! GitAddCommitWithMessageAndPush(option)
+    let l:option = a:option
+    let curline = getline('.')
+    call inputsave()
+    let l:msg = input('Enter commit message: ')
+    call inputrestore()
+    execute '!git add -'.a:option.' && git commit -m "'.l:msg.'" && git push'
+endfunction
+command! -nargs=* GCommit call GitAddCommitWithMessageAndPush()
+
+
 " ## CTAGS mappings ##
 "
 " build ctags for current directory
 command! MakeTags !ctags -R .
-nnoremap <F11> :call ProjRoot()<cr> MakeTags
+" Change to the proj_root directory and execute ctags from proj_root
+"nnoremap <F11> :call ProjRoot()<cr> MakeTags
+nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R .<cr>
 " C-] - go to definition = Ctrl-Left_MouseClick - Go to definition
 " C-T - Jump back from the definition.(or :pop) = Ctrl-Right_MouseClick - Jump back from definition
 " C-W C-] - Open the definition in a horizontal split
@@ -229,6 +272,101 @@ map <leader>tp :tprevious<cr>
 map <leader>tf :tfirst<cr>
 ":tlast 	  - Jump to last matching tag. (Also short form :tl)
 map <leader>tl :tlast<cr>
+
+" ## Plugin mappings ##
+"
+" ++ VIM EXPLORER ++
+let loaded_matchparen = 1
+let g:netrw_browse_split = 2
+let g:netrw_banner = 0
+let g:netrw_winsize = 25
+" Toggle netrw in sidebar
+nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
+"
+" ++ FUGITIVE ++
+nmap <leader>gj :diffget //3<CR>
+nmap <leader>gf :diffget //2<CR>
+nmap <leader>gs :G<CR>
+nnoremap <leader>gc :GCheckout<CR>
+nnoremap <C-p> :GFiles<CR>
+"
+" ++ FZF - Fuzzy finder ++
+" This is the default extra key bindings
+"let g:fzf_action = {
+            "\ 'ctrl-t': 'tab split',
+            "\ 'ctrl-x': 'split',
+            "\ 'ctrl-v': 'vsplit' }
+" Default fzf layout
+"let g:fzf_layout = { 'down': '50%'}
+let g:fzf_layout = { 'window': { 'width': 0.8, 'height': 0.8 } }
+" https://github.com/junegunn/fzf.vim/issues/456
+" Depending where it's installed
+"set rtp+=~/.fzf
+"set rtp+=/usr/local/opt/fzf
+" Invoke fuzzy finder to find files
+nnoremap <silent> <leader>t :Files <cr>
+" List buffers
+nnoremap <silent> <leader>b :Buffers<cr>
+" Simple MRU search - v:oldfiles
+nnoremap <silent> <leader><Enter> :History<cr>
+" Search current buffer
+nnoremap <silent> <leader>bl :BLines<cr>
+" Search all open buffers
+nnoremap <silent> <leader>ba :Lines<cr>
+"
+" ++ RIPGREP ++
+" Use RG for grepping
+set grepprg=rg\ --vimgrep\ --smart-case\ --hidden\ --follow
+let g:rg_command = 'rg --vimgrep -S'
+if executable('rg')
+    let g:rg_derive_root='true'
+endif
+let g:vrfr_rg = 'true'
+nnoremap \ :Rg<CR>
+nnoremap <leader>pw :Rg <C-R>=expand("<cword>")<CR><CR>
+nnoremap <leader>ps :Rg<SPACE>
+"
+" ++ NERDTREE ++
+" NERDTree ignore files
+let g:NERDTreeIgnore=['\.vim$', '\~$','\.cat$','\.agignore$']
+" Automatically centers on cursor focus
+let g:NERDTreeAutoCenter=1
+" Pretty colors!
+let g:NERDChristmasTree=1
+" Open NERDTree positions
+let g:NERDTreeWinPos='left'
+" Closes the tree window after opening a file.
+let g:NERDTreeQuitOnOpen=1
+" Toggle NERDTree Open/Close
+nmap <F8> :NERDTreeToggle<CR>
+"
+" ++ SURROUND ++
+" Surround line with Parens:
+nmap <leader>) yss)
+nmap <leader>( yss(
+" Surround selection with Parens:
+vmap <leader>) S)
+vmap <leader>( S(
+" Surround line with brackets:
+nmap <leader>] yss]
+nmap <leader>[ yss[
+" Surround selection with brackets:
+vmap <leader>] S]
+vmap <leader>[ S[
+" Surround line with quotes:
+nmap <leader>" yss"
+" Surround selection with quotes:
+vmap <leader>" S"
+" Surround line with single quote:
+nmap <leader>' yss'
+" Surround selection with single quote:
+vmap <leader>' S'
+"
+" ++ DISPATCH ++
+autocmd FileType java let b:dispatch = 'javac %'
+autocmd FileType python let b:dispatch = 'python %'
+autocmd FileType cpp let b:dispatch = 'g++ % -o %.o'
+autocmd FileType rs let b:dispatch = 'rustc %'
 
 
 " ## Editing, Copying, Pasting, Files ##
@@ -279,7 +417,7 @@ nmap <silent> <leader>sv :so ~/.vimrc<CR>
 " ## Formatting ##
 "
 " Show tabs and whitespace when needed
-set listchars=tab:>-,trail:!,eol:$
+set listchars=tab:>-,trail:!,eol:$,nbsp:^
 nmap <silent> <leader>s :set nolist!<CR>
 " remove end of line spaces;
 nmap <silent> <leader>dt :%s/\s\+$//e<cr>
@@ -303,7 +441,7 @@ nmap <silent> <leader>: <s-a>:<esc>|
 " ++ VIM EXPLORER ++
 let g:netrw_browse_split=4  " open in prior window
 let g:netrw_banner = 0
-let g:netrw_winsize = 25
+"let g:netrw_winsize = 25
 let g:netrw_altv=1          " open splits to the right
 let g:netrw_liststyle=3     " tree view
 let g:netrw_list_hide = '\(^\|\s\s\)\zs\.\S\+,\(^\|\s\s\)ntuser\.\S\+'
@@ -318,18 +456,18 @@ nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 
 " SNIPPETS:
 " Read an empty HTML template and move cursor to title
-" nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>3jwf>a
-"
+"nnoremap ,html :-1read $HOME/.vim/.skeleton.html<CR>3jwf>a
+
 " NOW WE CAN:
 " - Take over the world!
 "   (with much fewer keystrokes)
-"
+
 " BUILD INTEGRATION:
 " Steal Mr. Bradley's formatter & add it to our spec_helper
 " http://philipbradley.net/rspec-into-vim-with-quickfix
 " Configure the `make` command to run RSpec
-" et makeprg=bundle\ exec\ rspec\ -f\ QuickfixFormatter
-"
+"set makeprg=bundle\ exec\ rspec\ -f\ QuickfixFormatter
+
 " NOW WE CAN:
 " - Run :make to run RSpec
 " - :cl to list errors
