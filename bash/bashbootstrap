@@ -34,3 +34,4 @@ myed=${VISUAL:-${EDITOR:-vim}}
 alias editbashrc="$myed $masterbashrc"
 alias editosbashrc="$myed $osbashrc"
 alias editlocalbashrc="$myed $localbashrc"
+. "$HOME/.cargo/env"

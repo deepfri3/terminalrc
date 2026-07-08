@@ -1,20 +1,22 @@
 # terminalrc
 
-A collection of `.vimrc` and other various configurations for an awesome terminal experience.
+A collection configurations for an awesome terminal experience.
 
-![Image of terminalrc](https://github.com/deepfri3/terminalrc/blob/master/terminal.png)
+![Image of terminalrc](images/terminal.png)
 
 ### Configures and installs:
 
-* i3
 * bash
 * zsh
 * tmux
-* (n)vim
+* neovim
+* vim
 * nerd fonts
-* base-16 and gruvbox _for that sexy look!_
+  * SourceCodePro
+  * FiraCode
+* and gruvbox everywhere _for that sexy look!_
 
 Plus the helpers!
 
-* ripgrep, oh my zsh!, ag, autojump, fzf
+* ripgrep, oh my zsh!, autojump, fzf
 

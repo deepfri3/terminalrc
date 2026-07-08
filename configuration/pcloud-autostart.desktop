@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Version=1.0
-Name=pCloud
-Comment=pCloud startup script
-Exec=/home/bakerg/.local/applications/appimages/pcloud
-StartupNotify=false
-Terminal=false

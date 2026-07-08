@@ -1,545 +1,455 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 # Configure terminal environment
+set -euo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"' ERR
 
-function pause(){
- read -s -n 1 -p "Press any key to continue . . ."
- echo ""
+# --- Options -----------------------------------------------------------------
+
+INSTALL_ALL=0
+INSTALL_TMUX=0
+INSTALL_VIM=0
+INSTALL_NVIM=0
+INSTALL_FONTS=0
+
+usage() {
+  cat <<EOF
+Usage: $0 [OPTIONS]
+
+Setup terminal environment.
+
+Options:
+  --all     Install tmux, vim, neovim, and fonts (default if no options given)
+  --tmux    Compile and install tmux
+  --vim     Compile and install vim
+  --nvim    Compile and install neovim
+  --fonts   Download and install latest fonts
+  --help    Show this help message
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --all) INSTALL_ALL=1 ;;
+  --tmux) INSTALL_TMUX=1 ;;
+  --vim) INSTALL_VIM=1 ;;
+  --nvim) INSTALL_NVIM=1 ;;
+  --fonts) INSTALL_FONTS=1 ;;
+  --help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1" >&2
+    usage
+    exit 1
+    ;;
+  esac
+  shift
+done
+
+if [[ $INSTALL_ALL -eq 1 ]]; then
+  INSTALL_TMUX=1
+  INSTALL_VIM=1
+  INSTALL_NVIM=1
+  INSTALL_FONTS=1
+fi
+
+# Default to all if no install options given
+if [[ $INSTALL_TMUX -eq 0 && $INSTALL_VIM -eq 0 && $INSTALL_NVIM -eq 0 && $INSTALL_FONTS -eq 0 ]]; then
+  INSTALL_TMUX=1
+  INSTALL_VIM=1
+  INSTALL_NVIM=1
+  INSTALL_FONTS=1
+fi
+
+# --- Helpers -----------------------------------------------------------------
+
+function pause() {
+  read -s -n 1 -p "Press any key to continue . . ."
+  echo ""
+}
+
+log() { echo -e "\n** $1 **\n"; }
+
+backup_or_remove() {
+  local target="$1"
+  if [[ -e "$target" && ! -L "$target" ]]; then
+    mv "$target" "${target}.bak.$(date +%s)"
+  elif [[ -L "$target" ]]; then
+    rm "$target"
+  fi
+}
+
+safe_link() {
+  local src="$1" dst="$2"
+  mkdir -p "$(dirname "$dst")"
+  backup_or_remove "$dst"
+  ln -s "$src" "$dst"
 }
 
 basedir=$(pwd)
 echo "basedir=$basedir"
 
-DISTRO=$(cat /etc/issue | cut -d\  -f1)
-echo "disro=$DISTRO"
+DISTRO=$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+echo "distro=$DISTRO"
 
-# install dependencies
-echo -e "\n** Install dependencies **\n"
-#Ubuntu / Debian
-sudo apt update && sudo apt -y upgrade
-sudo apt install -y \
-    ninja-build \
-    gettext \
-    libtool \
-    libtool-bin \
-    autoconf \
-    automake \
-    cmake \
-    make \
-    g++ \
-    pkg-config \
-    unzip \
-    npm \
-    curl \
-    libevent-dev \
-    libncurses-dev \
-    bison \
-    byacc \
-    vim-gtk3 \
-    libgtk2.0-dev \
-    libx11-dev \
-    libxt-dev \
-    libgtk-3-dev \
-    perl \
-    libperl-dev \
-    ruby \
-    ruby-dev \
-    python3-pip \
-    python3-dev \
-    neofetch \
-    htop \
-    autotools-dev \
-    xsel \
-    xclip \
-    ripgrep \
-    okular \
-    autojump \
-    universal-ctags \
-    silversearcher-ag
-    #python-pip-whl \
-    #python \
-sudo snap install bpytop
-sudo snap install vlc
-echo -e "\n** Installation of dependencies completed **\n"
+# --- Dependencies ------------------------------------------------------------
 
-echo -e "\n** Determine desktop environment **\n"
-if [ "$XDG_CURRENT_DESKTOP" = "" ]
-then
-  desktop=$(echo "$XDG_DATA_DIRS" | sed 's/.*\(xfce\|kde\|gnome\).*/\1/')
+log "Install dependencies"
+
+pkg_is_installed() {
+  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+}
+
+packages=(
+  ninja-build gettext libtool libtool-bin autoconf automake cmake make g++
+  pkg-config unzip curl libevent-dev libncurses-dev bison byacc libx11-dev
+  libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
+  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags fzf
+  snapd fd-find cargo
+)
+
+missing=()
+for pkg in "${packages[@]}"; do
+  if ! pkg_is_installed "$pkg"; then
+    missing+=("$pkg")
+  fi
+done
+
+if [[ ${#missing[@]} -gt 0 ]]; then
+  log "Installing missing packages: ${missing[*]}"
+  sudo apt-get update
+  sudo apt-get install -y "${missing[@]}"
 else
-  desktop=`echo $XDG_CURRENT_DESKTOP | cut -d ':' -f 2`
+  echo "All apt packages already installed"
 fi
-desktop=${desktop,,}  # convert to lower case
+
+# Make fd-find usable as 'fd'
+if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
+  mkdir -p ~/.local/bin
+  ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+fi
+
+if [[ "$DISTRO" == "debian" ]]; then
+  LAZYGIT_VERSION=$(curl -fsSL \
+    "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
+    grep -Po '"tag_name": *"v\K[^"]*') || true
+  [[ -z "$LAZYGIT_VERSION" ]] && {
+    echo "Could not fetch lazygit version" >&2
+    exit 1
+  }
+
+  ARCH=$(uname -m)
+  case "$ARCH" in
+  x86_64) LAZYGIT_ARCH="Linux_x86_64" ;;
+  aarch64) LAZYGIT_ARCH="Linux_arm64" ;;
+  armv7l) LAZYGIT_ARCH="Linux_armv7" ;;
+  *)
+    echo "Unsupported architecture: $ARCH" >&2
+    exit 1
+    ;;
+  esac
+
+  curl -fsSL -o /tmp/lazygit.tar.gz \
+    "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
+  tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
+  sudo install /tmp/lazygit -D -t /usr/local/bin/
+  rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
+
+  sudo snap install ghostty --classic
+  sudo snap install zig --beta --classic
+
+  log "Install fastfetch"
+  if ! command -v fastfetch >/dev/null 2>&1; then
+    FASTFETCH_VERSION=$(curl -fsSL \
+      "https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest" |
+      grep -Po '"tag_name": *"\K[^"]*' || true)
+
+    [[ -z "$FASTFETCH_VERSION" ]] && {
+      echo "Could not determine fastfetch version" >&2
+      exit 1
+    }
+
+    curl -fsSL -o /tmp/fastfetch-linux-amd64.deb \
+      "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.deb"
+
+    sudo dpkg -i /tmp/fastfetch-linux-amd64.deb
+    sudo apt-get install -f -y
+    rm -f /tmp/fastfetch-linux-amd64.deb
+  else
+    echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
+  fi
+fi
+
+log "Installation of dependencies completed"
+
+# --- Desktop environment -----------------------------------------------------
+
+log "Determine desktop environment"
+
+if [[ -z "${XDG_CURRENT_DESKTOP:-}" ]]; then
+  desktop=$(echo "${XDG_DATA_DIRS:-}" | sed -n 's/.*\(xfce\|kde\|gnome\).*/\1/p')
+else
+  desktop=$(echo "$XDG_CURRENT_DESKTOP" | cut -d ':' -f 2)
+fi
+desktop=${desktop,,}
 echo "Desktop Environment --> $desktop"
 
-if [ $desktop == "gnome" ]; then
-    if [ ! -d ~/.config/base16-gnome-terminal ]; then
-        echo "cloning gnome base-16 theme..."
-        git clone https://github.com/aaron-williamson/base16-gnome-terminal.git ~/.config/base16-gnome-terminal
-        #install desired base-16 themes
-        ~/.config/base16-
-        gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
-    fi
+if [[ "$desktop" == "gnome" ]]; then
+  if [[ ! -d ~/.config/base16-gnome-terminal ]]; then
+    echo "cloning gnome base-16 theme..."
+    git clone https://github.com/aaron-williamson/base16-gnome-terminal.git \
+      ~/.config/base16-gnome-terminal
+    ~/.config/base16-gnome-terminal/color-scripts/base16-gruvbox-dark-hard.sh
+  fi
 
-    if [ ! -d ~/.themes ]; then
-        mkdir -p ~/repositories
-        git clone https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git ~/repositories/gnome-gruvbox-theme
-        mkdir -p ~/.themes
-        mkdir -p ~/.icons
-        cp ~/repositories/gnome-gruvbox-theme/themes/* ~/.themes
-        cp ~/repositories/gnome-gruvbox-theme/icons/* ~/.icons
-        mkdir -p ~/.local/share/gedit/styles
-        cp ~/repositories/gnome-gruvbox-theme/extras/text-editor/* ~/.local/share/gedit/styles
-    fi
+  if [[ ! -d ~/.themes ]]; then
+    mkdir -p ~/repos
+    git clone https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme.git \
+      ~/repos/gnome-gruvbox-theme
+    mkdir -p ~/.themes ~/.icons ~/.local/share/gedit/styles
+    cp ~/repos/gnome-gruvbox-theme/themes/* ~/.themes/
+    cp ~/repos/gnome-gruvbox-theme/icons/* ~/.icons/
+    cp ~/repos/gnome-gruvbox-theme/extras/text-editor/* \
+      ~/.local/share/gedit/styles/
+  fi
+elif [[ "$desktop" == "kde" ]]; then
+  echo "KDE desktop!"
+
+  if [[ ! -d ~/repos/base16-konsole-themes ]]; then
+    echo "Install base16 themes for Konsole"
+    git clone https://github.com/cskeeters/base16-konsole.git \
+      ~/repos/base16-konsole-themes
+    mkdir -p ~/.local/share/konsole
+    cp ~/repos/base16-konsole-themes/colorscheme/base16-gruvbox-dark-* \
+      ~/.local/share/konsole/
+  fi
+
+  if [[ ! -f ~/.local/share/konsole/Gruvbox_dark.colorscheme ]]; then
+    echo "Install gruvbox Konsole color scheme"
+    mkdir -p ~/.local/share/konsole
+    curl -fsSL -o ~/.local/share/konsole/Gruvbox_dark.colorscheme \
+      "https://raw.githubusercontent.com/morhetz/gruvbox-contrib/master/konsole/Gruvbox_dark.colorscheme"
+    curl -fsSL -o ~/.local/share/konsole/Gruvbox_light.colorscheme \
+      "https://raw.githubusercontent.com/morhetz/gruvbox-contrib/master/konsole/Gruvbox_light.colorscheme"
+  fi
+
+  if [[ ! -d ~/.local/share/warp-terminal/themes ]]; then
+    echo "Install Warp terminal themes"
+    mkdir -p ~/.local/share/warp-terminal
+    git clone https://github.com/warpdotdev/themes.git \
+      ~/.local/share/warp-terminal/themes
+  fi
+else
+  echo "Unknown desktop!"
 fi
 
+mkdir -p ~/.local/bin
 
-if [ ! -d ~/.local/bin ]; then
-    echo "~/.local/bin doesn't exist...create it."
-    mkdir -p ~/.local/bin
-fi
-if [ ! -d ~/.local/applications ]; then
-    echo "~/.local/applications doesn't exist...create it."
-    mkdir -p ~/.local/applications
-fi
+# --- Bash --------------------------------------------------------------------
 
+log "bash configuration"
+safe_link "$basedir/bash/bashbootstrap" ~/.bashrc
+log "bash configuration completed"
 
-# i3 installation and configuration
-#echo -e "\n** i3 installation configuration started **\n"
-#if [ $DISTRO == "Ubuntu" ]; then
-    #if [ ! -f ~/Downloads/keyring.deb ]; then
-        #echo "Do the following manually:"
-        #echo "pushd ~/Downloads"
-        #echo "https://i3wm.org/docs/repositories.html"
-        #echo "/usr/lib/apt/apt-helper download-file https://debian.sur5r.net/i3/pool/main/s/sur5r-keyring/sur5r-keyring_2021.02.02_all.deb keyring.deb SHA256:cccfb1dd7d6b1b6a137bb96ea5b5eef18a0a4a6df1d6c0c37832025d2edaa710"
-        #echo "#sudo dpkg -i ./keyring.deb"
-        #echo "\"deb [arch=amd64] http://debian.sur5r.net/i3/ $(grep '^DISTRIB_CODENAME=' /etc/lsb-release | cut -f2 -d=) universe\" >> /etc/apt/sources.list.d/sur5r-i3.list"
-        #echo "sudo apt update"
-        #echo "popd"
-        #pause
-        #sudo apt install -y i3 i3lock i3lock-fancy rofi
-    #fi
-    #if [ ! -d ~/.config/i3 ]; then
-        #echo "~/.config/i3 doesn't exist...create it."
-        #mkdir -p ~/.config/i3
-    #fi
-    #if [ ! -d ~/.config/i3status ]; then
-        #echo "~/.config/i3status doesn't exist...create it."
-        #mkdir -p ~/.config/i3status
-    #fi
-    #if [ -f ~/.Xresources ]; then
-        #echo "~/.Xresources exists...remove it."
-        #rm ~/.Xresources
-    #fi
-    #ln -s $basedir/dotFiles/dotXresources ~/.Xresources
-    #if [ -f ~/.config/i3/config ]; then
-        #echo "~/.config/i3/config exists...remove it."
-        #rm ~/.config/i3/config
-    #fi
-    #ln -s $basedir/i3/i3config ~/.config/i3/config
-    #if [ -f ~/.config/i3/config ]; then
-        #echo "~/.config/i3/config exists...remove it."
-        #rm ~/.config/i3/config
-    #fi
-    #ln -s $basedir/i3/i3config ~/.config/i3/config
-    #if [ -f ~/.config/i3status/config ]; then
-        #echo "~/.config/i3status/config exists...remove it."
-        #rm ~/.config/i3status/config
-    #fi
-    #ln -s $basedir/i3/i3status ~/.config/i3status/config
-    #if [ ! -d ~/.config/rofi/themes/gruvbox ]; then
-        #echo "Install gruvbox theme for rofi..."
-        #git clone https://github.com/bardisty/gruvbox-rofi ~/.config/rofi/themes/gruvbox
-        #mkdir -p ~/.config/rofi
-        #echo -e "rofi.theme: ~/.config/rofi/themes/gruvbox/gruvbox-dark.rasi\n" > ~/.config/rofi/config
-    #fi
-    #sudo cp $basedir/configuration/wakelock.service /etc/systemd/system
-    #sudo systemctl enable wakelock.service
-#fi
-#echo -e "\n** i3 installation and configuration completed **\n"
+# --- bash-git-prompt ---------------------------------------------------------
 
-# bash configuration
-echo -e "\n** bash configuration started **\n"
-if [ -f ~/.bashrc ]; then
-    echo "~/.bashrc exists...remove it."
-    rm ~/.bashrc
-fi
-ln -s $basedir/bash/bashbootstrap ~/.bashrc
-#if [ -f ~/.dircolorsrc ]; then
-#    echo "~/.dircolorsrc exists...remove it."
-#    rm ~/.dircolorsrc
-#fi
-#ln -s $basedir/dotFiles/dotdircolorsrc ~/.dircolorsrc
-echo -e "\n** bash configuration completed **\n"
-
-echo -e "\n** bash-git-promt configuration started **\n"
-echo "git prompt for bash"
-if [ ! -d ~/.bash-git-prompt ]; then
-    echo "cloning bash-git-prompt..."
-    git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1
+log "bash-git-prompt configuration"
+if [[ ! -d ~/.bash-git-prompt ]]; then
+  git clone --depth=1 https://github.com/magicmonty/bash-git-prompt.git \
+    ~/.bash-git-prompt
 fi
 pushd ~/.bash-git-prompt
 echo "updating bash-git-prompt"
 git pull
-echo "update complete"
 popd
-echo -e "\n** bash-git-prompt configuration completed **\n"
+log "bash-git-prompt configuration completed"
 
-echo -e "\n** base16 shell configuration started **\n"
-# add base16-shell (https://github.com/chriskempson/base16-shell)
-if [ ! -d ~/.config/base16-shell ]; then
-    echo "need to download base16-shell..."
-    git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
+# --- base16-shell ------------------------------------------------------------
+
+log "base16 shell configuration"
+if [[ ! -d ~/.config/base16-shell ]]; then
+  git clone https://github.com/chriskempson/base16-shell.git \
+    ~/.config/base16-shell
 fi
 pushd ~/.config/base16-shell
 echo "updating base16-shell"
 git pull
-echo "update complete"
 popd
-echo -e "\n** base16 shell configuration completed **\n"
+log "base16 shell configuration completed"
 
-echo -e "\n** zsh configuration start **\n"
-if [ ! -d ~/.oh-my-zsh ]; then
-    echo "go download oh my zsh!..."
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+# --- Zsh / Oh-My-Zsh ---------------------------------------------------------
+
+log "zsh configuration"
+if [[ ! -d ~/.oh-my-zsh ]]; then
+  sh -c "$(curl -fsSL \
+    https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  git clone https://github.com/zsh-users/zsh-autosuggestions.git \
+    "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
+    "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
 fi
 pushd ~/.oh-my-zsh
 echo "updating oh-my-zsh"
 git pull
-echo "update complete"
 popd
-if [ -f ~/.zshrc ]; then
-    echo "~/.zshrc exists...remove it."
-    rm ~/.zshrc
-fi
-ln -s $basedir/zsh/zshbootstrap ~/.zshrc
-echo -e "\n** zsh configuration completed **\n"
+safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
+log "zsh configuration completed"
 
-echo -e "\n** tmux installation and configuration **\n"
-# tmux installation and configuration
-if [ ! -d ~/repositories/tmux ]; then
+# --- Ghostty -----------------------------------------------------------------
+
+log "ghostty configuration"
+mkdir -p ~/.config/ghostty
+safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
+log "ghostty configuration completed"
+
+# --- tmux --------------------------------------------------------------------
+
+if [[ $INSTALL_TMUX -eq 1 ]]; then
+  log "tmux installation and configuration"
+  if [[ ! -d ~/repos/tmux ]]; then
     echo "cloning tmux..."
-    git clone https://github.com/tmux/tmux.git ~/repositories/tmux
-    # setup tmux plugins
+    git clone https://github.com/tmux/tmux.git ~/repos/tmux
     echo "cloning and installing tmux tpm plugin manager..."
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  fi
+  pushd ~/repos/tmux
+  echo "updating tmux..."
+  git pull
+  echo "update complete"
+  sh autogen.sh
+  echo "tmux configure..."
+  ./configure --prefix="${HOME}/.local"
+  echo "tmux clean..."
+  make clean
+  echo "tmux build..."
+  make
+  echo "tmux install..."
+  make install
+  echo "tmux installed"
+  popd
+  safe_link "$basedir/.tmux.conf" ~/.tmux.conf
+  log "tmux installation and configuration completed"
 fi
-pushd ~/repositories/tmux
-echo "updating tmux..."
-git pull
-echo "update complete"
-sh autogen.sh
-echo "tmux configure..."
-./configure --prefix=${HOME}/.local > log_configure.txt
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "tmux clean..."
-make clean > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "tmux build..."
-make > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-echo "tmux install..."
-make install > /dev/null
-[ $? -eq 0 ] && echo "OK" || echo "ERROR"
-#if [ -f ~/bin/tmux ]; then
-#    echo "~/bin/tmux exists...remove it."
-#    rm ~/bin/tmux
-#fi
-#ln -s ~/applications/bin/tmux ~/bin/tmux
-echo "tmux installed"
-popd
-if [ -f ~/.tmux.conf ]; then
-    echo "~/.tmux.conf exists...remove it."
-    rm ~/.tmux.conf
-fi
-ln -s $basedir/dotFiles/dottmuxdotconf ~/.tmux.conf
-#ostmuxconf=tmux-`uname`
-#localtmuxconf=$ostmuxconf-`hostname | cut -d. -f1`
-#echo -e "\n# default resurrect dir" > ~/.tmux.conf
-#echo -e "set -g @resurrect-dir '~/.tmux/resurrect/$localtmuxconf'\n" >> ~/.tmux.conf
-#echo -e "source-file $basedir/dotFiles/dottmuxdotconf\n" >> ~/.tmux.conf
-echo -e "\n** tmux installation and configuration completed **\n"
 
-# vim install and configure links
-echo -e "\n** vim install and configure started **\n"
-if [ ! -d ~/repositories/vim ]; then
+# --- vim ---------------------------------------------------------------------
+
+if [[ $INSTALL_VIM -eq 1 ]]; then
+  log "vim install and configure"
+  if [[ ! -d ~/repos/vim ]]; then
     echo "cloning vim..."
-    git clone https://github.com/vim/vim.git ~/repositories/vim
+    git clone https://github.com/vim/vim.git ~/repos/vim
     curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    echo -e "install modern vim dependencies..."
-fi
-pushd ~/repositories/vim
-    echo "updating vim..."
-    git pull
-    echo "update complete"
-    echo "vim clean..."
-    make distclean > /dev/null
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "configuring vim..."
-    ./configure --prefix=${HOME}/.local \
+      https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    echo "install modern vim dependencies..."
+  fi
+  pushd ~/repos/vim
+  echo "updating vim..."
+  git pull
+  echo "update complete"
+  echo "vim clean..."
+  make distclean
+  echo "configuring vim..."
+  ./configure --prefix="${HOME}/.local" \
     --with-features=huge \
     --disable-nls \
     --with-x \
-    --enable-gtk2-check \
-    --enable-gui=auto \
+    --enable-gui=gtk3 \
     --enable-multibyte=yes \
     --enable-cscope=yes \
     --with-tlib=ncurses \
-    --enable-pythoninterp \
-    --with-python-command=/usr/bin/python2.7 \
-    --enable-python3interp \
+    --enable-python3interp=dynamic \
     --with-python3-command=/usr/bin/python3 \
-    --with-python3-config-dir=$(python3-config --configdir) \
-    --enable-luainterp=yes \
-    --enable-rubyinterp=yes \
-    --enable-perlinterp=yes \
-    --with-ruby-command=/usr/bin/ruby \
-    --enable-fontset=yes > log_configure.txt
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "vim configured"
-    echo "vim build..."
-    make > /dev/null
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "make done"
-    echo "vim install"
-    make install > /dev/null
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "install done"
-popd
-:<<'END'
-if [ -f ~/bin/vim ]; then
-    echo "~/bin/vim exists...remove it."
-    rm ~/bin/vim
+    --with-python3-config-dir="$(python3-config --configdir)" \
+    --enable-luainterp=dynamic \
+    --enable-rubyinterp=dynamic \
+    --enable-perlinterp=dynamic \
+    --enable-fail-if-missing \
+    --disable-netbeans \
+    --enable-fontset=yes
+  echo "vim configured"
+  echo "vim build..."
+  make
+  echo "make done"
+  echo "vim install"
+  make install
+  echo "install done"
+  popd
+  safe_link "$basedir/vim/no_plugins.vimrc" ~/.vimrc
+  log "vim install and configuration completed"
 fi
-ln -s ~/.local/bin/vim ~/bin/vim
-if [ -f ~/bin/gvim ]; then
-    echo "~/bin/gvim exists...remove it."
-    rm ~/bin/gvim
-fi
-ln -s ~/.local/bin/gvim ~/bin/gvim
-if [ -f ~/.vimrc ]; then
-    echo "~/.vimrc exists...remove it."
-    rm ~/.vimrc
-fi
-END
-ln -s $basedir/vim/no_plugins.vimrc ~/.vimrc
-echo -e "\n** vim install and configuration completed **\n"
 
-# neovim install and configure links
-echo -e "\n** neovim install and configure **\n"
-if [ ! -d ~/respositories/neovim ]; then
+# --- neovim ------------------------------------------------------------------
+
+if [[ $INSTALL_NVIM -eq 1 ]]; then
+  log "neovim install and configure"
+  if [[ ! -d ~/repos/neovim ]]; then
     echo "clone neovim from repo..."
-    git clone https://github.com/neovim/neovim.git ~/repositories/neovim
-    echo "download from plug.vim and install..."
-    sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+    git clone https://github.com/neovim/neovim.git ~/repos/neovim
+  fi
+  pushd ~/repos/neovim
+  echo "updating neovim..."
+  git pull
+  echo "update complete"
+  echo "neovim clean..."
+  rm -rf build/
+  echo "neovim build..."
+  make CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=${HOME}/.local" \
+    CMAKE_BUILD_TYPE=Release
+  echo "neovim compiled."
+  echo "install neovim"
+  make install
+  echo "install done"
+  cargo install tree-sitter-cli
+  popd
+  log "neovim setup completed"
 fi
-pushd ~/repositories/neovim
-    echo "updating neovim..."
-    git pull
-    echo "update complete"
-    echo "make neovim..."
-    echo "neovim clean..."
-    make CMAKE_INSTALL_PREFIX=${HOME}/.local CMAKE_BUILD_TYPE=Release distclean > /dev/null
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "neovim build..."
-    make CMAKE_INSTALL_PREFIX=${HOME}/.local CMAKE_BUILD_TYPE=Release all > /dev/null
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "neovim compiled."
-    echo "install neovim"
-    make install > /dev/null
-    [ $? -eq 0 ] && echo "OK" || echo "ERROR"
-    echo "install done"
-popd
-#if [ -f ~/bin/nvim ]; then
-#    echo "~/bin/nvim exists...remove it."
-#    rm ~/bin/nvim
-#fi
-#ln -s ~/applications/bin/nvim ~/bin/nvim
-mkdir -p ~/.config/nvim
-mkdir -p ~/.local/share/nvim/site/plugged
-if [ -f ~/.config/nvim/init.vim ]; then
-    echo "init.vim exists...remove it."
-    rm ~/.config/nvim/init.vim
-fi
-ln -s $basedir/vim/init.vim ~/.config/nvim/init.vim
-echo "neovim setup completed"
 
+# --- Misc --------------------------------------------------------------------
 
-:<<'END'
-# install autojump
-# https://github.com/wting/autojump
-echo -e "\n** install autojump **\n"
-if [ $DISTRO == "Ubuntu" ]; then
-    sudo apt-get install -y autojump
-    # autojump (https://github.com/wting/autojump)
-    # configured for Debian
-    # add to terminalrc
-    #[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
-fi
-echo "install done"
-if [ ! -d ~/applications/autojump ]; then
-    echo "cloning autojump..."
-    git clone git://github.com/wting/autojump.git ~/applications/autojump
-fi
-pushd ~/applications/autojump
-echo "updating autojump..."
-git pull
-echo "update complete"
-echo "install autojump"
-python uninstall.py
-python install.py
-echo "install done"
-popd
-END
-
-:<<'END'
-# install ag the silver searcher
-# https://github.com/ggreer/the_silver_searcher
-echo -e "\n** install ag - the sliver searcher **\n"
-if [ $DISTRO == "Ubuntu" ]; then
-    sudo apt-get install -y silversearcher-ag
-fi
-echo "install done"
-if [ ! -d ~/applications/the_silver_searcher ]; then
-    echo "cloning ag..."
-    git clone https://github.com/ggreer/the_silver_searcher.git ~/applications/the_silver_searcher
-fi
-pushd ~/applications/the_silver_searcher
-echo "updating ag..."
-git pull
-echo "update complete"
-echo "install ag"
-./build.sh
-popd
-if [ -f ~/bin/ag ]; then
-    rm ~/bin/ag
-fi
-ln ~/Downloads/the_silver_searcher/ag ~/bin/ag
-echo "install done"
-END
-
-:<<'END'
-echo -e "\n** install fzf **\n"
-if [ $DISTRO == "Ubuntu" ]; then
-    # fzf - fuzzy finder (https://github.com/junegunn/fzf)
-    sudo apt-get install -y fzf
-    # configured for Debian
-    echo "add to terminalrc:"
-    echo "source /usr/share/doc/fzf/examples/key-bindings.zsh"
-    echo "source /usr/share/doc/fzf/examples/completion.zsh"
-    pause
-fi
-echo "install done"
-# https://github.com/junegunn/fzf
-if [ ! -d ~/applications/fzf ]; then
-    echo "cloning fzf..."
-    git clone --depth 1 https://github.com/junegunn/fzf.git ~/applications/fzf
-fi
-pushd ~/applications/fzf
-echo "updating fzf..."
-git pull
-echo "update complete"
-echo "clean and install fzf"
-./install
-echo "install done"
-popd
-END
-
-# install pCloud
-echo -e "\n** pcloud installation **\n"
-if [ ! -f ~/.local/bin/pcloud ]; then
-    echo "Go download pcloud appimage to ~/.local/applications/appimages"
-    pause
-    chmod +x ~/.local/applications/appimages/pcloud
-    echo "download completed"
-fi
-if [ -f ~/.local/bin/pcloud ]; then
-    echo "~/.local/bin/pcloud exists...remove it."
-    rm ~/.local/bin/pcloud
-fi
-ln -s ~/.local/applications/appimages/pcloud ~/.local/bin/pcloud
-if [ -f ~/.local/share/applications/pcloud.desktop ]; then
-    rm ~/.local/share/applications/pcloud.desktop
-fi
-ln -s $basedir/configuration/pcloud-dmenu.desktop ~/.local/share/applications/pcloud.desktop
-if [ -f ~/.config/autostart/pcloud.desktop ]; then
-    rm ~/.config/autostart/pcloud.desktop
-fi
-ln -s $basedir/configuration/pcloud-autostart.desktop ~/.config/autostart/pcloud.desktop
-cp $basedir/configuration/pcloud.png ~/.local/applications/appimages
-echo -e "\n** pcloud installation completed  **\n"
-
-# install UHK
-echo -e "\n** UHK installation **\n"
-if [ ! -f ~/.local/applications/appimages/uhk ]; then
-    echo "Go download latest UHK ~/.local/applications/appimages"
-    pause
-    chmod +x ~/.local/applications/appimages/uhk
-fi
-if [ -f ~/.local/bin/uhk ]; then
-    echo "~/.local/bin/uhk exists...remove it."
-    rm ~/.local/bin/uhk
-fi
-ln -s ~/.local/applications/appimages/uhk ~/.local/bin/uhk
-cp $basedir/configuration/uhk.desktop ~/.local/share/applications
-cp $basedir/configuration/uhk.jpeg ~/.local/applications/appimages
-echo -e "\n** UHK installation completed  **\n"
-
-# Misc
-echo -e "\n** do misc **\n"
+log "do misc"
 echo "ssh configuration"
 mkdir -p ~/.ssh
-chmod 0740 ~/.ssh
+chmod 0700 ~/.ssh
+
 echo "ignore file"
-if [ -f ~/.agignore ]; then
-    rm ~/.agignore
-fi
-echo "agignore"
-ln -s $basedir/dotFiles/dotagignore ~/.agignore
-echo "1password dmenu entry"
-if [ -f ~/.config/autostart/1password.desktop ]; then
-    rm ~/.config/autostart/1password.desktop
-fi
-ln -s $basedir/configuration/1password.desktop ~/.config/autostart/1password.desktop
+safe_link "$basedir/.agignore" ~/.agignore
+
 echo "add .profile"
-if [ -f ~/.profile ]; then
-    echo "~/.profile exists...remove it."
-    rm ~/.profile
-fi
-ln -s $basedir/dotFiles/dotProfile ~/.profile
-echo -e "\n** misc done **\n"
+safe_link "$basedir/.profile" ~/.profile
+log "misc done"
 
-# configure fonts
-echo -e "\n** configure fonts **\n"
-if [ ! -d ~/.local/share/fonts ]; then
-    mkdir -p ~/.local/share/fonts
-fi
+# --- Fonts -------------------------------------------------------------------
 
-# goto fonts directory and download...
-pushd ~/.local/share/fonts
-    echo -e "Downloading Source Code Pro\n"
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Regular/SauceCodeProNerdFont-Regular.ttf
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Regular/SauceCodeProNerdFontMono-Regular.ttf
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Medium/SauceCodeProNerdFont-Medium.ttf
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/SourceCodePro/Medium/SauceCodeProNerdFontMono-Medium.ttf
-    echo -e "Downloading Fira Code\n"
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Regular/FiraCodeNerdFont-Regular.ttf
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Regular/FiraCodeNerdFontMono-Regular.ttf
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Medium/FiraCodeNerdFont-Medium.ttf
-    curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/FiraCode/Medium/FiraCodeNerdFontMono-Medium.ttf
-popd
+if [[ $INSTALL_FONTS -eq 1 ]]; then
+  log "configure fonts"
+  mkdir -p ~/.local/share/fonts
 
-# Reset font cache on Linux
-if which fc-cache >/dev/null 2>&1 ; then
+  install_nerd_font_family() {
+    local family="$1"
+    local version="${2:-v3.4.0}"
+    local zip="${family}.zip"
+    local url="https://github.com/ryanoasis/nerd-fonts/releases/download/${version}/${zip}"
+
+    curl -fsSL -o "/tmp/${zip}" "$url"
+    unzip -o "/tmp/${zip}" -d ~/.local/share/fonts/
+    rm -f "/tmp/${zip}"
+  }
+
+  echo "Installing Source Code Pro"
+  install_nerd_font_family "SourceCodePro"
+  echo "Installing Fira Code"
+  install_nerd_font_family "FiraCode"
+
+  if command -v fc-cache >/dev/null 2>&1; then
     echo "Resetting font cache, this may take a moment..."
     fc-cache -f -v ~/.local/share/fonts
+  fi
 fi
 
-#restart applications that need the fonts
 echo -e "\nswitch to zsh:"
-echo -e "\n\tchsh -s \$(which zsh)\n"
+echo -e "\n\tchsh -s \$(command -v zsh)\n"
 
 pause
-exit
+exit 0
