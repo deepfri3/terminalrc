@@ -1,0 +1,64 @@
+format = """
+$username\
+$hostname\
+$localip\
+$shlvl\
+$directory\
+$vcsh\
+$git_branch\
+$git_commit\
+$git_state\
+$git_metrics\
+$git_status\
+$package\
+$buf\
+$nix_shell\
+$memory_usage\
+$env_var\
+$custom\
+$sudo\
+$cmd_duration\
+$jobs\
+$battery\
+$time\
+$status\
+$shell\
+$character"""
+
+[character]
+#success_symbol = "[➜](bold green) "
+#error_symbol = "[✗](bold red) "
+#success_symbol = "[❯](green)"
+#error_symbol = "[❯](red)"
+success_symbol = "[\\$](bold green) "
+error_symbol = "[X](bold red) "
+
+[directory]
+style = "blue bold"
+
+# Slow on WSL, ok on Linux/Windows
+[git_status]
+disabled = false
+ahead = "^"
+style = "yellow"
+
+[git_branch]
+#symbol = "שׂ "
+symbol = " "
+format = "[$symbol$branch(:$remote_branch)]($style) "
+truncation_length = 19
+# truncation_symbol = "*"
+style = "magenta"
+
+[cmd_duration]
+format = "[$duration]($style) "
+
+[username]
+format = "[$user]($style)"
+
+[hostname]
+disabled = false
+ssh_symbol = "@"
+style = "bold green"
+format = "[$ssh_symbol$hostname]($style) "
+#format = "$directory$git_branch$git_status$character"

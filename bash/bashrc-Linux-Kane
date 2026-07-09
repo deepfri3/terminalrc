@@ -1,0 +1,16 @@
+
+# ========== KANE SPECIFIC =========== #
+
+# set environment
+export PATH=/usr/atria/bin:/usr/atria/etc:/usr/atria/etc/utils:$PATH
+
+# Java home directory
+export JAVA_HOME=/usr/lib/jvm/default-java
+
+alias userlist='cat /etc/passwd | grep /bin/bash | grep "10[0-1][0-9]" | cut -d: -f1'
+
+#Dropbox
+alias dropbox="dbus-launch ~/.dropbox-dist/dropboxd start -i &"
+
+# List DNS IP addresses
+alias lsips="grep -ri \"#\\ host[0-9]\" /etc/bind/named.conf.options"
