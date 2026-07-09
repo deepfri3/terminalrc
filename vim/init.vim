@@ -265,6 +265,8 @@ let g:netrw_winsize = 25
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 "
 " ++ COC ++
+" https://nodejs.org/en/download/
+let g:coc_node_path = '/home/deepfri3/.config/nvm/versions/node/v24.18.0/bin/node'
 set signcolumn=yes
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
