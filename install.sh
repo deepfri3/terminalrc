@@ -414,7 +414,7 @@ mkdir -p ~/.ssh
 chmod 0700 ~/.ssh
 
 echo "ignore file"
-safe_link "$basedir/.agignore" ~/.agignore
+safe_link "$basedir/.rgignore" ~/.rgignore
 
 echo "add .profile"
 safe_link "$basedir/.profile" ~/.profile
