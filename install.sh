@@ -376,8 +376,9 @@ if [[ $INSTALL_VIM -eq 1 ]]; then
   make install
   echo "install done"
   popd
-  safe_link "$basedir/vim/no_plugins.vimrc" ~/.vimrc
+  safe_link "$basedir/vim/init.vim" ~/.vimrc
   log "vim install and configuration completed"
+  mkdir p ~/.vim/autoload
 fi
 
 # --- neovim ------------------------------------------------------------------

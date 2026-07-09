@@ -36,7 +36,9 @@ require("lazy").setup({
 
 	-- Colors
 	-- { "gruvbox-community/gruvbox", lazy = false, priority = 1000 },
-	{ "morhetz/gruvbox", lazy = false, priority = 1000 },
+	-- { "morhetz/gruvbox", lazy = false, priority = 1000 },
+    	-- Gruvbox written in native lua
+    	{ "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
 
 	-- Statusline: airline -> lualine
 	{ "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },

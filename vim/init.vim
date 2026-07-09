@@ -3,23 +3,13 @@
 
 " Startup
 filetype off
-let g:running_windows = has("win16") || has("win32") || has("win64")
-if g:running_windows
-    let g:python3_host_prog='C:\Python38\Lib\venv\scripts\nt\python.exe'
-else
-    if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-      silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-        \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-      autocmd VimEnter * PlugInstall --sync | source ~/.config/nvim/init.vim
-    endif
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source ~/.vimrc
 endif
 
-" Specify a directory for plugins
-if g:running_windows
-    call plug#begin('~/AppData/Local/nvim/plugged')
-else
-    call plug#begin('~/.local/share/nvim/site/plugged')
-endif
+call plug#begin()
 
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'tpope/vim-fugitive'
@@ -120,13 +110,8 @@ set noswapfile " disable swap file
 set undofile " enable vim undo history
 set undolevels=1000 " use many muchos levels of undo
 
-if g:running_windows
-    set undodir=~\AppData\Local\nvim\undodir " Keep undo history across sessions,
-                                             " by storing in file.
-else
-    set undodir=~/.local/share/nvim/undodir " Keep undo history across sessions,
+set undodir=~/.vim/undodir " Keep undo history across sessions,
                                             " by storing in file.
-endif
 set viminfo+='100,f1 " Save up to 100 marks, enable capital marks
 
 set history=1000         " remember more commands and search history
@@ -259,14 +244,9 @@ vnoremap <leader>d "_d
 " ## CTAGS mappings ##
 "
 " build ctags for current directory
-if g:running_windows
-    let g:tagbar_ctags_bin = "ctags.exe"
-    map <leader>tag :!ctags -R .<CR><CR>
-else
-    " Change to the proj_root directory and execute ctags from proj_root
-    command! MakeTags !ctags -R .
-    nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R .<cr>
-endif
+" Change to the proj_root directory and execute ctags from proj_root
+command! MakeTags !ctags -R .
+nnoremap <leader>tag :call ProjRoot()<cr>:Dispatch ctags -R .<cr>
 " Open the definition in a vertical split
 map <C-\> :vsp <CR>:exec("tag ".expand("<cword>"))<CR>
 " C-] - go to definition = Ctrl-Left_MouseClick - Go to definition
@@ -492,18 +472,14 @@ vnoremap <F5> y :exec("Rg ".expand("<C-R>""))<CR>
 
 " ## Quickly edit/reload the vimrc file ##
 " Works for both Linux/Windows
-nmap <silent> <leader>ev :e ~/.config/nvim/init.vim<CR>
-nmap <silent> <leader>sv :so ~/.config/nvim/init.vim<CR>
+nmap <silent> <leader>ev :e ~/.vimrc<CR>
+nmap <silent> <leader>sv :so ~/.vimrc<CR>
 
 
 " ## Editing, Copying, Pasting, Files ##
 "
 " set clipboard instead of default
-if g:running_windows
-    set clipboard+=unnamed
-else
-    set clipboard=unnamedplus
-endif
+set clipboard=unnamedplus
 " map a shortcut to make current buffer/file writeable
 nmap <leader>wr :!chmod a+w %<CR><Esc>
 " map a shortcut to make current buffer/file read-only
