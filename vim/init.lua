@@ -48,14 +48,13 @@ require("lazy").setup({
 	{ "nvim-tree/nvim-tree.lua", dependencies = { "nvim-tree/nvim-web-devicons" } },
 
 	-- Fuzzy finder: fzf/fzf.vim -> telescope
-	{
-		"nvim-telescope/telescope.nvim",
-		branch = "0.1.x",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
-		},
-	},
+    {
+      "nvim-telescope/telescope.nvim",
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+        { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+      },
+    },
 
 	-- Syntax: treesitter
     {
