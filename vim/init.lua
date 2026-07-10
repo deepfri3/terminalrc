@@ -30,10 +30,25 @@ require("lazy").setup({
 	"tpope/vim-surround",
 	"tpope/vim-dispatch",
 	"mbbill/undotree",
-
+    -- Tagbar
+    {
+      "preservim/tagbar",   -- majutsushi/tagbar was moved here and is the maintained fork
+      cmd = "TagbarToggle",
+      init = function()
+        vim.g.tagbar_autofocus  = 1      -- put cursor in tagbar when opened
+        vim.g.tagbar_autoclose  = 1      -- close tagbar when you jump to a tag
+        vim.g.tagbar_left       = 1      -- open tagbar on the left
+        vim.g.tagbar_compact    = 1      -- remove extra space
+        vim.g.tagbar_updateonsave_maxlines = 10000
+      end,
+    },
 	-- Tabular (restored)
 	{ "godlygeek/tabular", cmd = "Tabularize" },
-
+    {
+      "folke/lazydev.nvim",
+      ft = "lua",
+      opts = {},
+    },
 	-- Colors
 	-- { "gruvbox-community/gruvbox", lazy = false, priority = 1000 },
 	-- { "morhetz/gruvbox", lazy = false, priority = 1000 },
@@ -418,15 +433,22 @@ require("lualine").setup({
 	options = {
 		theme = "gruvbox",
 		icons_enabled = true,
-		section_separators = "",
-		component_separators = "",
+        section_separators = { left = '', right = ''},
+		-- section_separators = "",
+        component_separators = { left = '', right = ''},
+		-- component_separators = "",
 	},
 	sections = {
 		lualine_b = { "branch", "diff", "diagnostics" },
-		lualine_c = { { "filename", path = 1 } },
+		lualine_c = { { "filename", path = 4 } },
 		lualine_x = { "encoding", "fileformat", "filetype" },
 	},
 })
+
+--------------------------------------------------------------------------------
+-- Plugin setup: TagBar
+--------------------------------------------------------------------------------
+map("n", "<F9>", "<cmd>TagbarToggle<CR>", { silent = true })
 
 --------------------------------------------------------------------------------
 -- Plugin setup: nvim-tree (NERDTree replacement)
@@ -434,7 +456,7 @@ require("lualine").setup({
 require("nvim-tree").setup({
 	view = { side = "left", width = 50 },
 	filters = { custom = { "\\.vim$", "\\.cat$" } },
-	renderer = { highlight_git = true },
+	renderer = { highlight_git = "all" },
 })
 map("n", "<F8>", ":NvimTreeToggle<CR>")
 
@@ -455,8 +477,11 @@ telescope.setup({
 			"--ignore-file",
 			vim.fn.expand("~/.rgignore"),
 		},
-		layout_strategy = "bottom_pane",
-		layout_config = { height = 0.5 },
+		layout_strategy = "horizontal",
+		layout_config = {
+            height = 0.5,
+            mirror = false,
+        },
 		mappings = {
 			i = {
 				["<C-t>"] = require("telescope.actions").select_tab,
@@ -551,8 +576,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "K",  vim.lsp.buf.hover, o)
     map("n", "<leader>rn", vim.lsp.buf.rename, o)
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
-    map("n", "[d", vim.diagnostic.goto_prev, o)
-    map("n", "]d", vim.diagnostic.goto_next, o)
+    -- map("n", "[d", vim.diagnostic.goto_prev, o)
+    -- map("n", "]d", vim.diagnostic.goto_next, o)
   end,
 })
 
