@@ -151,6 +151,52 @@ require("lazy").setup({
       branch = "main",
       lazy = false,
       build = ":TSUpdate",
+	  opts = {
+		textobjects = {
+		  move = {
+			goto_next_start = {
+			  ["]f"] = {
+				query = "@function.outer",
+				desc = "Next function",
+			  },
+			  ["]c"] = {
+				query = "@class.outer",
+				desc = "Next class",
+			  },
+			},
+			goto_next_end = {
+			  ["]F"] = {
+				query = "@function.outer",
+				desc = "Next function (end)",
+			  },
+			  ["]C"] = {
+				query = "@class.outer",
+				desc = "Next class (end)",
+			  },
+			},
+			goto_previous_start = {
+			  ["[f"] = {
+				query = "@function.outer",
+				desc = "Prev function",
+			  },
+			  ["[c"] = {
+				query = "@class.outer",
+				desc = "Prev class",
+			  },
+			},
+			goto_previous_end = {
+			  ["[F"] = {
+				query = "@function.outer",
+				desc = "Prev function (end)",
+			  },
+			  ["[C"] = {
+				query = "@class.outer",
+				desc = "Prev class (end)",
+			  },
+			},
+		  },
+		},
+	  },
     },
 
 	-- LSP + completion (replaces tagbar's role for code intel; keep ctags too)
