@@ -4,6 +4,9 @@ set -euo pipefail
 IFS=$'\n\t'
 trap 'echo "Error on line $LINENO"' ERR
 
+# --- Globals -----------------------------------------------------------------
+GOLANG_VERISON=1.26.5
+
 # --- Options -----------------------------------------------------------------
 
 INSTALL_ALL=0
@@ -56,12 +59,12 @@ if [[ $INSTALL_ALL -eq 1 ]]; then
 fi
 
 # Default to all if no install options given
-if [[ $INSTALL_TMUX -eq 0 && $INSTALL_VIM -eq 0 && $INSTALL_NVIM -eq 0 && $INSTALL_FONTS -eq 0 ]]; then
-  INSTALL_TMUX=1
-  INSTALL_VIM=1
-  INSTALL_NVIM=1
-  INSTALL_FONTS=1
-fi
+# if [[ $INSTALL_TMUX -eq 0 && $INSTALL_VIM -eq 0 && $INSTALL_NVIM -eq 0 && $INSTALL_FONTS -eq 0 ]]; then
+#   INSTALL_TMUX=1
+#   INSTALL_VIM=1
+#   INSTALL_NVIM=1
+#   INSTALL_FONTS=1
+# fi
 
 # --- Helpers -----------------------------------------------------------------
 
@@ -106,8 +109,8 @@ packages=(
   ninja-build gettext libtool libtool-bin autoconf automake cmake make g++
   pkg-config unzip curl libevent-dev libncurses-dev bison byacc libx11-dev
   libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
-  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags fzf
-  snapd fd-find cargo
+  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
+  fd-find cargo wl-clipboard
 )
 
 missing=()
@@ -132,33 +135,37 @@ if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
 fi
 
 if [[ "$DISTRO" == "debian" ]]; then
+  log "Install lazygit"
   LAZYGIT_VERSION=$(curl -fsSL \
-    "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
-    grep -Po '"tag_name": *"v\K[^"]*') || true
+	"https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
+	grep -Po '"tag_name": *"v\K[^"]*') || true
   [[ -z "$LAZYGIT_VERSION" ]] && {
-    echo "Could not fetch lazygit version" >&2
-    exit 1
+	echo "Could not fetch lazygit version" >&2
+	exit 1
   }
 
-  ARCH=$(uname -m)
-  case "$ARCH" in
-  x86_64) LAZYGIT_ARCH="Linux_x86_64" ;;
-  aarch64) LAZYGIT_ARCH="Linux_arm64" ;;
-  armv7l) LAZYGIT_ARCH="Linux_armv7" ;;
-  *)
-    echo "Unsupported architecture: $ARCH" >&2
-    exit 1
-    ;;
-  esac
-
+  LAZYGIT_ARCH="Linux_x86_64"
   curl -fsSL -o /tmp/lazygit.tar.gz \
-    "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
+	"https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
   tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
   sudo install /tmp/lazygit -D -t /usr/local/bin/
   rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
 
-  sudo snap install ghostty --classic
-  sudo snap install zig --beta --classic
+  snap_is_installed() {
+    snap list "$1" >/dev/null 2>&1
+  }
+
+  if ! snap_is_installed ghostty; then
+    sudo snap install ghostty --classic
+  else
+    echo "ghostty already installed via snap, skipping"
+  fi
+
+  if ! snap_is_installed zig; then
+    sudo snap install zig --beta --classic
+  else
+    echo "zig already installed via snap, skipping"
+  fi
 
   log "Install fastfetch"
   if ! command -v fastfetch >/dev/null 2>&1; then
@@ -177,8 +184,91 @@ if [[ "$DISTRO" == "debian" ]]; then
     sudo dpkg -i /tmp/fastfetch-linux-amd64.deb
     sudo apt-get install -f -y
     rm -f /tmp/fastfetch-linux-amd64.deb
+    log "Fastfetch installed"
   else
     echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
+  fi
+
+  log "Install Go"
+  install_go() {
+	local tarball="go${GOLANG_VERSION}.linux-amd64.tar.gz"
+	local url="https://go.dev/dl/${tarball}"
+
+	echo "Downloading Go ${version}..."
+	curl -fsSL -o "/tmp/${tarball}" "$url"
+
+	echo "Removing previous Go installation..."
+	sudo rm -rf /usr/local/go
+
+	echo "Extracting Go to /usr/local..."
+	sudo tar -C /usr/local -xzf "/tmp/${tarball}"
+
+	rm -f "/tmp/${tarball}"
+  }
+
+  if ! command -v go >/dev/null 2>&1; then
+	install_go
+    log "Go installed"
+  else
+	echo "Go already installed and up to date, skipping"
+  fi
+
+  log "Install fzf"
+  install_fzf() {
+	local version
+	version=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	[[ -z "$version" ]] && {
+	  echo "Could not determine latest fzf version" >&2
+	  return 1
+	}
+
+	local tarball="fzf-${version}-linux_amd64.tar.gz"
+	local url="https://github.com/junegunn/fzf/releases/download/v${version}/${tarball}"
+
+	echo "Downloading fzf ${version} for linux_amd64..."
+	curl -fsSL -o "/tmp/${tarball}" "$url"
+
+	echo "Extracting fzf to ~/.local/bin..."
+	tar -xzf "/tmp/${tarball}" -C ~/.local/bin fzf
+	chmod +x ~/.local/bin/fzf
+
+	rm -f "/tmp/${tarball}"
+  }
+
+  if ! command -v fzf >/dev/null 2>&1; then
+	install_fzf
+	log "fzf installed"
+  else
+	current=$(fzf --version | awk '{print $1}')
+	latest=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	if [[ -n "$latest" && "$current" != "$latest" ]]; then
+	  echo "fzf ${current} installed, updating to ${latest}..."
+	  install_fzf
+	  log "fzf installed"
+	else
+	  echo "fzf ${current} already installed and up to date, skipping"
+	fi
+  fi
+
+  log "Install starship"
+  if ! command -v starship >/dev/null 2>&1; then
+	curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b ~/.local/bin
+    log "starship installed"
+  else
+	current=$(starship --version | awk '{print $1}')
+	latest=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	if [[ -n "$latest" && "$current" != "$latest" ]]; then
+	  echo "starship ${current} installed, updating to ${latest}..."
+	  curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b ~/.local/bin
+	else
+	  echo "starship ${current} already installed and up to date, skipping"
+	fi
   fi
 fi
 
@@ -234,13 +324,6 @@ elif [[ "$desktop" == "kde" ]]; then
     curl -fsSL -o ~/.local/share/konsole/Gruvbox_light.colorscheme \
       "https://raw.githubusercontent.com/morhetz/gruvbox-contrib/master/konsole/Gruvbox_light.colorscheme"
   fi
-
-  if [[ ! -d ~/.local/share/warp-terminal/themes ]]; then
-    echo "Install Warp terminal themes"
-    mkdir -p ~/.local/share/warp-terminal
-    git clone https://github.com/warpdotdev/themes.git \
-      ~/.local/share/warp-terminal/themes
-  fi
 else
   echo "Unknown desktop!"
 fi
@@ -252,19 +335,6 @@ mkdir -p ~/.local/bin
 log "bash configuration"
 safe_link "$basedir/bash/bashbootstrap" ~/.bashrc
 log "bash configuration completed"
-
-# --- bash-git-prompt ---------------------------------------------------------
-
-log "bash-git-prompt configuration"
-if [[ ! -d ~/.bash-git-prompt ]]; then
-  git clone --depth=1 https://github.com/magicmonty/bash-git-prompt.git \
-    ~/.bash-git-prompt
-fi
-pushd ~/.bash-git-prompt
-echo "updating bash-git-prompt"
-git pull
-popd
-log "bash-git-prompt configuration completed"
 
 # --- base16-shell ------------------------------------------------------------
 
@@ -285,10 +355,6 @@ log "zsh configuration"
 if [[ ! -d ~/.oh-my-zsh ]]; then
   sh -c "$(curl -fsSL \
     https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-  git clone https://github.com/zsh-users/zsh-autosuggestions.git \
-    "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
-    "${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
 fi
 pushd ~/.oh-my-zsh
 echo "updating oh-my-zsh"
@@ -303,6 +369,11 @@ log "ghostty configuration"
 mkdir -p ~/.config/ghostty
 safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
 log "ghostty configuration completed"
+
+# --- Ghostty -----------------------------------------------------------------
+log "starship configuration"
+safe_link "$basedir/configs/starship.toml" ~/.config/starship.toml
+log "starship configuration completed"
 
 # --- tmux --------------------------------------------------------------------
 

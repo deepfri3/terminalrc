@@ -1,253 +1,65 @@
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
-
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
-
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
-#ZSH_THEME="bira"
-#ZSH_THEME="avit"
-#ZSH_THEME="gnzh"
-#ZSH_THEME="agnoster"
-#DEFAULT_USER=$USER
-
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to automatically update without prompting.
-# DISABLE_UPDATE_PROMPT="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS=true
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-#plugins=(git autojump zsh-autosuggestions per-directory-history)
-#plugins=(git autojump zsh-autosuggestions zsh-syntax-highlighting)
-
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-#export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
-
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
-
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-#ZSH_THEME="robbyrussell"
-
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to automatically update without prompting.
-# DISABLE_UPDATE_PROMPT="true"
-
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS=true
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(
-    colorize
-    git
-    autojump
-)
-
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
+### Environment Variables
 # You may need to manually set your language environment
 export LANG=en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
-
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='vim'
-# fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
-
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-
+# Path to your oh-my-zsh installation.
+export ZSH=$HOME/.oh-my-zsh
 # Set PATH
 export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
 # Add user $HOME/bin to PATH
 export PATH=$HOME/.local/bin:$PATH
-
 # set default editor
 export VISUAL=nvim
 export EDITOR=$VISUAL
-# My vimrc
+# My nvim config
 export MYVIMRC=~/.config/nvim/init.lua
-alias editvimconf="$EDITOR ~/.config/nvim/init.lua"
+# fzf - fuzzy finder (https://github.com/junegunn/fzf)
+# Setting ag as the default source for fzf
+export FZF_DEFAULT_COMMAND="rg --files --hidden --follow --glob '!.git'"
+# Apply the command to CTRL-T as well
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+# other default fzf options
+export FZF_DEFAULT_OPTS='--layout=reverse --height 40% --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --border --inline-info'
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
+# zoxide echo results of 'z'
+export _ZO_ECHO='0'
 
+### Alias ###
+# Set tmux convenience aliases
 #gdb aliases
 alias gdb="gdb -quiet -fullname"
+alias editvimconf="$EDITOR ~/.config/nvim/init.lua"
+alias ohmyzsh="source ~/.oh-my-zsh"
+alias sourcezsh='source ~/.zshrc'
+# tmux
+alias edittmuxconf="$EDITOR ~/.tmux.conf"
+alias sourcetmux='tmux source ~/.tmux.conf'
+alias save=~/.tmux/plugins/tpm/tmux-resurrect/scripts/save.sh
+alias restore=~/.tmux/plugins/tpm/tmux-resurrect/scripts/restore.sh
+alias tpm=~/.tmux/plugins/tpm/tpm
+alias gk='ghostty +list-keybinds'
 
-# autojump (https://github.com/wting/autojump)
-#export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ;} history -a"
-#[[ -s ~/.autojump/etc/profile.d/autojump.sh ]] && source ~/.autojump/etc/profile.d/autojump.sh
-# configured for Debian
-#[[ -s /usr/share/autojump/autojump.sh ]] && source /usr/share/autojump/autojump.sh
+### Functions ###
+hgrep() { find $HISTFILE -type f|xargs grep -h $*; }
 
-#base16 colorscheme support
-#https://github.com/chriskempson/base16-shell
-BASE16_SHELL=$HOME/.config/base16-shell/
-[ -n "$PS1" ] && [ -s $BASE16_SHELL/profile_helper.sh ] && eval "$($BASE16_SHELL/profile_helper.sh)"
+function mv() {
+  # Put this function to your .bashrc file.
+  # Usage: mv oldfilename
+  # If you call mv without the second parameter it will prompt you to edit the filename on command line.
+  # Original mv is called when it's called with more than one argument.
+  # It's useful when you want to change just a few letters in a long name.
+  #
+  # Also see:
+  # - imv from renameutils
+  # - Ctrl-W Ctrl-Y Ctrl-Y (cut last word, paste, paste)
+  if [ "$#" -ne 1 ] || [ ! -e "$1" ]; then
+    command mv "$@"
+    return
+  fi
 
-# fzf - fuzzy finder (https://github.com/junegunn/fzf)
-# ag - the silver searcher (https://github.com/ggreer/the_silver_searcher/wiki)
-#source /usr/share/doc/fzf/examples/key-bindings.zsh
-#source /usr/share/doc/fzf/examples/completion.zsh
-#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-# Setting ag as the default source for fzf
-#export FZF_DEFAULT_COMMAND='ag -l -g ""'
-#export FZF_DEFAULT_COMMAND="rg --files --hidden --follow --glob '!.git'"
-# Apply the command to CTRL-T as well
-#export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-# other default fzf options
-#export FZF_DEFAULT_OPTS='--layout=reverse --height 40% --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --border --inline-info'
-#export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
-#export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info --reverse"
+  read "$1" newfilename
+  command mv -v -- "$1" "$newfilename"
+}
 
 # fd - cd to selected directory
 fd() {
@@ -284,13 +96,6 @@ cdf() {
    local dir
    file=$(fzf +m -q "$1") && dir=$(dirname "$file") && cd "$dir"
 }
-
-#alias tmux="TERM=screen-256color-bce tmux"
-#export TERM="xterm-256color"
-#export TERM="screen-256color"
-
-# Set tmux convenience aliases
-alias edittmuxconf="$EDITOR ~/.tmux.conf"
 
 # TMUX Helpers
 # tm - create new tmux session, or switch to existing one. Works from within tmux too. (@bag-man)
@@ -336,16 +141,24 @@ ftpane() {
   # bind-key 0 run "tmux split-window -l 12 'bash -ci ftpane'"
 }
 
-#git helpers
-function acp() {
-  git add -u .
-  git commit -m "$1"
-  git push
-}
+### ZSH configuration and loading ohmyzsh ###
+# Set the theme
+ZSH_THEME="robbyrussell"
+# Uncomment the following line to disable auto-setting terminal title.
+DISABLE_AUTO_TITLE="true"
+# Uncomment the following line to enable command auto-correction.
+ENABLE_CORRECTION="true"
+# Load oh-my-zsh
+source $ZSH/oh-my-zsh.sh
 
-bindkey -v
-
-if [ $(pgrep ssh-agent >/dev/null) ]; then
-    eval "$(ssh-agent -s)"
+# Set up fzf key bindings and fuzzy completion
+if command -v fzf >/dev/null 2>&1; then
+  source <(fzf --zsh)
 fi
-
+# zoxide
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi

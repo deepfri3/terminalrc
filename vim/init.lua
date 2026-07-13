@@ -30,6 +30,8 @@ require("lazy").setup({
 	"tpope/vim-surround",
 	"tpope/vim-dispatch",
 	"mbbill/undotree",
+    -- Dead simple plugin to center the currently focused buffer to the middle of the screen.
+    { "shortcuts/no-neck-pain.nvim", version = "*"},
     -- Tagbar
     {
       "preservim/tagbar",   -- majutsushi/tagbar was moved here and is the maintained fork
@@ -52,8 +54,8 @@ require("lazy").setup({
 	-- Colors
 	-- { "gruvbox-community/gruvbox", lazy = false, priority = 1000 },
 	-- { "morhetz/gruvbox", lazy = false, priority = 1000 },
-    	-- Gruvbox written in native lua
-    	{ "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
+    -- Gruvbox written in native lua
+    { "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
 
 	-- Statusline: airline -> lualine
 	{ "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },
@@ -72,7 +74,77 @@ require("lazy").setup({
         { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
       },
     },
-
+    -- Trouble
+    {
+      "folke/trouble.nvim",
+      opts = {
+        keys = {
+          -- Filter on errors
+          e = {
+            action = function(view)
+              view:filter({
+                function(item)
+                  return item.text:find("error:") ~= nil
+                end,
+            function(item)
+              return item.filename:find((vim.loop or vim.uv).cwd(), 1, true)
+            end,
+              },
+              { toggle = true, template = "{hl:Title}Filter:{hl} errors" })
+            end,
+            desc = "Filter on errors"
+          },
+          -- Filter on warnings
+          w = {
+            action = function(view)
+              view:filter({
+                function(item)
+                  return item.text:find("warning:") ~= nil
+                end,
+            function(item)
+              return item.filename:find((vim.loop or vim.uv).cwd(), 1, true)
+            end,
+              },
+              { toggle = true, template = "{hl:Title}Filter:{hl} warnings" })
+            end,
+            desc = "Filter on warnings"
+          }
+        },
+      },
+      cmd = "Trouble",
+      keys = {
+        {
+          "<leader>xx",
+          "<cmd>Trouble diagnostics toggle<cr>",
+          desc = "Diagnostics (Trouble)",
+        },
+        {
+          "<leader>xX",
+          "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+          desc = "Buffer Diagnostics (Trouble)",
+        },
+        {
+          "<leader>cs",
+          "<cmd>Trouble symbols toggle focus=false<cr>",
+          desc = "Symbols (Trouble)",
+        },
+        {
+          "<leader>cl",
+          "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+          desc = "LSP Definitions / references / ... (Trouble)",
+        },
+        {
+          "<leader>xL",
+          "<cmd>Trouble loclist toggle<cr>",
+          desc = "Location List (Trouble)",
+        },
+        {
+          "<leader>xQ",
+          "<cmd>Trouble qflist toggle<cr>",
+          desc = "Quickfix List (Trouble)",
+        },
+      },
+    },
 	-- Syntax: treesitter
     {
       "nvim-treesitter/nvim-treesitter",
@@ -361,7 +433,17 @@ map("n", "<leader>cl", [[:let @"=line(".")<CR>]])
 map("n", "<leader>bp", [[:let @"="break ".expand("%").":".line(".")<CR>]])
 map("n", "<leader>rr", ":edit<cr>")
 map("i", "<leader>fp", "<c-x><c-f>")
-
+vim.g.clipboard = {
+  name = "OSC 52",
+  copy = {
+    ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+    ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+  },
+  paste = {
+    ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+    ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+  },
+}
 --------------------------------------------------------------------------------
 -- Search (telescope-backed where it makes sense)
 --------------------------------------------------------------------------------
@@ -477,10 +559,10 @@ telescope.setup({
 			"--ignore-file",
 			vim.fn.expand("~/.rgignore"),
 		},
-		layout_strategy = "horizontal",
+		layout_strategy = "vertical",
 		layout_config = {
             height = 0.5,
-            mirror = false,
+            mirror = true,
         },
 		mappings = {
 			i = {
@@ -511,7 +593,7 @@ map("v", "<F5>", tb.grep_string, { silent = true })
 --------------------------------------------------------------------------------
 require("nvim-treesitter").setup()
 
-local ts_langs = { "c", "cpp", "lua", "python", "bash", "vim", "vimdoc", "yaml", "json" }
+local ts_langs = { "c", "cpp", "lua", "python", "bash", "vim", "vimdoc", "yaml", "json", "go", "rust" }
 
 -- install parsers (async); safe to call on every startup
 require("nvim-treesitter").install(ts_langs)
@@ -541,11 +623,12 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities()
 -- defaults (cmd, root markers, filetypes) through vim.lsp.config; we simply no
 -- longer call its deprecated require('lspconfig')[server].setup() framework.
 vim.lsp.config("*", { capabilities = capabilities })
+vim.lsp.enable("basedpyright")
 
 -- mason-lspconfig v2 auto-installs these AND auto-enables them for you
 -- (it calls vim.lsp.enable() internally), so no manual enable loop is needed.
 require("mason-lspconfig").setup({
-  ensure_installed = { "clangd", "lua_ls" },
+  ensure_installed = { "clangd", "lua_ls", "gopls", "rust_analyzer" },
 })
 
 cmp.setup({
@@ -576,10 +659,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "K",  vim.lsp.buf.hover, o)
     map("n", "<leader>rn", vim.lsp.buf.rename, o)
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
-    -- map("n", "[d", vim.diagnostic.goto_prev, o)
-    -- map("n", "]d", vim.diagnostic.goto_next, o)
   end,
 })
+
+--------------------------------------------------------------------------------
+-- Enable/Disable Diagnostics
+--------------------------------------------------------------------------------
+map("n", "<leader>dd", function()
+  local on = vim.diagnostic.is_enabled()
+  vim.diagnostic.enable(not on)
+  vim.notify("Diagnostics " .. (on and "disabled" or "enabled"))
+end, { silent = true })
 
 --------------------------------------------------------------------------------
 -- Autocommands
