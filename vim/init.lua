@@ -699,10 +699,10 @@ cmp.setup({
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local o = { buffer = ev.buf, silent = true }
-    map("n", "gd", vim.lsp.buf.definition, o)
-    map("n", "gr", vim.lsp.buf.references, o)
-    map("n", "gi", vim.lsp.buf.implementation, o)
-    map("n", "K",  vim.lsp.buf.hover, o)
+    map("n", "<leader>gd", vim.lsp.buf.definition, o)
+    map("n", "<leader>gr", vim.lsp.buf.references, o)
+    map("n", "<leader>gi", vim.lsp.buf.implementation, o)
+    map("n", "<leader>gh", vim.lsp.buf.hover, o)
     map("n", "<leader>rn", vim.lsp.buf.rename, o)
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
   end,
