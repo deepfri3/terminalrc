@@ -479,17 +479,18 @@ map("n", "<leader>cl", [[:let @"=line(".")<CR>]])
 map("n", "<leader>bp", [[:let @"="break ".expand("%").":".line(".")<CR>]])
 map("n", "<leader>rr", ":edit<cr>")
 map("i", "<leader>fp", "<c-x><c-f>")
-vim.g.clipboard = {
-  name = "OSC 52",
-  copy = {
-    ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-    ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-  },
-  paste = {
-    ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-    ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
-  },
-}
+
+-- vim.g.clipboard = {
+--   name = "OSC 52",
+--   copy = {
+--     ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+--     ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+--   },
+--   paste = {
+--     ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+--     ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+--   },
+-- }
 --------------------------------------------------------------------------------
 -- Search (telescope-backed where it makes sense)
 --------------------------------------------------------------------------------
@@ -583,7 +584,11 @@ map("n", "<F9>", "<cmd>TagbarToggle<CR>", { silent = true })
 --------------------------------------------------------------------------------
 require("nvim-tree").setup({
 	view = { side = "left", width = 50 },
-	filters = { custom = { "\\.vim$", "\\.cat$" } },
+	filters = {
+        custom = { "\\.vim$", "\\.cat$" },
+        dotfiles = false,      -- also show dotfiles if you want
+        git_ignored = false,   -- show .gitignore'd files (newer key)
+    },
 	renderer = { highlight_git = "all" },
 })
 map("n", "<F8>", ":NvimTreeToggle<CR>")
@@ -602,8 +607,8 @@ telescope.setup({
 			"--line-number",
 			"--column",
 			"--smart-case",
-			"--ignore-file",
-			vim.fn.expand("~/.rgignore"),
+            "--no-ignore-vcs",
+			"--ignore-file", vim.fn.expand("~/.rgignore"),
 		},
 		layout_strategy = "vertical",
 		layout_config = {
@@ -618,6 +623,17 @@ telescope.setup({
 			},
 		},
 	},
+    pickers = {
+        find_files = {
+            find_command = {
+                "rg",
+                "--files",
+                "--hidden",
+                "--glob", "!.git/*",
+                "--no-ignore-vcs"
+            },
+        },
+    },
 })
 pcall(telescope.load_extension, "fzf")
 
