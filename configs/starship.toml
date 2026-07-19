@@ -1,40 +1,56 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
 format = """
 $username\
 $hostname\
-$localip\
-$shlvl\
 $directory\
-$vcsh\
 $git_branch\
-$git_commit\
-$git_state\
-$git_metrics\
 $git_status\
-$package\
-$buf\
-$nix_shell\
-$memory_usage\
-$env_var\
-$custom\
-$sudo\
+$c\
+$cpp\
+$rust\
+$golang\
+$python\
+$golang\
 $cmd_duration\
-$jobs\
-$battery\
-$time\
-$status\
-$shell\
-$character"""
+$line_break$character"""
 
-[character]
-#success_symbol = "[➜](bold green) "
-#error_symbol = "[✗](bold red) "
-#success_symbol = "[❯](green)"
-#error_symbol = "[❯](red)"
-success_symbol = "[\\$](bold green) "
-error_symbol = "[X](bold red) "
+palette = 'gruvbox_dark'
+
+[palettes.gruvbox_dark]
+color_fg0 = '#fbf1c7'
+color_bg1 = '#3c3836'
+color_bg3 = '#665c54'
+color_blue = '#458588'
+color_aqua = '#689d6a'
+color_green = '#98971a'
+color_orange = '#d65d0e'
+color_purple = '#b16286'
+color_red = '#cc241d'
+color_yellow = '#d79921'
+
+[username]
+show_always = false
+format = "[$user]($style)"
+
+[hostname]
+ssh_symbol = "@"
+style = "bold green"
+format = "[$hostname]($style) "
+disabled = false
 
 [directory]
+truncation_length = 3
+truncation_symbol = "…/"
 style = "blue bold"
+format = "[$path ]($style)"
+
+[git_branch]
+symbol = " "
+style = "color_aqua"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+truncation_length = 19
+# truncation_symbol = "*"
 
 # Slow on WSL, ok on Linux/Windows
 [git_status]
@@ -42,23 +58,48 @@ disabled = false
 ahead = "^"
 style = "yellow"
 
-[git_branch]
-#symbol = "שׂ "
-symbol = " "
-format = "[$symbol$branch(:$remote_branch)]($style) "
-truncation_length = 19
-# truncation_symbol = "*"
-style = "magenta"
+[c]
+symbol = ""
+style = "bg:color_blue"
+format = '[[$symbol( $version) ](fg:color_fg0)]($style)'
+
+[cpp]
+symbol = ""
+style = "bg:color_blue"
+format = '[[$symbol( $version) ](fg:color_fg0)]($style)'
+
+[rust]
+symbol = ""
+style = "bg:color_blue"
+format = '[[$symbol( $version) ](fg:color_fg0)]($style)'
+
+[golang]
+symbol = ""
+style = "bg:color_blue"
+format = '[[$symbol( $version) ](fg:color_fg0)]($style)'
+
+[python]
+symbol = ""
+style = "bg:color_blue"
+format = '[[$symbol( $version) ](fg:color_fg0)]($style)'
 
 [cmd_duration]
+min_time = 2000
 format = "[$duration]($style) "
 
-[username]
-format = "[$user]($style)"
-
-[hostname]
+[line_break]
 disabled = false
-ssh_symbol = "@"
-style = "bold green"
-format = "[$ssh_symbol$hostname]($style) "
-#format = "$directory$git_branch$git_status$character"
+
+[character]
+#success_symbol = "[➜](bold green) "
+#success_symbol = "[\\$](bold green) "
+#success_symbol = "[\\$](color_green) "
+success_symbol = "[❯](color_green)"
+#error_symbol = "[✗](bold red) "
+#error_symbol = "[❯](red)"
+#error_symbol = "[X](bold red) "
+error_symbol = "[X](color_red) "
+vimcmd_symbol = '[❮](bold fg:color_green)'
+vimcmd_replace_one_symbol = '[❮](bold fg:color_purple)'
+disabled = false
+
