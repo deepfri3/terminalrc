@@ -473,8 +473,9 @@ if [[ $INSTALL_NVIM -eq 1 ]]; then
   echo "install neovim"
   make install
   echo "install done"
-  cargo install tree-sitter-cli
   popd
+  safe_link "$basedir/vim/build-parsers.sh" ~/.config/nvim/build-parsers.sh
+  ~/.config/nvim/build-parsers.sh
   log "neovim setup completed"
 fi
 

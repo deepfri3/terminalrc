@@ -39,7 +39,7 @@ require("lazy").setup({
       init = function()
         vim.g.tagbar_autofocus  = 1      -- put cursor in tagbar when opened
         vim.g.tagbar_autoclose  = 1      -- close tagbar when you jump to a tag
-        vim.g.tagbar_left       = 1      -- open tagbar on the left
+        vim.g.tagbar_left       = 0      -- open tagbar on the left
         vim.g.tagbar_compact    = 1      -- remove extra space
         vim.g.tagbar_updateonsave_maxlines = 10000
       end,
@@ -59,9 +59,6 @@ require("lazy").setup({
 
 	-- Statusline: airline -> lualine
 	{ "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },
-
-	-- Commenting: nerdcommenter -> Comment.nvim
-	{ "numToStr/Comment.nvim", opts = {} },
 
 	-- File tree: NERDTree -> nvim-tree
 	{ "nvim-tree/nvim-tree.lua", dependencies = { "nvim-tree/nvim-web-devicons" } },
@@ -145,59 +142,6 @@ require("lazy").setup({
         },
       },
     },
-	-- Syntax: treesitter
-    {
-      "nvim-treesitter/nvim-treesitter",
-      branch = "main",
-      lazy = false,
-      build = ":TSUpdate",
-	  opts = {
-		textobjects = {
-		  move = {
-			goto_next_start = {
-			  ["]f"] = {
-				query = "@function.outer",
-				desc = "Next function",
-			  },
-			  ["]c"] = {
-				query = "@class.outer",
-				desc = "Next class",
-			  },
-			},
-			goto_next_end = {
-			  ["]F"] = {
-				query = "@function.outer",
-				desc = "Next function (end)",
-			  },
-			  ["]C"] = {
-				query = "@class.outer",
-				desc = "Next class (end)",
-			  },
-			},
-			goto_previous_start = {
-			  ["[f"] = {
-				query = "@function.outer",
-				desc = "Prev function",
-			  },
-			  ["[c"] = {
-				query = "@class.outer",
-				desc = "Prev class",
-			  },
-			},
-			goto_previous_end = {
-			  ["[F"] = {
-				query = "@function.outer",
-				desc = "Prev function (end)",
-			  },
-			  ["[C"] = {
-				query = "@class.outer",
-				desc = "Prev class (end)",
-			  },
-			},
-		  },
-		},
-	  },
-    },
 
 	-- LSP + completion (replaces tagbar's role for code intel; keep ctags too)
 	"williamboman/mason.nvim",
@@ -220,7 +164,7 @@ opt.mouse = "" -- "this is vim!"
 opt.termguicolors = true
 vim.cmd.colorscheme("gruvbox")
 
-opt.colorcolumn = "85"
+opt.colorcolumn = "88"
 vim.api.nvim_set_hl(0, "ColorColumn", { ctermbg = "LightGray", bg = "gray14" })
 
 opt.ruler = true
@@ -273,11 +217,7 @@ opt.wildmenu = true
 opt.wildmode = { "list:longest", "full" }
 opt.wildignore = {
 	"tags",
-	"*.tags",
-	".tags",
-	"*.map",
 	"*.o",
-	"*.obj",
 	"*~",
 	"*.swp",
 	"*.bak",
@@ -285,15 +225,7 @@ opt.wildignore = {
 	"*.class",
 	"*.d",
 	"*.a",
-	"*.dsw",
-	"*.dsp",
-	"*.hgc",
-	"*.hrc",
-	"*.png",
-	"*.jpg",
-	"*.gif",
 	"log/**",
-	"tmp/**",
 	"package/**",
 }
 
@@ -480,17 +412,6 @@ map("n", "<leader>bp", [[:let @"="break ".expand("%").":".line(".")<CR>]])
 map("n", "<leader>rr", ":edit<cr>")
 map("i", "<leader>fp", "<c-x><c-f>")
 
--- vim.g.clipboard = {
---   name = "OSC 52",
---   copy = {
---     ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
---     ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
---   },
---   paste = {
---     ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
---     ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
---   },
--- }
 --------------------------------------------------------------------------------
 -- Search (telescope-backed where it makes sense)
 --------------------------------------------------------------------------------
@@ -651,24 +572,22 @@ map("n", "<F5>", tb.grep_string, { silent = true }) -- rg word under cursor
 map("v", "<F5>", tb.grep_string, { silent = true })
 
 --------------------------------------------------------------------------------
--- Plugin setup: treesitter
+-- Native treesitter highlighting (no plugin, no tree-sitter CLI)
+-- Works for bundled langs (c, lua, markdown, query, vim, vimdoc) out of the box.
+-- Other langs work once their .so is in ~/.config/nvim/parser/ and queries in
+-- ~/.config/nvim/queries/<lang>/. Falls back to regex syntax if absent.
 --------------------------------------------------------------------------------
-require("nvim-treesitter").setup()
-
-local ts_langs = { "c", "cpp", "lua", "python", "bash", "vim", "vimdoc", "yaml", "json", "go", "rust" }
-
--- install parsers (async); safe to call on every startup
-require("nvim-treesitter").install(ts_langs)
-
--- enable highlighting + treesitter indentation per-buffer
 vim.api.nvim_create_autocmd("FileType", {
-  group = vim.api.nvim_create_augroup("TreesitterStart", { clear = true }),
+  group = vim.api.nvim_create_augroup("NativeTreesitter", { clear = true }),
   callback = function(args)
-    local lang = vim.treesitter.language.get_lang(vim.bo[args.buf].filetype)
-    if lang and vim.treesitter.language.add(lang) then
-      pcall(vim.treesitter.start, args.buf)
-      vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    local ft = vim.bo[args.buf].filetype
+    local lang = vim.treesitter.language.get_lang(ft) or ft
+    -- language.add returns false (0.11) / nil (0.12) if no parser is found
+    local ok = pcall(vim.treesitter.language.add, lang)
+    if ok then
+      pcall(vim.treesitter.start, args.buf, lang)  -- highlighting; disables regex syntax
     end
+    -- No treesitter indentexpr: your smartindent/autoindent handles it.
   end,
 })
 
