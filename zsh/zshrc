@@ -151,6 +151,9 @@ ENABLE_CORRECTION="true"
 # Load oh-my-zsh
 source $ZSH/oh-my-zsh.sh
 
+# Enable vi mode
+bindkey -v
+
 # Set up fzf key bindings and fuzzy completion
 if command -v fzf >/dev/null 2>&1; then
   source <(fzf --zsh)
