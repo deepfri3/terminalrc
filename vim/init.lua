@@ -1,5 +1,5 @@
 -- init.lua
--- Converted from init.vim (George Baker, 2021), modernized to native Lua
+-- Converted from init.vim (George Baker, 2021), modernized to native Lua (2026)
 
 -- Leader must be set before plugins/keymaps load
 vim.g.mapleader = ","
@@ -52,8 +52,6 @@ require("lazy").setup({
       opts = {},
     },
 	-- Colors
-	-- { "gruvbox-community/gruvbox", lazy = false, priority = 1000 },
-	-- { "morhetz/gruvbox", lazy = false, priority = 1000 },
     -- Gruvbox written in native lua
     { "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
 
@@ -153,6 +151,15 @@ require("lazy").setup({
 	"hrsh7th/cmp-path",
 	"L3MON4D3/LuaSnip",
 	"saadparwaiz1/cmp_luasnip",
+    {
+      "gl1tchc0d3r/typstwriter.nvim",
+      ft = { "typst" },
+      config = function()
+        require("typstwriter").setup({
+          -- Configuration options (see Configuration page)
+        })
+      end,
+    }
 })
 
 --------------------------------------------------------------------------------
@@ -494,6 +501,11 @@ require("lualine").setup({
 		lualine_x = { "encoding", "fileformat", "filetype" },
 	},
 })
+
+--------------------------------------------------------------------------------
+-- Plugin setup: Undotree
+--------------------------------------------------------------------------------
+map({"n", "v"}, "<Leader>ut", "<cmd>UndotreeToggle<CR>")
 
 --------------------------------------------------------------------------------
 -- Plugin setup: TagBar
