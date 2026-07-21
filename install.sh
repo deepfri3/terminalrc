@@ -4,16 +4,16 @@ set -euo pipefail
 IFS=$'\n\t'
 trap 'echo "Error on line $LINENO"' ERR
 
-# --- Globals -----------------------------------------------------------------
-GOLANG_VERISON=1.26.5
-
 # --- Options -----------------------------------------------------------------
-
 INSTALL_ALL=0
 INSTALL_TMUX=0
 INSTALL_VIM=0
 INSTALL_NVIM=0
 INSTALL_FONTS=0
+INSTALL_UV=0
+INSTALL_STARSHIP=0
+INSTALL_FZF=0
+INSTALL_GO=0
 
 usage() {
   cat <<EOF
@@ -22,12 +22,16 @@ Usage: $0 [OPTIONS]
 Setup terminal environment.
 
 Options:
-  --all     Install tmux, vim, neovim, and fonts (default if no options given)
-  --tmux    Compile and install tmux
-  --vim     Compile and install vim
-  --nvim    Compile and install neovim
-  --fonts   Download and install latest fonts
-  --help    Show this help message
+  --all      Install tmux, vim, neovim, and fonts (default if no options given)
+  --tmux     Compile and install tmux
+  --vim      Compile and install vim
+  --nvim     Compile and install neovim
+  --fonts    Download and install latest fonts
+  --uv       Download and install uv executable
+  --starship Download and install starship executable
+  --fzf      Download and install fzf executable
+  --go       Download and install latest Go
+  --help     Show this help message
 EOF
 }
 
@@ -38,6 +42,10 @@ while [[ $# -gt 0 ]]; do
   --vim) INSTALL_VIM=1 ;;
   --nvim) INSTALL_NVIM=1 ;;
   --fonts) INSTALL_FONTS=1 ;;
+  --uv) INSTALL_UV=1 ;;
+  --starship) INSTALL_STARSHIP=1 ;;
+  --fzf) INSTALL_FZF=1 ;;
+  --go) INSTALL_GO=1 ;;
   --help)
     usage
     exit 0
@@ -56,15 +64,11 @@ if [[ $INSTALL_ALL -eq 1 ]]; then
   INSTALL_VIM=1
   INSTALL_NVIM=1
   INSTALL_FONTS=1
+  INSTALL_UV=1
+  INSTALL_STARSHIP=1
+  INSTALL_FZF=1
+  INSTALL_GO=1
 fi
-
-# Default to all if no install options given
-# if [[ $INSTALL_TMUX -eq 0 && $INSTALL_VIM -eq 0 && $INSTALL_NVIM -eq 0 && $INSTALL_FONTS -eq 0 ]]; then
-#   INSTALL_TMUX=1
-#   INSTALL_VIM=1
-#   INSTALL_NVIM=1
-#   INSTALL_FONTS=1
-# fi
 
 # --- Helpers -----------------------------------------------------------------
 
@@ -91,16 +95,15 @@ safe_link() {
   ln -s "$src" "$dst"
 }
 
+mkdir -p ~/.local/bin
+
 basedir=$(pwd)
 echo "basedir=$basedir"
 
 DISTRO=$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
 echo "distro=$DISTRO"
 
-# --- Dependencies ------------------------------------------------------------
-
-log "Install dependencies"
-
+# --- Packages ------------------------------------------------------------
 pkg_is_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
 }
@@ -113,43 +116,28 @@ packages=(
   fd-find cargo wl-clipboard
 )
 
-missing=()
-for pkg in "${packages[@]}"; do
-  if ! pkg_is_installed "$pkg"; then
-    missing+=("$pkg")
-  fi
-done
-
-if [[ ${#missing[@]} -gt 0 ]]; then
-  log "Installing missing packages: ${missing[*]}"
-  sudo apt-get update
-  sudo apt-get install -y "${missing[@]}"
-else
-  echo "All apt packages already installed"
-fi
-
-# Make fd-find usable as 'fd'
-if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
-  mkdir -p ~/.local/bin
-  ln -sf "$(command -v fdfind)" ~/.local/bin/fd
-fi
-
+log "Install packages"
 if [[ "$DISTRO" == "debian" ]]; then
-  log "Install lazygit"
-  LAZYGIT_VERSION=$(curl -fsSL \
-	"https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
-	grep -Po '"tag_name": *"v\K[^"]*') || true
-  [[ -z "$LAZYGIT_VERSION" ]] && {
-	echo "Could not fetch lazygit version" >&2
-	exit 1
-  }
+  missing=()
+  for pkg in "${packages[@]}"; do
+	if ! pkg_is_installed "$pkg"; then
+	  missing+=("$pkg")
+	fi
+  done
 
-  LAZYGIT_ARCH="Linux_x86_64"
-  curl -fsSL -o /tmp/lazygit.tar.gz \
-	"https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
-  tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
-  sudo install /tmp/lazygit -D -t /usr/local/bin/
-  rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
+  if [[ ${#missing[@]} -gt 0 ]]; then
+	log "Installing missing packages: ${missing[*]}"
+	sudo apt-get update
+	sudo apt-get install -y "${missing[@]}"
+  else
+	echo "All apt packages already installed"
+  fi
+
+  # Make fd-find usable as 'fd'
+  if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
+	mkdir -p ~/.local/bin
+	ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+  fi
 
   snap_is_installed() {
     snap list "$1" >/dev/null 2>&1
@@ -188,96 +176,12 @@ if [[ "$DISTRO" == "debian" ]]; then
   else
     echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
   fi
-
-  log "Install Go"
-  install_go() {
-	local tarball="go${GOLANG_VERSION}.linux-amd64.tar.gz"
-	local url="https://go.dev/dl/${tarball}"
-
-	echo "Downloading Go ${version}..."
-	curl -fsSL -o "/tmp/${tarball}" "$url"
-
-	echo "Removing previous Go installation..."
-	sudo rm -rf /usr/local/go
-
-	echo "Extracting Go to /usr/local..."
-	sudo tar -C /usr/local -xzf "/tmp/${tarball}"
-
-	rm -f "/tmp/${tarball}"
-  }
-
-  if ! command -v go >/dev/null 2>&1; then
-	install_go
-    log "Go installed"
-  else
-	echo "Go already installed and up to date, skipping"
-  fi
-
-  log "Install fzf"
-  install_fzf() {
-	local version
-	version=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
-
-	[[ -z "$version" ]] && {
-	  echo "Could not determine latest fzf version" >&2
-	  return 1
-	}
-
-	local tarball="fzf-${version}-linux_amd64.tar.gz"
-	local url="https://github.com/junegunn/fzf/releases/download/v${version}/${tarball}"
-
-	echo "Downloading fzf ${version} for linux_amd64..."
-	curl -fsSL -o "/tmp/${tarball}" "$url"
-
-	echo "Extracting fzf to ~/.local/bin..."
-	tar -xzf "/tmp/${tarball}" -C ~/.local/bin fzf
-	chmod +x ~/.local/bin/fzf
-
-	rm -f "/tmp/${tarball}"
-  }
-
-  if ! command -v fzf >/dev/null 2>&1; then
-	install_fzf
-	log "fzf installed"
-  else
-	current=$(fzf --version | awk '{print $1}')
-	latest=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
-
-	if [[ -n "$latest" && "$current" != "$latest" ]]; then
-	  echo "fzf ${current} installed, updating to ${latest}..."
-	  install_fzf
-	  log "fzf installed"
-	else
-	  echo "fzf ${current} already installed and up to date, skipping"
-	fi
-  fi
-
-  log "Install starship"
-  if ! command -v starship >/dev/null 2>&1; then
-	curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b ~/.local/bin
-    log "starship installed"
-  else
-	current=$(starship --version | awk '{print $1}')
-	latest=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
-
-	if [[ -n "$latest" && "$current" != "$latest" ]]; then
-	  echo "starship ${current} installed, updating to ${latest}..."
-	  curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b ~/.local/bin
-	else
-	  echo "starship ${current} already installed and up to date, skipping"
-	fi
-  fi
 fi
-
-log "Installation of dependencies completed"
+log "Installation of packages completed"
 
 # --- Desktop environment -----------------------------------------------------
 
 log "Determine desktop environment"
-
 if [[ -z "${XDG_CURRENT_DESKTOP:-}" ]]; then
   desktop=$(echo "${XDG_DATA_DIRS:-}" | sed -n 's/.*\(xfce\|kde\|gnome\).*/\1/p')
 else
@@ -328,16 +232,12 @@ else
   echo "Unknown desktop!"
 fi
 
-mkdir -p ~/.local/bin
-
 # --- Bash --------------------------------------------------------------------
-
 log "bash configuration"
 safe_link "$basedir/bash/bashbootstrap" ~/.bashrc
 log "bash configuration completed"
 
 # --- base16-shell ------------------------------------------------------------
-
 log "base16 shell configuration"
 if [[ ! -d ~/.config/base16-shell ]]; then
   git clone https://github.com/chriskempson/base16-shell.git \
@@ -350,7 +250,6 @@ popd
 log "base16 shell configuration completed"
 
 # --- Zsh / Oh-My-Zsh ---------------------------------------------------------
-
 log "zsh configuration"
 if [[ ! -d ~/.oh-my-zsh ]]; then
   sh -c "$(curl -fsSL \
@@ -364,7 +263,6 @@ safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
 log "zsh configuration completed"
 
 # --- Ghostty -----------------------------------------------------------------
-
 log "ghostty configuration"
 mkdir -p ~/.config/ghostty
 safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
@@ -375,6 +273,207 @@ log "starship configuration"
 safe_link "$basedir/configs/starship.toml" ~/.config/starship.toml
 log "starship configuration completed"
 
+# --- lazygit ----------------------------------------------------------------------
+log "Install lazygit"
+LAZYGIT_VERSION=$(curl -fsSL \
+  "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
+  grep -Po '"tag_name": *"v\K[^"]*') || true
+[[ -z "$LAZYGIT_VERSION" ]] && {
+  echo "Could not fetch lazygit version" >&2
+  exit 1
+}
+
+LAZYGIT_ARCH="Linux_x86_64"
+curl -fsSL -o /tmp/lazygit.tar.gz \
+  "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
+tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
+sudo install /tmp/lazygit -D -t /usr/local/bin/
+rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
+
+# --- Go ----------------------------------------------------------------------
+if [[ $INSTALL_GO -eq 1 ]]; then
+  log "Install Go"
+  GO_ARCH="linux-amd64"
+
+  install_go() {
+    local version
+    version=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n1 || true)
+
+    [[ -z "$version" ]] && {
+      echo "Could not determine latest Go version" >&2
+      return 1
+    }
+
+    local tarball="${version}.${GO_ARCH}.tar.gz"
+    local url="https://go.dev/dl/${tarball}"
+
+    echo "Downloading Go ${version} for ${GO_ARCH}..."
+    curl -fsSL -o "/tmp/${tarball}" "$url"
+
+    echo "Removing previous Go installation..."
+    sudo rm -rf /usr/local/go
+
+    echo "Extracting Go to /usr/local..."
+    sudo tar -C /usr/local -xzf "/tmp/${tarball}"
+
+    rm -f "/tmp/${tarball}"
+  }
+
+  if ! command -v go >/dev/null 2>&1; then
+    install_go
+    log "Go installed"
+  else
+    current=$(go version | awk '{print $3}')
+    latest=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n1 || true)
+
+    if [[ -n "$latest" && "$current" != "$latest" ]]; then
+      echo "Go ${current} installed, updating to ${latest}..."
+      install_go
+      log "Go installed"
+    else
+      echo "Go ${current} already installed and up to date, skipping"
+    fi
+  fi
+fi
+
+# --- fzf ----------------------------------------------------------------------
+if [[ $INSTALL_FZF -eq 1 ]]; then
+  log "Install fzf"
+  install_fzf() {
+	local version
+	version=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	[[ -z "$version" ]] && {
+	  echo "Could not determine latest fzf version" >&2
+	  return 1
+	}
+
+	local tarball="fzf-${version}-linux_amd64.tar.gz"
+	local url="https://github.com/junegunn/fzf/releases/download/v${version}/${tarball}"
+
+	echo "Downloading fzf ${version} for linux_amd64..."
+	curl -fsSL -o "/tmp/${tarball}" "$url"
+
+	echo "Extracting fzf to ~/.local/bin..."
+	tar -xzf "/tmp/${tarball}" -C ~/.local/bin fzf
+	chmod +x ~/.local/bin/fzf
+
+	rm -f "/tmp/${tarball}"
+  }
+
+  if ! command -v fzf >/dev/null 2>&1; then
+	install_fzf
+	log "fzf installed"
+  else
+	current=$(fzf --version | awk '{print $1}')
+	latest=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	if [[ -n "$latest" && "$current" != "$latest" ]]; then
+	  echo "fzf ${current} installed, updating to ${latest}..."
+	  install_fzf
+	  log "fzf installed"
+	else
+	  echo "fzf ${current} already installed and up to date, skipping"
+	fi
+  fi
+fi
+
+# --- starship ----------------------------------------------------------------
+if [[ $INSTALL_STARSHIP -eq 1 ]]; then
+  log "Install starship"
+  STARSHIP_ARCH="x86_64-unknown-linux-gnu"
+
+  install_starship() {
+	local version
+	version=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	[[ -z "$version" ]] && {
+	  echo "Could not determine latest starship version" >&2
+	  return 1
+	}
+
+	local tarball="starship-${STARSHIP_ARCH}.tar.gz"
+	local url="https://github.com/starship/starship/releases/download/v${version}/${tarball}"
+
+	echo "Downloading starship ${version} for ${STARSHIP_ARCH}..."
+	curl -fsSL -o "/tmp/${tarball}" "$url"
+
+	echo "Extracting starship to ~/.local/bin..."
+	tar -xzf "/tmp/${tarball}" -C ~/.local/bin starship
+	chmod +x ~/.local/bin/starship
+
+	rm -f "/tmp/${tarball}"
+  }
+
+  if ! command -v starship >/dev/null 2>&1; then
+	install_starship
+	log "starship installed"
+  else
+	current=$(starship --version | awk '{print $2}')
+	latest=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
+	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+
+	if [[ -n "$latest" && "$current" != "$latest" ]]; then
+	  echo "starship ${current} installed, updating to ${latest}..."
+	  install_starship
+	  log "starship installed"
+	else
+	  echo "starship ${current} already installed and up to date, skipping"
+	fi
+  fi
+fi
+
+# --- uv ----------------------------------------------------------------------
+if [[ $INSTALL_UV -eq 1 ]]; then
+  log "Install uv"
+  UV_ARCH="x86_64-unknown-linux-gnu"
+
+  install_uv() {
+	local version
+	version=$(curl -fsSL \
+	  "https://api.github.com/repos/astral-sh/uv/releases/latest" \
+	  | grep -Po '"tag_name": *"\K[^"]*' || true)
+
+	[[ -z "$version" ]] && {
+	  echo "Could not determine latest uv version" >&2
+	  return 1
+	}
+
+	local tarball="uv-${UV_ARCH}.tar.gz"
+	local url="https://github.com/astral-sh/uv/releases/download/${version}/${tarball}"
+
+	echo "Downloading uv ${version} for ${UV_ARCH}..."
+	curl -fsSL -o "/tmp/${tarball}" "$url"
+
+	echo "Extracting uv and uvx to ~/.local/bin..."
+	tar -xzf "/tmp/${tarball}" -C /tmp
+	install -m 0755 "/tmp/uv-${UV_ARCH}/uv" ~/.local/bin/uv
+	install -m 0755 "/tmp/uv-${UV_ARCH}/uvx" ~/.local/bin/uvx
+
+	rm -rf "/tmp/${tarball}" "/tmp/uv-${UV_ARCH}"
+  }
+
+  if ! command -v uv >/dev/null 2>&1; then
+	install_uv
+	log "uv installed"
+  else
+	current=$(uv --version | awk '{print $2}')
+	latest=$(curl -fsSL \
+	  "https://api.github.com/repos/astral-sh/uv/releases/latest" \
+	  | grep -Po '"tag_name": *"\K[^"]*' || true)
+
+	if [[ -n "$latest" && "$current" != "$latest" ]]; then
+	  echo "uv ${current} installed, updating to ${latest}..."
+	  install_uv
+	  log "uv installed"
+	else
+	  echo "uv ${current} already installed and up to date, skipping"
+	fi
+  fi
+fi
 # --- tmux --------------------------------------------------------------------
 
 if [[ $INSTALL_TMUX -eq 1 ]]; then

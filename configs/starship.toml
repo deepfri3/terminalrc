@@ -15,39 +15,38 @@ $golang\
 $cmd_duration\
 $line_break$character"""
 
-palette = 'gruvbox_dark'
+# palette = 'gruvbox_dark'
 
-[palettes.gruvbox_dark]
-color_fg0 = '#fbf1c7'
-color_bg1 = '#3c3836'
-color_bg3 = '#665c54'
-color_blue = '#458588'
-color_aqua = '#689d6a'
-color_green = '#98971a'
-color_orange = '#d65d0e'
-color_purple = '#b16286'
-color_red = '#cc241d'
-color_yellow = '#d79921'
+# color_fg0 = '#fbf1c7'
+# color_bg1 = '#3c3836'
+# color_bg3 = '#665c54'
+# color_blue = '#458588'
+# color_aqua = '#689d6a'
+# color_green = '#98971a'
+# color_orange = '#d65d0e'
+# color_purple = '#b16286'
+# color_red = '#cc241d'
+# color_yellow = '#d79921'
 
 [username]
-show_always = false
+show_always = true
 format = "[$user]($style)"
 
 [hostname]
 ssh_symbol = "@"
 style = "bold green"
-format = "[$hostname]($style) "
+format = "[$ssh_symbol$hostname]($style) "
 disabled = false
 
 [directory]
 truncation_length = 3
 truncation_symbol = "…/"
-style = "blue bold"
-format = "[$path ]($style)"
+#style = "blue bold"
+format = "[ $path ]($style)"
 
 [git_branch]
 symbol = " "
-style = "color_aqua"
+#style = "color_aqua"
 format = "[$symbol$branch(:$remote_branch)]($style) "
 truncation_length = 19
 # truncation_symbol = "*"
@@ -88,18 +87,16 @@ min_time = 2000
 format = "[$duration]($style) "
 
 [line_break]
-disabled = false
+disabled = true
 
 [character]
 #success_symbol = "[➜](bold green) "
-#success_symbol = "[\\$](bold green) "
+success_symbol = "[\\$](bold green) "
 #success_symbol = "[\\$](color_green) "
-success_symbol = "[❯](color_green)"
+#success_symbol = "[❯](color_green)"
 #error_symbol = "[✗](bold red) "
 #error_symbol = "[❯](red)"
-#error_symbol = "[X](bold red) "
-error_symbol = "[X](bold fg:color_red) "
-vimcmd_symbol = '[❮](bold fg:color_green)'
-vimcmd_replace_one_symbol = '[❮](bold fg:color_purple)'
+error_symbol = "[X](bold red) "
+#error_symbol = "[X](bold fg:color_red) "
 disabled = false
 

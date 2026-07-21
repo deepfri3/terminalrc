@@ -5,6 +5,7 @@
 vim.g.mapleader = ","
 vim.g.C_MapLeader = ","
 
+local grp = vim.api.nvim_create_augroup("UserConfig", { clear = true })
 --------------------------------------------------------------------------------
 -- Bootstrap lazy.nvim
 --------------------------------------------------------------------------------
@@ -237,8 +238,8 @@ opt.wildignore = {
 }
 
 opt.laststatus = 2
-opt.clipboard = "unnamedplus"
 opt.listchars = { tab = ">-", trail = "!", nbsp = "%", eol = "$" }
+opt.clipboard = "unnamedplus"
 
 --------------------------------------------------------------------------------
 -- Helper functions
@@ -291,6 +292,52 @@ local function trim_whitespace()
 	vim.cmd([[keeppatterns %s/\s\+$//e]])
 	vim.fn.winrestview(view)
 end
+
+-- Highlight log keywords in terminals, inspired by MobaXTerm and
+-- https://github.com/fei6409/log-highlight.nvim
+vim.api.nvim_create_autocmd("TermOpen", {
+  group = grp,
+  callback = function()
+    vim.cmd([[
+      syn keyword LogError E ERROR error
+      syn keyword LogWarn  W WARN[ING] warn[ing]
+      syn keyword LogInfo  I INFO info
+
+      hi LogBlue ctermfg=lightblue guifg=#92bcfc
+
+      hi def link LogError ErrorMsg
+      hi def link LogWarn  WarningMsg
+      hi def link LogInfo  LogBlue
+    ]])
+  end,
+})
+
+-- Yank text to the system clipboard via OSC52 terminal code support. May not
+-- work in TMUX and requires 'vim.o.clipboard = "unnamedplus"'
+vim.api.nvim_create_autocmd("TextYankPost", {
+  callback = function()
+    -- Highlight the text being yanked
+    vim.hl.hl_op()
+
+    local copy_to_unnamedplus = require("vim.ui.clipboard.osc52").copy("+")
+    local copy_to_unnamed = require("vim.ui.clipboard.osc52").copy("*")
+
+    copy_to_unnamedplus(vim.v.event.regcontents)
+    copy_to_unnamed(vim.v.event.regcontents)
+  end,
+})
+
+vim.g.clipboard = {
+  name = "OSC 52",
+  -- copy = {
+  --   ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+  --   ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+  -- },
+  paste = {
+    ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+    ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+  },
+}
 
 --------------------------------------------------------------------------------
 -- Ease of use
@@ -420,12 +467,43 @@ map("n", "<leader>rr", ":edit<cr>")
 map("i", "<leader>fp", "<c-x><c-f>")
 
 --------------------------------------------------------------------------------
--- Search (telescope-backed where it makes sense)
+-- Search
 --------------------------------------------------------------------------------
 map("v", "g/", [[y/<C-R>"<CR>]])
 map("n", ",/", ":nohlsearch<CR>", { silent = true })
 map("v", "*", ":call VisualSelection('f')<CR>", { silent = true })
 map("v", "#", ":call VisualSelection('b')<CR>", { silent = true })
+
+-- Grep
+--
+-- Neovim uses ripgrep by default and falls back to grep if it's not available. In both cases,
+-- the default options to those programs could be improved.
+if vim.fn.executable("rg") == 1 then
+  -- default: "rg --vimgrep -uu "
+  --
+  -- -u: ripgrep won't filter based on .gitignore files
+  -- -uu: ripgrep will search hidden files and directories
+  --
+  -- Changes
+  --  * Respect .gitignore
+  --  * Include hidden files (like .gitlab-ci.yml, .clang-format, etc.)
+  vim.o.grepprg = "rg --vimgrep --smart-case --hidden -g '!.git' "
+else
+  -- default: "grep -HIn $* /dev/null"
+  --
+  -- Changes
+  --  * Recursive (follow symlinks)
+  --  * Search current directory and all below
+  --  * Exclude common files and directories (this is where ripgrep is especially better)
+  vim.o.grepprg = "grep -HInR $* . /dev/null --exclude=tags --exclude-dir=.git --exclude-dir=build --exclude-dir=CMakeItems --exclude-dir=externals --exclude-dir=.cache"
+end
+vim.opt.grepformat = "%f:%l:%c:%m"
+
+-- :Rg <pattern>  -> quickfix, then auto-open
+vim.api.nvim_create_user_command("Rg", function(opts)
+  vim.cmd("silent grep! " .. opts.args)
+  vim.cmd("copen")
+end, { nargs = "+" })
 
 --------------------------------------------------------------------------------
 -- Edit / reload config
@@ -667,8 +745,6 @@ end, { silent = true })
 --------------------------------------------------------------------------------
 -- Autocommands
 --------------------------------------------------------------------------------
-local grp = vim.api.nvim_create_augroup("UserConfig", { clear = true })
-
 vim.api.nvim_create_autocmd("BufReadPost", {
 	group = grp,
 	callback = function()
