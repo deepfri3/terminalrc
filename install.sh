@@ -14,6 +14,9 @@ INSTALL_UV=0
 INSTALL_STARSHIP=0
 INSTALL_FZF=0
 INSTALL_GO=0
+INSTALL_LAZYGIT=0
+INSTALL_GIT=0
+INSTALL_PACKAGES=0
 
 usage() {
   cat <<EOF
@@ -31,6 +34,9 @@ Options:
   --starship Download and install starship executable
   --fzf      Download and install fzf executable
   --go       Download and install latest Go
+  --lazy     Download and install lazygit
+  --git      Compile and install git
+  --packages Install system packages
   --help     Show this help message
 EOF
 }
@@ -46,6 +52,9 @@ while [[ $# -gt 0 ]]; do
   --starship) INSTALL_STARSHIP=1 ;;
   --fzf) INSTALL_FZF=1 ;;
   --go) INSTALL_GO=1 ;;
+  --lazy) INSTALL_LAZYGIT=1 ;;
+  --git) INSTALL_GIT=1 ;;
+  --packages) INSTALL_PACKAGES=1 ;;
   --help)
     usage
     exit 0
@@ -68,6 +77,9 @@ if [[ $INSTALL_ALL -eq 1 ]]; then
   INSTALL_STARSHIP=1
   INSTALL_FZF=1
   INSTALL_GO=1
+  INSTALL_LAZYGIT=1
+  INSTALL_GIT=1
+  INSTALL_PACKAGES=1
 fi
 
 # --- Helpers -----------------------------------------------------------------
@@ -95,89 +107,104 @@ safe_link() {
   ln -s "$src" "$dst"
 }
 
-mkdir -p ~/.local/bin
+# github_latest_tag <repo> [strip_v]
+github_latest_tag() {
+  local repo="$1" strip="${2:-1}"
+  local pat='"tag_name": *"\K[^"]*'
+  [[ "$strip" == "1" ]] && pat='"tag_name": *"v\K[^"]*'
+  curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" \
+    | grep -Po "$pat" || true
+}
 
+mkdir -p ~/.local/bin
 basedir=$(pwd)
 echo "basedir=$basedir"
 
-DISTRO=$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
-echo "distro=$DISTRO"
-
 # --- Packages ------------------------------------------------------------
-pkg_is_installed() {
-  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
-}
+if [[ $INSTALL_PACKAGES -eq 1 ]]; then
+  log "Install packages"
 
-packages=(
-  ninja-build gettext libtool libtool-bin autoconf automake cmake make g++
-  pkg-config unzip curl libevent-dev libncurses-dev bison byacc libx11-dev
-  libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
-  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
-  fd-find cargo wl-clipboard
-)
+  DISTRO=$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+  echo "distro=$DISTRO"
+  if [[ "$DISTRO" == "debian" ]]; then
+	pkg_is_installed() {
+	  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+	}
 
-log "Install packages"
-if [[ "$DISTRO" == "debian" ]]; then
-  missing=()
-  for pkg in "${packages[@]}"; do
-	if ! pkg_is_installed "$pkg"; then
-	  missing+=("$pkg")
+	packages=(
+	  ninja-build gettext libtool libtool-bin autoconf automake cmake make g++
+	  pkg-config unzip curl libevent-dev libncurses-dev bison byacc libx11-dev
+	  libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
+	  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
+	  fd-find cargo wl-clipboard libcurl4-openssl-dev libexpat1-dev libssl-dev
+	  zlib1g-dev
+	)
+
+	missing=()
+	for pkg in "${packages[@]}"; do
+	  if ! pkg_is_installed "$pkg"; then
+		missing+=("$pkg")
+	  fi
+	done
+
+	if [[ ${#missing[@]} -gt 0 ]]; then
+	  log "Installing missing packages: ${missing[*]}"
+	  sudo apt-get update
+	  sudo apt-get install -y "${missing[@]}"
+	else
+	  echo "All apt packages already installed"
 	fi
-  done
 
-  if [[ ${#missing[@]} -gt 0 ]]; then
-	log "Installing missing packages: ${missing[*]}"
-	sudo apt-get update
-	sudo apt-get install -y "${missing[@]}"
-  else
-	echo "All apt packages already installed"
+	# Make fd-find usable as 'fd'
+	if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
+	  mkdir -p ~/.local/bin
+	  ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+	fi
+
+	snap_is_installed() {
+	  snap list "$1" >/dev/null 2>&1
+	}
+
+	if ! snap_is_installed ghostty; then
+	  sudo snap install ghostty --classic
+	  log "ghostty configuration"
+	  mkdir -p ~/.config/ghostty
+	  safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
+	  log "ghostty configuration completed"
+	else
+	  echo "ghostty already installed via snap, skipping"
+	fi
+
+	if ! snap_is_installed zig; then
+	  sudo snap install zig --beta --classic
+	else
+	  echo "zig already installed via snap, skipping"
+	fi
+
+	log "Install fastfetch"
+	if ! command -v fastfetch >/dev/null 2>&1; then
+	  FASTFETCH_VERSION=$(curl -fsSL \
+		"https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest" |
+		grep -Po '"tag_name": *"\K[^"]*' || true)
+
+	  [[ -z "$FASTFETCH_VERSION" ]] && {
+		echo "Could not determine fastfetch version" >&2
+		exit 1
+	  }
+
+	  curl -fsSL -o /tmp/fastfetch-linux-amd64.deb \
+		"https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.deb"
+
+	  sudo dpkg -i /tmp/fastfetch-linux-amd64.deb
+	  sudo apt-get install -f -y
+	  rm -f /tmp/fastfetch-linux-amd64.deb
+	  log "Fastfetch installed"
+	else
+	  echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
+	fi
   fi
-
-  # Make fd-find usable as 'fd'
-  if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
-	mkdir -p ~/.local/bin
-	ln -sf "$(command -v fdfind)" ~/.local/bin/fd
-  fi
-
-  snap_is_installed() {
-    snap list "$1" >/dev/null 2>&1
-  }
-
-  if ! snap_is_installed ghostty; then
-    sudo snap install ghostty --classic
-  else
-    echo "ghostty already installed via snap, skipping"
-  fi
-
-  if ! snap_is_installed zig; then
-    sudo snap install zig --beta --classic
-  else
-    echo "zig already installed via snap, skipping"
-  fi
-
-  log "Install fastfetch"
-  if ! command -v fastfetch >/dev/null 2>&1; then
-    FASTFETCH_VERSION=$(curl -fsSL \
-      "https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest" |
-      grep -Po '"tag_name": *"\K[^"]*' || true)
-
-    [[ -z "$FASTFETCH_VERSION" ]] && {
-      echo "Could not determine fastfetch version" >&2
-      exit 1
-    }
-
-    curl -fsSL -o /tmp/fastfetch-linux-amd64.deb \
-      "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.deb"
-
-    sudo dpkg -i /tmp/fastfetch-linux-amd64.deb
-    sudo apt-get install -f -y
-    rm -f /tmp/fastfetch-linux-amd64.deb
-    log "Fastfetch installed"
-  else
-    echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
-  fi
+  log "Installation of packages completed"
 fi
-log "Installation of packages completed"
 
 # --- Desktop environment -----------------------------------------------------
 
@@ -262,33 +289,24 @@ popd
 safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
 log "zsh configuration completed"
 
-# --- Ghostty -----------------------------------------------------------------
-log "ghostty configuration"
-mkdir -p ~/.config/ghostty
-safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
-log "ghostty configuration completed"
-
-# --- Ghostty -----------------------------------------------------------------
-log "starship configuration"
-safe_link "$basedir/configs/starship.toml" ~/.config/starship.toml
-log "starship configuration completed"
-
 # --- lazygit ----------------------------------------------------------------------
-log "Install lazygit"
-LAZYGIT_VERSION=$(curl -fsSL \
-  "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
-  grep -Po '"tag_name": *"v\K[^"]*') || true
-[[ -z "$LAZYGIT_VERSION" ]] && {
-  echo "Could not fetch lazygit version" >&2
-  exit 1
-}
+if [[ $INSTALL_LAZYGIT -eq 1 ]]; then
+    log "Install lazygit"
+    LAZYGIT_VERSION=$(curl -fsSL \
+      "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
+      grep -Po '"tag_name": *"v\K[^"]*') || true
+    [[ -z "$LAZYGIT_VERSION" ]] && {
+      echo "Could not fetch lazygit version" >&2
+      exit 1
+    }
 
-LAZYGIT_ARCH="Linux_x86_64"
-curl -fsSL -o /tmp/lazygit.tar.gz \
-  "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
-tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
-sudo install /tmp/lazygit -D -t /usr/local/bin/
-rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
+    LAZYGIT_ARCH="Linux_x86_64"
+    curl -fsSL -o /tmp/lazygit.tar.gz \
+      "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
+    tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
+    sudo install /tmp/lazygit -D -t /usr/local/bin/
+    rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
+fi
 
 # --- Go ----------------------------------------------------------------------
 if [[ $INSTALL_GO -eq 1 ]]; then
@@ -424,6 +442,10 @@ if [[ $INSTALL_STARSHIP -eq 1 ]]; then
 	  echo "starship ${current} already installed and up to date, skipping"
 	fi
   fi
+
+  log "starship configuration"
+  safe_link "$basedir/configs/starship.toml" ~/.config/starship.toml
+  log "starship configuration completed"
 fi
 
 # --- uv ----------------------------------------------------------------------
@@ -548,7 +570,7 @@ if [[ $INSTALL_VIM -eq 1 ]]; then
   popd
   safe_link "$basedir/vim/init.vim" ~/.vimrc
   log "vim install and configuration completed"
-  mkdir p ~/.vim/autoload
+  mkdir -p ~/.vim/autoload
 fi
 
 # --- neovim ------------------------------------------------------------------
@@ -578,8 +600,38 @@ if [[ $INSTALL_NVIM -eq 1 ]]; then
   log "neovim setup completed"
 fi
 
-# --- Misc --------------------------------------------------------------------
+# --- git ---------------------------------------------------------------------
+if [[ $INSTALL_GIT -eq 1 ]]; then
+  log "git installation"
+  if [[ ! -d ~/repos/git ]]; then
+    echo "cloning git..."
+    git clone https://github.com/git/git.git ~/repos/git
+  fi
+  pushd ~/repos/git
+  echo "updating git..."
+  git pull
+  echo "update complete"
 
+  # Build the most recent stable tag rather than an in-progress master
+  latest_tag=$(git tag -l 'v[0-9]*' --sort=-v:refname \
+    | grep -v -- '-rc' | head -n1)
+  if [[ -n "$latest_tag" ]]; then
+    echo "checking out ${latest_tag}..."
+    git checkout "$latest_tag"
+  fi
+
+  echo "git clean..."
+  make distclean || true
+  echo "git build..."
+  make prefix="${HOME}/.local" -j"$(nproc)" all
+  echo "git install..."
+  make prefix="${HOME}/.local" install
+  echo "git installed"
+  popd
+  log "git installation completed"
+fi
+
+# --- Misc --------------------------------------------------------------------
 log "do misc"
 echo "ssh configuration"
 mkdir -p ~/.ssh
@@ -600,7 +652,7 @@ if [[ $INSTALL_FONTS -eq 1 ]]; then
 
   install_nerd_font_family() {
     local family="$1"
-    local version="${2:-v3.4.0}"
+    local version="v$2"
     local zip="${family}.zip"
     local url="https://github.com/ryanoasis/nerd-fonts/releases/download/${version}/${zip}"
 
@@ -610,9 +662,11 @@ if [[ $INSTALL_FONTS -eq 1 ]]; then
   }
 
   echo "Installing Source Code Pro"
-  install_nerd_font_family "SourceCodePro"
+  latest_version=$(github_latest_tag "ryanoasis/nerd-fonts")
+  echo $latest_version
+  install_nerd_font_family "SourceCodePro" $latest_version
   echo "Installing Fira Code"
-  install_nerd_font_family "FiraCode"
+  install_nerd_font_family "FiraCode" $latest_version
 
   if command -v fc-cache >/dev/null 2>&1; then
     echo "Resetting font cache, this may take a moment..."
@@ -623,5 +677,4 @@ fi
 echo -e "\nswitch to zsh:"
 echo -e "\n\tchsh -s \$(command -v zsh)\n"
 
-pause
 exit 0
