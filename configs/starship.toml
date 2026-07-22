@@ -35,7 +35,7 @@ format = "[$user]($style)"
 [hostname]
 ssh_symbol = "@"
 style = "bold green"
-format = "[$ssh_symbol$hostname]($style) "
+format = "[$ssh_symbol$hostname]($style)"
 disabled = false
 
 [directory]
