@@ -390,14 +390,6 @@ fi
 # --- Zsh / Oh-My-Zsh ---------------------------------------------------------
 if [[ $INSTALL_ZSH -eq 1 ]]; then
   log "zsh configuration"
-  if [[ ! -d ~/.oh-my-zsh ]]; then
-	sh -c "$(curl -fsSL \
-	  https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-  fi
-  pushd ~/.oh-my-zsh
-  echo "updating oh-my-zsh"
-  git pull
-  popd
   safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
   log "zsh configuration completed"
 fi

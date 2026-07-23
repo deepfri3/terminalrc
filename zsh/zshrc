@@ -1,9 +1,15 @@
+### ZSH configuration ###
+# Set the theme
+ZSH_THEME=""
+# Uncomment the following line to disable auto-setting terminal title.
+#DISABLE_AUTO_TITLE="true"
+# Uncomment the following line to enable command auto-correction.
+#ENABLE_CORRECTION="true"
+
 ### Environment Variables
 # You may need to manually set your language environment
 export LANG=en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
 # Set PATH
 export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
 # Add user $HOME/bin to PATH
@@ -20,7 +26,6 @@ export FZF_DEFAULT_COMMAND="rg --files --hidden --follow --glob '!.git'"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # other default fzf options
 export FZF_DEFAULT_OPTS='--layout=reverse --height 40% --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --border --inline-info'
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
 # zoxide echo results of 'z'
 export _ZO_ECHO='0'
 
@@ -31,6 +36,7 @@ alias gdb="gdb -quiet -fullname"
 alias editvimconf="$EDITOR ~/.config/nvim/init.lua"
 alias ohmyzsh="source ~/.oh-my-zsh"
 alias sourcezsh='source ~/.zshrc'
+alias reloadzsh='exec zsh'   # cleanest: replace current shell
 # tmux
 alias edittmuxconf="$EDITOR ~/.tmux.conf"
 alias sourcetmux='tmux source ~/.tmux.conf'
@@ -40,7 +46,7 @@ alias tpm=~/.tmux/plugins/tpm/tpm
 alias gk='ghostty +list-keybinds'
 
 ### Functions ###
-hgrep() { find $HISTFILE -type f|xargs grep -h $*; }
+hgrep() { rg "$@" "$HISTFILE" }
 
 function mv() {
   # Put this function to your .bashrc file.
@@ -57,12 +63,12 @@ function mv() {
     return
   fi
 
-  read "$1" newfilename
-  command mv -v -- "$1" "$newfilename"
+  local newfilename="$1"
+  vared newfilename && command mv -v -- "$1" "$newfilename"
 }
 
 # fd - cd to selected directory
-fd() {
+fcd() {
   local dir
   dir=$(find ${1:-*} -path '*/\.*' -prune \
                   -o -type d -print 2> /dev/null | fzf +m) &&
@@ -77,7 +83,7 @@ fda() {
 
 # fdr - cd to selected parent directory
 fdr() {
-  local declare dirs=()
+  local -a dirs=()
   get_parent_dirs() {
     if [[ -d "${1}" ]]; then dirs+=("$1"); else return; fi
     if [[ "${1}" == '/' ]]; then
@@ -141,16 +147,6 @@ ftpane() {
   # bind-key 0 run "tmux split-window -l 12 'bash -ci ftpane'"
 }
 
-### ZSH configuration and loading ohmyzsh ###
-# Set the theme
-#ZSH_THEME="robbyrussell"
-# Uncomment the following line to disable auto-setting terminal title.
-#DISABLE_AUTO_TITLE="true"
-# Uncomment the following line to enable command auto-correction.
-#ENABLE_CORRECTION="true"
-# Load oh-my-zsh
-source $ZSH/oh-my-zsh.sh
-
 # Enable vi mode
 #bindkey -v
 
@@ -160,7 +156,7 @@ if command -v fzf >/dev/null 2>&1; then
 fi
 # zoxide
 if command -v zoxide >/dev/null 2>&1; then
-  eval "$(zoxide init zsh)"
+  eval "$(zoxide init zsh --cmd cd)"
 fi
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"

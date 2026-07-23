@@ -7,18 +7,19 @@ export PATH=$HOME/.cargo/bin:$HOME/go/bin:$PATH
 if [[ -d /usr/local/go/bin ]]; then
   export PATH="${PATH}:/usr/local/go/bin"
 fi
-export PATH=$PATH:$HOME/.config/nvm/versions/node/v24.18.0/bin
 export NVM_DIR="$HOME/.config/nvm"
 
 ### Alias ###
 alias wireless="nmcli"
 alias g++='g++ -Wall -g -O0 -std=c++17'
-alias cd='z'
 alias grep='rg'
 
 ### Functions ###
 
 # Node version manager (NVM)
 # nvm allows you to quickly install and use different versions of node via the command line.
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# Lazy NVM: only load when node/npm/nvm is first called
+nvm() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"; nvm "$@" }
+node() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"; node "$@" }
+npm() { unset -f nvm node npm npx; [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"; npm "$@" }
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
