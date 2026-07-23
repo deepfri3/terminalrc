@@ -17,6 +17,8 @@ INSTALL_GO=0
 INSTALL_LAZYGIT=0
 INSTALL_GIT=0
 INSTALL_PACKAGES=0
+INSTALL_ZSH=0
+INSTALL_BASH=0
 
 usage() {
   cat <<EOF
@@ -37,6 +39,8 @@ Options:
   --lazy     Download and install lazygit
   --git      Compile and install git
   --packages Install system packages
+  --zsh      Configure and setup zsh
+  --bash     Configure and setup bash
   --help     Show this help message
 EOF
 }
@@ -55,6 +59,8 @@ while [[ $# -gt 0 ]]; do
   --lazy) INSTALL_LAZYGIT=1 ;;
   --git) INSTALL_GIT=1 ;;
   --packages) INSTALL_PACKAGES=1 ;;
+  --zsh) INSTALL_ZSH=1 ;;
+  --bash) INSTALL_BASH=1 ;;
   --help)
     usage
     exit 0
@@ -80,6 +86,8 @@ if [[ $INSTALL_ALL -eq 1 ]]; then
   INSTALL_LAZYGIT=1
   INSTALL_GIT=1
   INSTALL_PACKAGES=1
+  INSTALL_ZSH=1
+  INSTALL_BASH=1
 fi
 
 # --- Helpers -----------------------------------------------------------------
@@ -256,56 +264,60 @@ elif [[ "$desktop" == "kde" ]]; then
       "https://raw.githubusercontent.com/morhetz/gruvbox-contrib/master/konsole/Gruvbox_light.colorscheme"
   fi
 else
-  echo "Unknown desktop!"
+  echo "Unknown (or no) desktop environment!"
 fi
 
 # --- Bash --------------------------------------------------------------------
-log "bash configuration"
-safe_link "$basedir/bash/bashbootstrap" ~/.bashrc
-log "bash configuration completed"
+if [[ $INSTALL_BASH -eq 1 ]]; then
+  # --- base16-shell ------------------------------------------------------------
+  log "base16 shell configuration"
+  if [[ ! -d ~/.config/base16-shell ]]; then
+	git clone https://github.com/chriskempson/base16-shell.git \
+	  ~/.config/base16-shell
+  fi
+  pushd ~/.config/base16-shell
+  echo "updating base16-shell"
+  git pull
+  popd
+  log "base16 shell configuration completed"
 
-# --- base16-shell ------------------------------------------------------------
-log "base16 shell configuration"
-if [[ ! -d ~/.config/base16-shell ]]; then
-  git clone https://github.com/chriskempson/base16-shell.git \
-    ~/.config/base16-shell
+  log "bash configuration"
+  safe_link "$basedir/bash/bashbootstrap" ~/.bashrc
+  log "bash configuration completed"
 fi
-pushd ~/.config/base16-shell
-echo "updating base16-shell"
-git pull
-popd
-log "base16 shell configuration completed"
 
 # --- Zsh / Oh-My-Zsh ---------------------------------------------------------
-log "zsh configuration"
-if [[ ! -d ~/.oh-my-zsh ]]; then
-  sh -c "$(curl -fsSL \
-    https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+if [[ $INSTALL_ZSH -eq 1 ]]; then
+  log "zsh configuration"
+  if [[ ! -d ~/.oh-my-zsh ]]; then
+	sh -c "$(curl -fsSL \
+	  https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  fi
+  pushd ~/.oh-my-zsh
+  echo "updating oh-my-zsh"
+  git pull
+  popd
+  safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
+  log "zsh configuration completed"
 fi
-pushd ~/.oh-my-zsh
-echo "updating oh-my-zsh"
-git pull
-popd
-safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
-log "zsh configuration completed"
 
 # --- lazygit ----------------------------------------------------------------------
 if [[ $INSTALL_LAZYGIT -eq 1 ]]; then
-    log "Install lazygit"
-    LAZYGIT_VERSION=$(curl -fsSL \
-      "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
-      grep -Po '"tag_name": *"v\K[^"]*') || true
-    [[ -z "$LAZYGIT_VERSION" ]] && {
-      echo "Could not fetch lazygit version" >&2
-      exit 1
-    }
+  log "Install lazygit"
+  LAZYGIT_VERSION=$(curl -fsSL \
+	"https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
+	grep -Po '"tag_name": *"v\K[^"]*') || true
+  [[ -z "$LAZYGIT_VERSION" ]] && {
+	echo "Could not fetch lazygit version" >&2
+	exit 1
+  }
 
-    LAZYGIT_ARCH="Linux_x86_64"
-    curl -fsSL -o /tmp/lazygit.tar.gz \
-      "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
-    tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
-    sudo install /tmp/lazygit -D -t /usr/local/bin/
-    rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
+  LAZYGIT_ARCH="Linux_x86_64"
+  curl -fsSL -o /tmp/lazygit.tar.gz \
+	"https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
+  tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
+  sudo install /tmp/lazygit -D -t /usr/local/bin/
+  rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
 fi
 
 # --- Go ----------------------------------------------------------------------
@@ -637,12 +649,12 @@ echo "ssh configuration"
 mkdir -p ~/.ssh
 chmod 0700 ~/.ssh
 
-echo "ignore file"
+echo "(rg)ignore file"
 safe_link "$basedir/.rgignore" ~/.rgignore
 
-echo "add .profile"
-safe_link "$basedir/.profile" ~/.profile
-log "misc done"
+# echo "add .profile"
+# safe_link "$basedir/.profile" ~/.profile
+# log "misc done"
 
 # --- Fonts -------------------------------------------------------------------
 
@@ -661,12 +673,14 @@ if [[ $INSTALL_FONTS -eq 1 ]]; then
     rm -f "/tmp/${zip}"
   }
 
-  echo "Installing Source Code Pro"
   latest_version=$(github_latest_tag "ryanoasis/nerd-fonts")
-  echo $latest_version
+  echo "Nerd Fonts version=$latest_version"
+  echo "Installing Source Code Pro"
   install_nerd_font_family "SourceCodePro" $latest_version
-  echo "Installing Fira Code"
-  install_nerd_font_family "FiraCode" $latest_version
+  echo "Installing Fira Code Mono"
+  install_nerd_font_family "FiraMono" $latest_version
+  echo "Installing Inconsolata"
+  install_nerd_font_family "Inconsolata" $latest_version
 
   if command -v fc-cache >/dev/null 2>&1; then
     echo "Resetting font cache, this may take a moment..."
@@ -674,7 +688,9 @@ if [[ $INSTALL_FONTS -eq 1 ]]; then
   fi
 fi
 
-echo -e "\nswitch to zsh:"
-echo -e "\n\tchsh -s \$(command -v zsh)\n"
+if command -v zsh >/dev/null 2>&1; then
+  echo "switch to zsh:"
+  echo "    chsh -s \$(command -v zsh)"
+fi
 
 exit 0
