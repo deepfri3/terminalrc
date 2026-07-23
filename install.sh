@@ -134,6 +134,15 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
 
   DISTRO=$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
   echo "distro=$DISTRO"
+
+  # Helper: returns 0 if distro is RHEL/Alma/Rocky/CentOS/Fedora
+  is_rhel_family() {
+    case "$DISTRO" in
+      rhel|almalinux|rocky|centos|fedora) return 0 ;;
+      *) return 1 ;;
+    esac
+  }
+
   if [[ "$DISTRO" == "debian" ]]; then
 	pkg_is_installed() {
 	  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
@@ -210,6 +219,98 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
 	else
 	  echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
 	fi
+  elif is_rhel_family; then
+    pkg_is_installed() {
+      rpm -q "$1" &>/dev/null
+    }
+
+    # Enable required repos (EPEL + CRB/PowerTools for extra packages)
+    if ! rpm -q epel-release &>/dev/null; then
+      sudo dnf install -y epel-release
+    fi
+    # CRB (CodeReady Builder) — needed on RHEL/Alma/Rocky for devel packages
+    if sudo dnf repolist | grep -qiE 'crb|codeready|powertools'; then
+      sudo dnf config-manager --set-enabled crb 2>/dev/null \
+        || sudo dnf config-manager --set-enabled powertools 2>/dev/null \
+        || true
+    fi
+
+    packages=(
+      ninja-build gettext libtool autoconf automake cmake make gcc-c++
+      pkgconfig unzip curl libevent-devel ncurses-devel bison byacc
+      libX11-devel libXt-devel gtk3-devel zsh perl perl-devel ruby ruby-devel
+      python3-pip python3-devel btop xsel xclip ripgrep ctags
+      fd-find cargo wl-clipboard libcurl-devel expat-devel openssl-devel
+      zlib-devel snapd
+    )
+
+    missing=()
+    for pkg in "${packages[@]}"; do
+      if ! pkg_is_installed "$pkg"; then
+        missing+=("$pkg")
+      fi
+    done
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      log "Installing missing packages: ${missing[*]}"
+      sudo dnf install -y "${missing[@]}"
+    else
+      echo "All dnf packages already installed"
+    fi
+
+    # fd-find installs as 'fd' on RHEL family (no fdfind alias needed)
+    if command -v fd >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
+      mkdir -p ~/.local/bin
+      ln -sf "$(command -v fd)" ~/.local/bin/fd
+    fi
+
+    # Enable and start snapd (required for ghostty/zig snaps)
+    if ! systemctl is-enabled snapd &>/dev/null; then
+      sudo systemctl enable --now snapd.socket
+      sudo ln -sf /var/lib/snapd/snap /snap 2>/dev/null || true
+      sleep 2  # give snapd a moment to initialise
+    fi
+
+    snap_is_installed() {
+      snap list "$1" >/dev/null 2>&1
+    }
+
+    if ! snap_is_installed ghostty; then
+      sudo snap install ghostty --classic
+      log "ghostty configuration"
+      mkdir -p ~/.config/ghostty
+      safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
+      log "ghostty configuration completed"
+    else
+      echo "ghostty already installed via snap, skipping"
+    fi
+
+    if ! snap_is_installed zig; then
+      sudo snap install zig --beta --classic
+    else
+      echo "zig already installed via snap, skipping"
+    fi
+
+    log "Install fastfetch"
+    if ! command -v fastfetch >/dev/null 2>&1; then
+      FASTFETCH_VERSION=$(curl -fsSL \
+        "https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest" |
+        grep -Po '"tag_name": *"\K[^"]*' || true)
+
+      [[ -z "$FASTFETCH_VERSION" ]] && {
+        echo "Could not determine fastfetch version" >&2
+        exit 1
+      }
+
+      curl -fsSL -o /tmp/fastfetch-linux-amd64.rpm \
+        "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.rpm"
+
+      sudo rpm -i /tmp/fastfetch-linux-amd64.rpm
+      rm -f /tmp/fastfetch-linux-amd64.rpm
+      log "Fastfetch installed"
+    else
+      echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
+    fi
   fi
   log "Installation of packages completed"
 fi
