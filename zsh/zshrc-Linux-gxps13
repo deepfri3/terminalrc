@@ -13,8 +13,12 @@ export NVM_DIR="$HOME/.config/nvm"
 alias wireless="nmcli"
 alias g++='g++ -Wall -g -O0 -std=c++17'
 alias grep='rg'
+alias ll="ls $LS_OPTIONS -lh"
 
 ### Functions ###
+
+# Move .cargo/env to machine-specific file, guard it
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
 
 # Node version manager (NVM)
 # nvm allows you to quickly install and use different versions of node via the command line.

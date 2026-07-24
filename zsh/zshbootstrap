@@ -2,12 +2,12 @@ if [ -z "$PS1" ]; then
    return
 fi
 
-[[ -n "$ZSHRC_LOADED" ]] && return
-export ZSHRC_LOADED=1
+# [[ -n "$ZSHRC_LOADED" ]] && return
+# export ZSHRC_LOADED=1
 
 SOURCE="${(%):-%N}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  DIR="$( builtin cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
@@ -34,7 +34,7 @@ done
 echo
 
 # Set convenience aliases
-myed=${EDITOR:-nvim}}
+myed=${EDITOR:-nvim}
 alias editzshrc="$myed $masterzshrc"
 alias editoszshrc="$myed $oszshrc"
 alias editlocalzshrc="$myed $localzshrc"

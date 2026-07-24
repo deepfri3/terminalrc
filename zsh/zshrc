@@ -29,12 +29,24 @@ export FZF_DEFAULT_OPTS='--layout=reverse --height 40% --ansi -m +x --bind ctrl-
 # zoxide echo results of 'z'
 export _ZO_ECHO='0'
 
+### History ###
+HISTFILE="${HOME}/.zsh_history"
+HISTSIZE=100000          # lines kept in memory
+SAVEHIST=100000          # lines saved to file
+
+setopt HIST_IGNORE_ALL_DUPS   # remove older duplicate entry, keep newest
+setopt HIST_IGNORE_SPACE      # don't save commands prefixed with a space
+setopt HIST_REDUCE_BLANKS     # strip superfluous blanks before saving
+setopt HIST_VERIFY            # show expanded history command before running
+setopt SHARE_HISTORY          # share history across all open zsh sessions live
+setopt EXTENDED_HISTORY       # save timestamps + duration (format: : <time>:<duration>;<cmd>)
+setopt INC_APPEND_HISTORY_TIME # append after command completes (preserves timestamps with EXTENDED_HISTORY)
+
 ### Alias ###
 # Set tmux convenience aliases
 #gdb aliases
 alias gdb="gdb -quiet -fullname"
 alias editvimconf="$EDITOR ~/.config/nvim/init.lua"
-alias ohmyzsh="source ~/.oh-my-zsh"
 alias sourcezsh='source ~/.zshrc'
 alias reloadzsh='exec zsh'   # cleanest: replace current shell
 # tmux
@@ -43,7 +55,9 @@ alias sourcetmux='tmux source ~/.tmux.conf'
 alias save=~/.tmux/plugins/tpm/tmux-resurrect/scripts/save.sh
 alias restore=~/.tmux/plugins/tpm/tmux-resurrect/scripts/restore.sh
 alias tpm=~/.tmux/plugins/tpm/tpm
+# ghostty
 alias gk='ghostty +list-keybinds'
+alias editghostty='ghostty +edit-config'
 
 ### Functions ###
 hgrep() { rg "$@" "$HISTFILE" }
@@ -72,13 +86,13 @@ fcd() {
   local dir
   dir=$(find ${1:-*} -path '*/\.*' -prune \
                   -o -type d -print 2> /dev/null | fzf +m) &&
-  cd "$dir"
+  builtin cd "$dir"
 }
 
 # fda - including hidden directories
 fda() {
   local dir
-  dir=$(find ${1:-.} -type d 2> /dev/null | fzf +m) && cd "$dir"
+  dir=$(find ${1:-.} -type d 2> /dev/null | fzf +m) && builtin cd "$dir"
 }
 
 # fdr - cd to selected parent directory
@@ -93,14 +107,14 @@ fdr() {
     fi
   }
   local DIR=$(get_parent_dirs $(realpath "${1:-$(pwd)}") | fzf-tmux --tac)
-  cd "$DIR"
+  builtin cd "$DIR"
 }
 
 # cdf - cd into the directory of the selected file
 cdf() {
    local file
    local dir
-   file=$(fzf +m -q "$1") && dir=$(dirname "$file") && cd "$dir"
+   file=$(fzf +m -q "$1") && dir=$(dirname "$file") && builtin cd "$dir"
 }
 
 # TMUX Helpers
@@ -156,7 +170,7 @@ if command -v fzf >/dev/null 2>&1; then
 fi
 # zoxide
 if command -v zoxide >/dev/null 2>&1; then
-  eval "$(zoxide init zsh --cmd cd)"
+  eval "$(zoxide init zsh)"
 fi
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
