@@ -2,18 +2,17 @@
 # zshrc for local machine
 
 ### Environment variables ###
-export PATH=$HOME/.cargo/bin:$HOME/go/bin:$PATH
+path=($HOME/.cargo/bin $HOME/go/bin: $path)
 # Go
 if [[ -d /usr/local/go/bin ]]; then
-  export PATH="${PATH}:/usr/local/go/bin"
+  path=($path /usr/local/go/bin)
 fi
 export NVM_DIR="$HOME/.config/nvm"
 
 ### Alias ###
 alias wireless="nmcli"
 alias g++='g++ -Wall -g -O0 -std=c++17'
-alias grep='rg'
-alias ll="ls $LS_OPTIONS -lh"
+alias ll="ls --color=auto -lh"
 
 ### Functions ###
 

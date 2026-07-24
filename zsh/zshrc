@@ -1,19 +1,20 @@
 ### ZSH configuration ###
-# Set the theme
-ZSH_THEME=""
-# Uncomment the following line to disable auto-setting terminal title.
-#DISABLE_AUTO_TITLE="true"
-# Uncomment the following line to enable command auto-correction.
-#ENABLE_CORRECTION="true"
+autoload -Uz compinit
+# -C skips the slow security check; -d puts the dump in XDG cache
+compinit -C -d "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'  # case-insensitive
+
+# fast-syntax-highlighting is better maintained than zsh-syntax-highlighting
+source ~/.zsh/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
+source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 ### Environment Variables
 # You may need to manually set your language environment
 export LANG=en_US.UTF-8
-export LC_ALL="en_US.UTF-8"
 # Set PATH
-export PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
-# Add user $HOME/bin to PATH
-export PATH=$HOME/.local/bin:$PATH
+typeset -U path PATH   # auto-remove duplicates, keep first occurrence
+path=($HOME/.local/bin $path /usr/local/sbin /usr/sbin /sbin)
 # set default editor
 export VISUAL=nvim
 export EDITOR=$VISUAL
@@ -38,6 +39,8 @@ setopt HIST_IGNORE_ALL_DUPS   # remove older duplicate entry, keep newest
 setopt HIST_IGNORE_SPACE      # don't save commands prefixed with a space
 setopt HIST_REDUCE_BLANKS     # strip superfluous blanks before saving
 setopt HIST_VERIFY            # show expanded history command before running
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_FIND_NO_DUPS
 setopt SHARE_HISTORY          # share history across all open zsh sessions live
 setopt EXTENDED_HISTORY       # save timestamps + duration (format: : <time>:<duration>;<cmd>)
 setopt INC_APPEND_HISTORY_TIME # append after command completes (preserves timestamps with EXTENDED_HISTORY)
@@ -81,20 +84,7 @@ function mv() {
   vared newfilename && command mv -v -- "$1" "$newfilename"
 }
 
-# fd - cd to selected directory
-fcd() {
-  local dir
-  dir=$(find ${1:-*} -path '*/\.*' -prune \
-                  -o -type d -print 2> /dev/null | fzf +m) &&
-  builtin cd "$dir"
-}
-
-# fda - including hidden directories
-fda() {
-  local dir
-  dir=$(find ${1:-.} -type d 2> /dev/null | fzf +m) && builtin cd "$dir"
-}
-
+setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT
 # fdr - cd to selected parent directory
 fdr() {
   local -a dirs=()
@@ -108,13 +98,6 @@ fdr() {
   }
   local DIR=$(get_parent_dirs $(realpath "${1:-$(pwd)}") | fzf-tmux --tac)
   builtin cd "$DIR"
-}
-
-# cdf - cd into the directory of the selected file
-cdf() {
-   local file
-   local dir
-   file=$(fzf +m -q "$1") && dir=$(dirname "$file") && builtin cd "$dir"
 }
 
 # TMUX Helpers

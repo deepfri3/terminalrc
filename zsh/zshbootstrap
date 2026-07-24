@@ -5,18 +5,10 @@ fi
 # [[ -n "$ZSHRC_LOADED" ]] && return
 # export ZSHRC_LOADED=1
 
-SOURCE="${(%):-%N}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( builtin cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-
-[[ -n "$ZSH_DEBUG" ]] && echo "Bootstrap loaded from: $SOURCE"
-
-basezshdir=${SOURCE:A:h}
+basezshdir=${${(%):-%N}:A:h}
+[[ -n "$ZSH_DEBUG" ]] && echo "Bootstrap loaded from: $basezshdir"
 masterzshrc=$basezshdir/zshrc
-oszshrc=$masterzshrc-`uname`
+oszshrc=$masterzshrc-$(uname)          # prefer $(...) over backticks
 localzshrc=$oszshrc-${HOST%%.*}
 
 if [ ! -f $localzshrc ]; then
@@ -27,15 +19,14 @@ fi
 [[ -n "$ZSH_DEBUG" ]] && echo -n "Applicable shell configs: "
 for zshfile in "$masterzshrc" "$oszshrc" "$localzshrc"; do
   if [ -r $zshfile ]; then
-    . $zshfile
     [[ -n "$ZSH_DEBUG" ]] && echo -n "`basename $zshfile` "
+    . $zshfile
   fi
 done
-echo
 
 # Set convenience aliases
 myed=${EDITOR:-nvim}
 alias editzshrc="$myed $masterzshrc"
 alias editoszshrc="$myed $oszshrc"
 alias editlocalzshrc="$myed $localzshrc"
-
+unset myed
