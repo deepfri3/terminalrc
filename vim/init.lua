@@ -594,7 +594,7 @@ map("n", "<F9>", "<cmd>TagbarToggle<CR>", { silent = true })
 -- Plugin setup: nvim-tree (NERDTree replacement)
 --------------------------------------------------------------------------------
 require("nvim-tree").setup({
-	view = { side = "left", width = 50 },
+	view = { side = "left", width = 40 },
 	filters = {
         custom = { "\\.vim$", "\\.cat$" },
         dotfiles = false,      -- also show dotfiles if you want
