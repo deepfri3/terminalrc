@@ -2,106 +2,22 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-# If not running interactively, don't do anything
-[ -z "$PS1" ] && return
-
-# don't put duplicate lines in the history. See bash(1) for more options
-# don't overwrite GNU Midnight Commander's setting of `ignorespace'.
-HISTCONTROL=$HISTCONTROL${HISTCONTROL+:}ignoredups
-# ... or force ignoredups and ignorespace
 HISTCONTROL=ignoreboth
+HISTSIZE=10000; HISTFILESIZE=20000
 # append to the history file, don't overwrite it
 shopt -s histappend
-# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-# set vi editing mode for bash
-set -o vi
-
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
-force_color_prompt=yes
-
-if [ -n "$force_color_prompt" ]; then
-  if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-    # We have color support; assume it's compliant with Ecma-48
-    # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-    # a case would tend to support setf rather than setaf.)
-    color_prompt=yes
-  else
-    color_prompt=
-  fi
-fi
-
-if [ "$color_prompt" = yes ]; then
-  # set a fancy prompt (non-color, unless we know we "want" color)
-  case "$TERM" in
-    xterm-color) color_prompt=yes;;
-  esac
-
-  # Enable colors for ls, etc.  Prefer user defined file
-  # run: $ dircolors -p > ~/.dircolorsrc
-  if type -P dircolors >/dev/null ; then
-    if [[ -f ~/.dircolorsrc ]] ; then
-      eval $(dircolors -b ~/.dircolorsrc)
-    elif [[ -f /etc/DIR_COLORS ]] ; then
-      eval $(dircolors -b /etc/DIR_COLORS)
-    fi
-  fi
-
-  # You may uncomment the following lines if you want `ls' to be colorized:
-  alias grep="grep --color=auto"
-  alias fgrep="fgrep --color=auto"
-  alias egrep="egrep --color=auto"
-
-  # You may uncomment the following lines if you want `ls' to be colorized:
-  export LS_OPTIONS='--color=auto'
-  alias ls="ls $LS_OPTIONS"
-  alias ll="ls $LS_OPTIONS -l"
-
-  #source ~/.bash-powerline.sh
-  PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-else
-  PS1='\u@\h:\w\$ '
-fi
-
-# git prompt for bash (https://github.com/magicmonty/bash-git-prompt)
-if [ -f "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
-    GIT_PROMPT_ONLY_IN_REPO=1
-    GIT_PROMPT_FETCH_REMOTE_STATUS=0   # uncomment to avoid fetching remote status
-    source $HOME/.bash-git-prompt/gitprompt.sh
-fi
-
-# dont pollute the rest of the bashrc
-unset color_prompt force_color_prompt unset
-
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-  xterm*|rxvt*)
-    PS1="\[\e]0;\u@\h: \w\a\]$PS1"
-    ;;
-  *)
-    ;;
-esac
-
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
-if [ -f ~/.bash_aliases ]; then
-  . ~/.bash_aliases
-fi
-
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-  . /etc/bash_completion
-fi
+for _bc in /etc/bash_completion /usr/share/bash-completion/bash_completion; do
+  [[ -f "$_bc" ]] && ! shopt -oq posix && { . "$_bc"; break; }
+done
+unset _bc
 
 ### Environment Variables ###
 # Set PATH
@@ -123,38 +39,21 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_DEFAULT_OPTS="
   --color fg:#ebdbb2,bg:#282828,hl:#fabd2f,fg+:#ebdbb2,bg+:#3c3836,hl+:#fabd2f
   --color info:#83a598,prompt:#bdae93,spinner:#fabd2f,pointer:#83a598,marker:#fe8019,header:#665c54
+  --layout=reverse --height 40% --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --border --inline-info
 "
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --layout=reverse --height 40% --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --border --inline-info"
-export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --ansi -m +x --bind ctrl-a:select-all,ctrl-d:deselect-all --height 50% --border --inline-info"
 
 ### Aliases ###
 #gdb aliases
 alias gdb="gdb -quiet -fullname"
 alias gdb-arm="arm-none-linux-gnueabi-gdb -quiet -fullname"
-alias cd="mycd"
+alias ll="ls $LS_OPTIONS -lh"
 
 ### Functions ###
-hgrep (){ find $HISTFILE -type f|xargs grep -h $*; }
-# Save bash history per directory
-# http://www.compbiome.com/2010/07/bash-per-directory-bash-history.html
-# Usage: mycd
-# Replacement for builtin 'cd', which keeps a separate bash-history
-# for every directory.
-function mycd()
-{
-  history -w # write current history file
-  builtin cd "$@" # do actual cd
-  local HISTDIR="$HOME/.dir_bash_history$PWD" # use& nbsp;nested folders for history
-  if [ ! -d "$HISTDIR" ]; then # create folder if neede d
-    mkdir -p "$HISTDIR"
-  fi
-  export HISTFILE="$HISTDIR/bash_history.txt" # set& nbsp;new history file
-  history -c # clear memory
-  history -r #read from current histfile
-}
+hgrep() { rg "$@" "$HISTFILE"; }
+
 
 # fd - cd to selected directory
-fd() {
+fcd() {
   local dir
   dir=$(find ${1:-*} -path '*/\.*' -prune \
                   -o -type d -print 2> /dev/null | fzf +m) &&
@@ -169,17 +68,13 @@ fda() {
 
 # fdr - cd to selected parent directory
 fdr() {
-  local declare dirs=()
-  get_parent_dirs() {
-    if [[ -d "${1}" ]]; then dirs+=("$1"); else return; fi
-    if [[ "${1}" == '/' ]]; then
-      for _dir in "${dirs[@]}"; do echo $_dir; done
-    else
-      get_parent_dirs $(dirname "$1")
-    fi
-  }
-  local DIR=$(get_parent_dirs $(realpath "${1:-$(pwd)}") | fzf-tmux --tac)
-  cd "$DIR"
+  local DIR
+  DIR=$(
+    path=$(realpath "${1:-$PWD}")
+    while [[ "$path" != "/" ]]; do echo "$path"; path=$(dirname "$path"); done
+    echo "/"
+  ) | fzf --tac
+  [[ -n "$DIR" ]] && cd "$DIR"
 }
 
 # cdf - cd into the directory of the selected file

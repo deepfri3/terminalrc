@@ -1,2 +1,4 @@
 
 # bashrc for local machine
+
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"

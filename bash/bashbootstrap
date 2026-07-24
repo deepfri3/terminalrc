@@ -2,15 +2,8 @@ if [ -z "$PS1" ]; then
    return
 fi
 
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-echo "Where is bootstrap? --> $SOURCE"
-
-basebashdir=$(dirname "$SOURCE")
+basebashdir=$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)
+[[ -n "$BASH_DEBUG" ]] && echo "Where is bootstrap? --> $basebashdir"
 masterbashrc=$basebashdir/bashrc
 osbashrc=$masterbashrc-`uname`
 localbashrc=$osbashrc-`hostname | cut -d. -f1`
@@ -20,18 +13,17 @@ if [ ! -f $localbashrc ]; then
     echo -e "\n# bashrc for local machine" > $localbashrc
 fi
 
-echo -n "Applicable shell configs: "
+[[ -n "$BASH_DEBUG" ]] && echo -n "Applicable shell configs: "
 for bashfile in "$masterbashrc" "$osbashrc" "$localbashrc"; do
-  if [ -r $bashfile ]; then
-    . $bashfile
-    echo -n "`basename $bashfile` "
+  if [ -r "$bashfile" ]; then
+    [[ -n "$BASH_DEBUG" ]] && echo -n "`basename $bashfile` "
+    . "$bashfile"
   fi
 done
-echo
 
 # Set convenience aliases
-myed=${VISUAL:-${EDITOR:-vim}}
+myed=${EDITOR:-nvim}
 alias editbashrc="$myed $masterbashrc"
 alias editosbashrc="$myed $osbashrc"
 alias editlocalbashrc="$myed $localbashrc"
-. "$HOME/.cargo/env"
+unset myed
