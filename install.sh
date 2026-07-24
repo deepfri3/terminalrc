@@ -392,6 +392,26 @@ if [[ $INSTALL_ZSH -eq 1 ]]; then
   log "zsh configuration"
   safe_link "$basedir/zsh/zshbootstrap" ~/.zshrc
   log "zsh configuration completed"
+
+  mkdir -p $HOME/.zsh
+  if [[ ! -d $HOME/.zsh/zsh-autosuggestions ]]; then
+    echo "Install zsh-autosuggestions plugin"
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git $HOME/.zsh/zsh-autosuggestions
+  else
+    echo "Updating zsh-autosuggestions plugin"
+    pushd $HOME/.zsh/zsh-autosuggestions
+    git pull
+    popd
+  fi
+  if [[ ! -d $HOME/.zsh/fast-syntax-highlighting ]]; then
+    echo "Install fast-syntax-highlighting plugin"
+    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting $HOME/.zsh/fast-syntax-highlighting
+  else
+    echo "Updating fast-syntax-highlighting plugin"
+    pushd $HOME/.zsh/fast-syntax-highlighting
+    git pull
+    popd
+  fi
 fi
 
 # --- lazygit ----------------------------------------------------------------------
