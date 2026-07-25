@@ -52,6 +52,10 @@ alias gdb="gdb -quiet -fullname"
 alias editvimconf="$EDITOR ~/.config/nvim/init.lua"
 alias sourcezsh='source ~/.zshrc'
 alias reloadzsh='exec zsh'   # cleanest: replace current shell
+eval "$(dircolors -b)"
+alias ls='ls --color=auto'
+alias ll="ls --color=auto -lh"
+alias la="ls --color=auto -lah"
 # tmux
 alias edittmuxconf="$EDITOR ~/.tmux.conf"
 alias sourcetmux='tmux source ~/.tmux.conf'

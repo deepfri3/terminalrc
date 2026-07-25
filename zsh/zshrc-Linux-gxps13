@@ -12,7 +12,6 @@ export NVM_DIR="$HOME/.config/nvm"
 ### Alias ###
 alias wireless="nmcli"
 alias g++='g++ -Wall -g -O0 -std=c++17'
-alias ll="ls --color=auto -lh"
 
 ### Functions ###
 
