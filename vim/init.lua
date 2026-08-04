@@ -327,17 +327,17 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
-vim.g.clipboard = {
-  name = "OSC 52",
-  -- copy = {
-  --   ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-  --   ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-  -- },
-  paste = {
-    ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-    ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
-  },
-}
+-- vim.g.clipboard = {
+--   name = "OSC 52",
+--   copy = {
+--     ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+--     ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+--   },
+--   paste = {
+--     ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+--     ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+--   },
+-- }
 
 --------------------------------------------------------------------------------
 -- Ease of use
@@ -732,6 +732,27 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
   end,
 })
+
+-- clangd
+vim.lsp.config['clangd'] = {
+  cmd = {
+    'clangd',
+    '--background-index',
+    '--clang-tidy',
+    '--header-insertion=iwyu',
+    '--completion-style=detailed',
+  },
+  filetypes = { 'c', 'cpp', },
+  root_markers = {
+    '.clangd',
+    '.clang-tidy',
+    '.clang-format',
+    'compile_commands.json',
+    'Makefile',
+    '.git'
+  },
+}
+vim.lsp.enable('clangd')
 
 --------------------------------------------------------------------------------
 -- Enable/Disable Diagnostics
