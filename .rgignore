@@ -26,6 +26,6 @@ Doxyfile
 *.cat
 *.vcproj
 *.htm
-*.txt
+#*.txt
 *.include
 *.csp

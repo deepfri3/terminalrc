@@ -239,7 +239,6 @@ opt.wildignore = {
 
 opt.laststatus = 2
 opt.listchars = { tab = ">-", trail = "!", nbsp = "%", eol = "$" }
-opt.clipboard = "unnamedplus"
 
 --------------------------------------------------------------------------------
 -- Helper functions
@@ -312,32 +311,22 @@ vim.api.nvim_create_autocmd("TermOpen", {
   end,
 })
 
--- Yank text to the system clipboard via OSC52 terminal code support. May not
--- work in TMUX and requires 'vim.o.clipboard = "unnamedplus"'
 vim.api.nvim_create_autocmd("TextYankPost", {
-  callback = function()
-    -- Highlight the text being yanked
-    vim.hl.hl_op()
-
-    local copy_to_unnamedplus = require("vim.ui.clipboard.osc52").copy("+")
-    local copy_to_unnamed = require("vim.ui.clipboard.osc52").copy("*")
-
-    copy_to_unnamedplus(vim.v.event.regcontents)
-    copy_to_unnamed(vim.v.event.regcontents)
-  end,
+  group = grp,
+  callback = function() vim.hl.hl_op() end,
 })
 
--- vim.g.clipboard = {
---   name = "OSC 52",
---   copy = {
---     ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
---     ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
---   },
---   paste = {
---     ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
---     ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
---   },
--- }
+local osc52 = require("vim.ui.clipboard.osc52")
+-- Paste from Neovim's own register. OSC 52 paste through tmux often doesn't work or hangs.
+local function paste()
+  return { vim.fn.split(vim.fn.getreg(""), "\n"), vim.fn.getregtype("") }
+end
+vim.g.clipboard = {
+  name = "OSC 52",
+  copy  = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") },
+  paste = { ["+"] = paste,           ["*"] = paste },
+}
+opt.clipboard = "unnamedplus"
 
 --------------------------------------------------------------------------------
 -- Ease of use
@@ -362,7 +351,7 @@ map("", "<C-l>", "<C-w>l")
 map("n", "<S-J>", ":bp<CR>")
 map("n", "<S-K>", ":bn<CR>")
 map("", "<leader>bd", ":Bclose<cr>", { silent = true })
-map("n", "<leader>b", ":ls<CR>:b<space>")
+-- map("n", "<leader>b", ":ls<CR>:b<space>")
 map("n", "<leader>bv", ":ls<CR>:vsp<space>|<space>b<space>")
 map("n", "<leader>bs", ":ls<CR>:sp<space>|<space>b<space>")
 map("n", "<leader>T", ":enew<cr>")
@@ -410,7 +399,7 @@ map("n", "<leader>r", toggle_rel)
 vim.api.nvim_create_user_command("Vb", "normal! \22", {})
 map("n", "<leader>vb", ":Vb<CR>")
 
-map("t", "<Esc>", [[<C-\><C-n>]])
+map("t", "<Esc><Esc>", [[<C-\><C-n>]])
 
 --------------------------------------------------------------------------------
 -- Git
@@ -438,10 +427,12 @@ map("n", "<leader>gc", ":GCheckout<CR>")
 vim.api.nvim_create_user_command("MakeTags", "!ctags -R .", {})
 map("n", "<F1>", function()
 	proj_root()
-	vim.cmd("Dispatch ctags -R --c++-kinds=+p --fields=+iaS --extras=+q .")
+    -- assumes using universal ctags
+	vim.cmd("Dispatch ctags -R --kinds-C++=+p --fields=+iaS --extras=+q --fields-C++=+{properties} .")
 	proj_root()
 end)
-map("", "<C-\\>", [[:vsp <CR>:exec("tag ".expand("<cword>"))<CR>]])
+-- map("", "<C-\\>", [[:vsp <CR>:exec("tag ".expand("<cword>"))<CR>]])
+map("", "<C-\\>", [[:exec("tag ".expand("<cword>"))<CR>]])
 map("", "<leader>ts", ":tselect <CR>/")
 map("", "<leader>tn", ":tnext<cr>")
 map("", "<leader>tp", ":tprevious<cr>")
@@ -650,14 +641,11 @@ pcall(telescope.load_extension, "fzf")
 
 local tb = require("telescope.builtin")
 map("n", "<leader>t", tb.find_files, { silent = true })
-map("n", "<leader>bb", tb.buffers, { silent = true })
+map("n", "<leader>b", tb.buffers, { silent = true })
 map("n", "<leader><Enter>", tb.oldfiles, { silent = true })
 map("n", "<leader>bl", tb.current_buffer_fuzzy_find, { silent = true })
-map("n", "<leader>ba", tb.live_grep, { silent = true })
+map("n", "<leader>a", tb.live_grep, { silent = true })
 map("n", "<F4>", tb.tags, { silent = true })
-map("n", "<leader>a", tb.live_grep, { silent = true }) -- rg live grep
-map("n", "<leader>pw", tb.grep_string, { silent = true }) -- rg word under cursor
-map("n", "<leader>ps", tb.live_grep, { silent = true }) -- rg live grep
 map("n", "<F5>", tb.grep_string, { silent = true }) -- rg word under cursor
 map("v", "<F5>", tb.grep_string, { silent = true })
 
