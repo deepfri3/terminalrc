@@ -141,17 +141,6 @@ require("lazy").setup({
         },
       },
     },
-
-	-- LSP + completion (replaces tagbar's role for code intel; keep ctags too)
-	"williamboman/mason.nvim",
-	"williamboman/mason-lspconfig.nvim",
-	"neovim/nvim-lspconfig",
-	"hrsh7th/nvim-cmp",
-	"hrsh7th/cmp-nvim-lsp",
-	"hrsh7th/cmp-buffer",
-	"hrsh7th/cmp-path",
-	"L3MON4D3/LuaSnip",
-	"saadparwaiz1/cmp_luasnip",
     {
       "gl1tchc0d3r/typstwriter.nvim",
       ft = { "typst" },
@@ -609,7 +598,8 @@ telescope.setup({
 			"--line-number",
 			"--column",
 			"--smart-case",
-            "--no-ignore-vcs",
+            "--hidden",
+            "--glob", "!.git/*",
 			"--ignore-file", vim.fn.expand("~/.rgignore"),
 		},
 		layout_strategy = "vertical",
@@ -632,7 +622,7 @@ telescope.setup({
                 "--files",
                 "--hidden",
                 "--glob", "!.git/*",
-                "--no-ignore-vcs"
+                "--ignore-file", vim.fn.expand("~/.rgignore"),
             },
         },
     },
@@ -658,6 +648,11 @@ map("v", "<F5>", tb.grep_string, { silent = true })
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("NativeTreesitter", { clear = true }),
   callback = function(args)
+    -- Skip scratch/special buffers (Telescope prompt, results, preview, etc.)
+    -- but keep help buffers so :help still gets vimdoc highlighting.
+    local bt = vim.bo[args.buf].buftype
+    if bt ~= "" and bt ~= "help" then return end
+
     local ft = vim.bo[args.buf].filetype
     local lang = vim.treesitter.language.get_lang(ft) or ft
     -- language.add returns false (0.11) / nil (0.12) if no parser is found
@@ -672,45 +667,92 @@ vim.api.nvim_create_autocmd("FileType", {
 --------------------------------------------------------------------------------
 -- Plugin setup: LSP + completion
 --------------------------------------------------------------------------------
-require("mason").setup()
+-- Every server is defined inline with vim.lsp.config(name, {...}). Because we
+-- set the table ourselves, vim.lsp.enable(name) never needs to look for an
+-- lsp/<name>.lua file on the runtimepath -- this whole block is the config.
 
-local cmp = require("cmp")
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
--- Apply cmp completion capabilities to EVERY server via the native 0.11+ API.
--- nvim-lspconfig is still installed and still supplies each server's built-in
--- defaults (cmd, root markers, filetypes) through vim.lsp.config; we simply no
--- longer call its deprecated require('lspconfig')[server].setup() framework.
-vim.lsp.config("*", { capabilities = capabilities })
-vim.lsp.enable("basedpyright")
-
--- mason-lspconfig v2 auto-installs these AND auto-enables them for you
--- (it calls vim.lsp.enable() internally), so no manual enable loop is needed.
-require("mason-lspconfig").setup({
-  ensure_installed = { "clangd", "lua_ls", "gopls", "rust_analyzer" },
+-- Shared defaults applied to every server (merged over per-server tables).
+vim.lsp.config("*", {
+  root_markers = { ".git" },
 })
 
-cmp.setup({
-  snippet = {
-    expand = function(args) require("luasnip").lsp_expand(args.body) end,
+-- 1) Server definitions ------------------------------------------------------
+
+vim.lsp.config("clangd", {
+  cmd = {
+    "clangd",
+    "--background-index",
+    "--clang-tidy",
+    "--header-insertion=iwyu",
+    "--completion-style=detailed",
   },
-  mapping = cmp.mapping.preset.insert({
-    ["<C-Space>"] = cmp.mapping.complete(),
-    ["<CR>"]      = cmp.mapping.confirm({ select = true }),
-    ["<Tab>"]     = cmp.mapping.select_next_item(),
-    ["<S-Tab>"]   = cmp.mapping.select_prev_item(),
-  }),
-  sources = {
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
-    { name = "buffer" },
-    { name = "path" },
+  filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+  root_markers = {
+    ".clangd", ".clang-tidy", ".clang-format",
+    "compile_commands.json", "compile_flags.txt",
+    "Makefile", "configure.ac", ".git",
   },
 })
 
--- LSP keymaps on attach
+vim.lsp.config("rust_analyzer", {
+  cmd = { "rust-analyzer" },
+  filetypes = { "rust" },
+  root_markers = { "Cargo.toml", "rust-project.json", ".git" },
+})
+
+vim.lsp.config("gopls", {
+  cmd = { "gopls" },
+  filetypes = { "go", "gomod", "gowork", "gotmpl" },
+  root_markers = { "go.work", "go.mod", ".git" },
+  settings = { gopls = { analyses = { unusedparams = true }, staticcheck = true } },
+})
+
+vim.lsp.config("lua_ls", {
+  cmd = { "lua-language-server" },
+  filetypes = { "lua" },
+  root_markers = { ".luarc.json", ".luarc.jsonc", ".stylua.toml", ".git" },
+  settings = { Lua = { telemetry = { enable = false } } },
+})
+
+-- Python: pick whichever single-binary server you have. ty is Astral's
+-- (checker + LSP in one binary); pyrefly is Meta's. Both avoid the Node.js
+-- runtime that basedpyright drags in.
+vim.lsp.config("ty", {
+  cmd = { "ty", "server" },
+  filetypes = { "python" },
+  root_markers = { "pyproject.toml", "ty.toml", "setup.py", "setup.cfg", "requirements.txt", ".git" },
+})
+
+-- vim.lsp.config("pyrefly", {                    -- enable instead of ty if you prefer
+--   cmd = { "pyrefly", "lsp" },
+--   filetypes = { "python" },
+--   root_markers = { "pyrefly.toml", "pyproject.toml", ".git" },
+-- })
+
+-- 2) Enable only the servers whose binary is actually on PATH ---------------
+-- degrades to ctags + treesitter instead of erroring at startup.
+local function enable_if(bin, name)
+  if vim.fn.executable(bin) == 1 then vim.lsp.enable(name) end
+end
+
+enable_if("clangd",              "clangd")
+enable_if("rust-analyzer",       "rust_analyzer")
+enable_if("gopls",               "gopls")
+enable_if("lua-language-server", "lua_ls")
+enable_if("ty",                  "ty")
+-- enable_if("pyrefly",          "pyrefly")
+
+-- 4) Keymaps on attach -------------------------------------------------------
 vim.api.nvim_create_autocmd("LspAttach", {
+  group = grp,
   callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+    -- Native completion for this client in this buffer
+    if client and client:supports_method("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+    end
+
     local o = { buffer = ev.buf, silent = true }
     map("n", "<leader>gd", vim.lsp.buf.definition, o)
     map("n", "<leader>gr", vim.lsp.buf.references, o)
@@ -718,29 +760,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>gh", vim.lsp.buf.hover, o)
     map("n", "<leader>rn", vim.lsp.buf.rename, o)
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
+    map("i", "<C-Space>", function() vim.lsp.completion.get() end, o)
   end,
 })
-
--- clangd
-vim.lsp.config['clangd'] = {
-  cmd = {
-    'clangd',
-    '--background-index',
-    '--clang-tidy',
-    '--header-insertion=iwyu',
-    '--completion-style=detailed',
-  },
-  filetypes = { 'c', 'cpp', },
-  root_markers = {
-    '.clangd',
-    '.clang-tidy',
-    '.clang-format',
-    'compile_commands.json',
-    'Makefile',
-    '.git'
-  },
-}
-vim.lsp.enable('clangd')
 
 --------------------------------------------------------------------------------
 -- Enable/Disable Diagnostics
