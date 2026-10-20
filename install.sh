@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configure terminal environment
-set -euo pipefail
+set -Eeuo pipefail
 IFS=$'\n\t'
 trap 'echo "Error on line $LINENO"' ERR
 
@@ -127,6 +127,25 @@ github_latest_tag() {
 mkdir -p ~/.local/bin
 basedir=$(pwd)
 echo "basedir=$basedir"
+
+# Retry on network blips, HTTPS only
+CURL=(curl -fsSL --proto '=https' --tlsv1.2 --retry 3 --retry-delay 2 --connect-timeout 15)
+
+case "$(uname -m)" in
+  x86_64)        GO_ARCH="linux-amd64"; RUST_TRIPLE="x86_64-unknown-linux-gnu" ;;
+  aarch64|arm64) GO_ARCH="linux-arm64"; RUST_TRIPLE="aarch64-unknown-linux-gnu" ;;
+  *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
+
+# Same filesystem as ~/.local, so the final mv is an atomic rename
+WORKDIR=$(mktemp -d "$HOME/.local/.install.XXXXXX")
+trap 'rm -rf "$WORKDIR"' EXIT
+
+verify_sha256() {  # <file> <expected>
+  echo "$2  $1" | sha256sum -c --quiet - \
+    || { echo "Checksum mismatch: $1" >&2; return 1; }
+}
+
 
 # --- Packages ------------------------------------------------------------
 if [[ $INSTALL_PACKAGES -eq 1 ]]; then
@@ -436,47 +455,43 @@ fi
 # --- Go ----------------------------------------------------------------------
 if [[ $INSTALL_GO -eq 1 ]]; then
   log "Install Go"
-  GO_ARCH="linux-amd64"
+  GO_ROOT="$HOME/.local/go"
+  GO_BIN="$GO_ROOT/bin/go"
 
-  install_go() {
-    local version
-    version=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n1 || true)
+  go_json=$("${CURL[@]}" "https://go.dev/dl/?mode=json" | tr -d '\n\r') \
+    || { echo "Could not reach go.dev" >&2; exit 1; }
+  latest=$(grep -Po '"version": *"\Kgo[0-9.]+' <<<"$go_json" | sed -n 1p)
 
-    [[ -z "$version" ]] && {
-      echo "Could not determine latest Go version" >&2
-      return 1
-    }
+  [[ -n "$latest" ]] || { echo "Could not determine latest Go version" >&2; exit 1; }
 
-    local tarball="${version}.${GO_ARCH}.tar.gz"
-    local url="https://go.dev/dl/${tarball}"
+  current=""
+  [[ -x "$GO_BIN" ]] && current=$("$GO_BIN" env GOVERSION)
 
-    echo "Downloading Go ${version} for ${GO_ARCH}..."
-    curl -fsSL -o "/tmp/${tarball}" "$url"
-
-    echo "Removing previous Go installation..."
-    rm -rf ~/.local/go
-
-    echo "Extracting Go to /usr/local..."
-    tar -C ~/.local/go -xzf "/tmp/${tarball}"
-
-    rm -f "/tmp/${tarball}"
-  }
-
-  if ! command -v go >/dev/null 2>&1; then
-    install_go
-    log "Go installed"
+  if [[ "$current" == "$latest" ]]; then
+    echo "Go $current already up to date, skipping"
   else
-    current=$(go version | awk '{print $3}')
-    latest=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n1 || true)
+    tarball="${latest}.${GO_ARCH}.tar.gz"
+    tarball_re=${tarball//./\\.}
+    sha=$(grep -Po "\"filename\": *\"${tarball_re}\"[^}]*\"sha256\": *\"\K[0-9a-f]{64}" <<<"$go_json" || true)
+    [[ -n "$sha" ]] || { echo "No checksum found for $tarball" >&2; exit 1; }
 
-    if [[ -n "$latest" && "$current" != "$latest" ]]; then
-      echo "Go ${current} installed, updating to ${latest}..."
-      install_go
-      log "Go installed"
-    else
-      echo "Go ${current} already installed and up to date, skipping"
-    fi
+    echo "Go ${current:-not installed} -> $latest"
+    "${CURL[@]}" -o "$WORKDIR/$tarball" "https://go.dev/dl/$tarball"
+    verify_sha256 "$WORKDIR/$tarball" "$sha"
+
+    # Extract and test in staging first; swap only if it works
+    tar -C "$WORKDIR" -xzf "$WORKDIR/$tarball"
+    "$WORKDIR/go/bin/go" version >/dev/null
+    rm -rf "$GO_ROOT.old"
+    [[ -d "$GO_ROOT" ]] && mv "$GO_ROOT" "$GO_ROOT.old"
+    mv "$WORKDIR/go" "$GO_ROOT"
+    rm -rf "$GO_ROOT.old"
+    log "Go $latest installed"
   fi
+
+  log "Install/update gopls"
+  GOBIN="$HOME/.local/bin" "$GO_BIN" install golang.org/x/tools/gopls@latest
+  "$HOME/.local/bin/gopls" version | head -n1
 fi
 
 # --- fzf ----------------------------------------------------------------------
@@ -576,51 +591,47 @@ fi
 # --- uv ----------------------------------------------------------------------
 if [[ $INSTALL_UV -eq 1 ]]; then
   log "Install uv"
-  UV_ARCH="x86_64-unknown-linux-gnu"
+  UV_BIN="$HOME/.local/bin/uv"
+  uv_tarball="uv-${RUST_TRIPLE}.tar.gz"
 
-  install_uv() {
-	local version
-	version=$(curl -fsSL \
-	  "https://api.github.com/repos/astral-sh/uv/releases/latest" \
-	  | grep -Po '"tag_name": *"\K[^"]*' || true)
+  # Follow the redirect to .../releases/tag/<version>; no API, no rate limit
+  latest=$("${CURL[@]}" -o /dev/null -w '%{url_effective}' \
+    "https://github.com/astral-sh/uv/releases/latest" || true)
+  latest=${latest##*/}
 
-	[[ -z "$version" ]] && {
-	  echo "Could not determine latest uv version" >&2
-	  return 1
-	}
+  current=""
+  [[ -x "$UV_BIN" ]] && current=$("$UV_BIN" --version | awk '{print $2}')
 
-	local tarball="uv-${UV_ARCH}.tar.gz"
-	local url="https://github.com/astral-sh/uv/releases/download/${version}/${tarball}"
-
-	echo "Downloading uv ${version} for ${UV_ARCH}..."
-	curl -fsSL -o "/tmp/${tarball}" "$url"
-
-	echo "Extracting uv and uvx to ~/.local/bin..."
-	tar -xzf "/tmp/${tarball}" -C /tmp
-	install -m 0755 "/tmp/uv-${UV_ARCH}/uv" ~/.local/bin/uv
-	install -m 0755 "/tmp/uv-${UV_ARCH}/uvx" ~/.local/bin/uvx
-
-	rm -rf "/tmp/${tarball}" "/tmp/uv-${UV_ARCH}"
-  }
-
-  if ! command -v uv >/dev/null 2>&1; then
-	install_uv
-	log "uv installed"
+  if [[ -z "$latest" || "$latest" == "latest" ]]; then
+    [[ -n "$current" ]] || { echo "Could not determine uv version" >&2; exit 1; }
+    echo "Could not check for uv updates, keeping $current"
+  elif [[ "$current" == "$latest" ]]; then
+    echo "uv $current already up to date, skipping"
   else
-	current=$(uv --version | awk '{print $2}')
-	latest=$(curl -fsSL \
-	  "https://api.github.com/repos/astral-sh/uv/releases/latest" \
-	  | grep -Po '"tag_name": *"\K[^"]*' || true)
+    base="https://github.com/astral-sh/uv/releases/download/${latest}"
+    echo "uv ${current:-not installed} -> $latest"
+    "${CURL[@]}" -o "$WORKDIR/$uv_tarball" "$base/$uv_tarball"
+    sha=$("${CURL[@]}" "$base/$uv_tarball.sha256" | awk '{print $1}')
+    verify_sha256 "$WORKDIR/$uv_tarball" "$sha"
 
-	if [[ -n "$latest" && "$current" != "$latest" ]]; then
-	  echo "uv ${current} installed, updating to ${latest}..."
-	  install_uv
-	  log "uv installed"
-	else
-	  echo "uv ${current} already installed and up to date, skipping"
-	fi
+    tar -xzf "$WORKDIR/$uv_tarball" -C "$WORKDIR"
+    "$WORKDIR/uv-${RUST_TRIPLE}/uv" --version >/dev/null
+    for b in uv uvx; do
+      install -m 0755 "$WORKDIR/uv-${RUST_TRIPLE}/$b" "$HOME/.local/bin/$b.new"
+      mv -f "$HOME/.local/bin/$b.new" "$HOME/.local/bin/$b"   # atomic replace
+    done
+    log "uv $latest installed"
   fi
+
+  log "Install/update ty"
+  if "$UV_BIN" tool list 2>/dev/null | grep -q '^ty '; then
+    "$UV_BIN" tool upgrade ty
+  else
+    "$UV_BIN" tool install ty@latest
+  fi
+  "$HOME/.local/bin/ty" --version
 fi
+
 # --- tmux --------------------------------------------------------------------
 
 if [[ $INSTALL_TMUX -eq 1 ]]; then
