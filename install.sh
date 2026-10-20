@@ -154,7 +154,7 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
 	  libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
 	  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
 	  fd-find cargo wl-clipboard libcurl4-openssl-dev libexpat1-dev libssl-dev
-	  zlib1g-dev
+	  zlib1g-dev clangd lua-language-server
 	)
 
 	missing=()
@@ -239,9 +239,9 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
       ninja-build gettext libtool autoconf automake cmake make gcc-c++
       pkgconfig unzip curl libevent-devel ncurses-devel bison byacc
       libX11-devel libXt-devel gtk3-devel zsh perl perl-devel ruby ruby-devel
-      python3-pip python3-devel btop xsel xclip ripgrep ctags
+      python3-pip python3-devel btop xsel xclip ripgrep universal-ctags
       fd-find cargo wl-clipboard libcurl-devel expat-devel openssl-devel
-      zlib-devel snapd
+      zlib-devel snapd clangd lua-language-server
     )
 
     missing=()
@@ -454,10 +454,10 @@ if [[ $INSTALL_GO -eq 1 ]]; then
     curl -fsSL -o "/tmp/${tarball}" "$url"
 
     echo "Removing previous Go installation..."
-    sudo rm -rf /usr/local/go
+    rm -rf ~/.local/go
 
     echo "Extracting Go to /usr/local..."
-    sudo tar -C /usr/local -xzf "/tmp/${tarball}"
+    tar -C ~/.local/go -xzf "/tmp/${tarball}"
 
     rm -f "/tmp/${tarball}"
   }

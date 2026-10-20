@@ -141,17 +141,6 @@ require("lazy").setup({
         },
       },
     },
-
-	-- LSP + completion (replaces tagbar's role for code intel; keep ctags too)
-	"williamboman/mason.nvim",
-	"williamboman/mason-lspconfig.nvim",
-	"neovim/nvim-lspconfig",
-	"hrsh7th/nvim-cmp",
-	"hrsh7th/cmp-nvim-lsp",
-	"hrsh7th/cmp-buffer",
-	"hrsh7th/cmp-path",
-	"L3MON4D3/LuaSnip",
-	"saadparwaiz1/cmp_luasnip",
     {
       "gl1tchc0d3r/typstwriter.nvim",
       ft = { "typst" },
@@ -239,7 +228,6 @@ opt.wildignore = {
 
 opt.laststatus = 2
 opt.listchars = { tab = ">-", trail = "!", nbsp = "%", eol = "$" }
-opt.clipboard = "unnamedplus"
 
 --------------------------------------------------------------------------------
 -- Helper functions
@@ -312,32 +300,22 @@ vim.api.nvim_create_autocmd("TermOpen", {
   end,
 })
 
--- Yank text to the system clipboard via OSC52 terminal code support. May not
--- work in TMUX and requires 'vim.o.clipboard = "unnamedplus"'
 vim.api.nvim_create_autocmd("TextYankPost", {
-  callback = function()
-    -- Highlight the text being yanked
-    vim.hl.hl_op()
-
-    local copy_to_unnamedplus = require("vim.ui.clipboard.osc52").copy("+")
-    local copy_to_unnamed = require("vim.ui.clipboard.osc52").copy("*")
-
-    copy_to_unnamedplus(vim.v.event.regcontents)
-    copy_to_unnamed(vim.v.event.regcontents)
-  end,
+  group = grp,
+  callback = function() vim.hl.hl_op() end,
 })
 
+local osc52 = require("vim.ui.clipboard.osc52")
+-- Paste from Neovim's own register. OSC 52 paste through tmux often doesn't work or hangs.
+local function paste()
+  return { vim.fn.split(vim.fn.getreg(""), "\n"), vim.fn.getregtype("") }
+end
 vim.g.clipboard = {
   name = "OSC 52",
-  -- copy = {
-  --   ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-  --   ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-  -- },
-  paste = {
-    ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-    ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
-  },
+  copy  = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") },
+  paste = { ["+"] = paste,           ["*"] = paste },
 }
+opt.clipboard = "unnamedplus"
 
 --------------------------------------------------------------------------------
 -- Ease of use
@@ -362,7 +340,7 @@ map("", "<C-l>", "<C-w>l")
 map("n", "<S-J>", ":bp<CR>")
 map("n", "<S-K>", ":bn<CR>")
 map("", "<leader>bd", ":Bclose<cr>", { silent = true })
-map("n", "<leader>b", ":ls<CR>:b<space>")
+-- map("n", "<leader>b", ":ls<CR>:b<space>")
 map("n", "<leader>bv", ":ls<CR>:vsp<space>|<space>b<space>")
 map("n", "<leader>bs", ":ls<CR>:sp<space>|<space>b<space>")
 map("n", "<leader>T", ":enew<cr>")
@@ -410,7 +388,7 @@ map("n", "<leader>r", toggle_rel)
 vim.api.nvim_create_user_command("Vb", "normal! \22", {})
 map("n", "<leader>vb", ":Vb<CR>")
 
-map("t", "<Esc>", [[<C-\><C-n>]])
+map("t", "<Esc><Esc>", [[<C-\><C-n>]])
 
 --------------------------------------------------------------------------------
 -- Git
@@ -438,10 +416,12 @@ map("n", "<leader>gc", ":GCheckout<CR>")
 vim.api.nvim_create_user_command("MakeTags", "!ctags -R .", {})
 map("n", "<F1>", function()
 	proj_root()
-	vim.cmd("Dispatch ctags -R --c++-kinds=+p --fields=+iaS --extras=+q .")
+    -- assumes using universal ctags
+	vim.cmd("Dispatch ctags -R --kinds-C++=+p --fields=+iaS --extras=+q --fields-C++=+{properties} .")
 	proj_root()
 end)
-map("", "<C-\\>", [[:vsp <CR>:exec("tag ".expand("<cword>"))<CR>]])
+-- map("", "<C-\\>", [[:vsp <CR>:exec("tag ".expand("<cword>"))<CR>]])
+map("", "<C-\\>", [[:exec("tag ".expand("<cword>"))<CR>]])
 map("", "<leader>ts", ":tselect <CR>/")
 map("", "<leader>tn", ":tnext<cr>")
 map("", "<leader>tp", ":tprevious<cr>")
@@ -618,7 +598,8 @@ telescope.setup({
 			"--line-number",
 			"--column",
 			"--smart-case",
-            "--no-ignore-vcs",
+            "--hidden",
+            "--glob", "!.git/*",
 			"--ignore-file", vim.fn.expand("~/.rgignore"),
 		},
 		layout_strategy = "vertical",
@@ -641,7 +622,7 @@ telescope.setup({
                 "--files",
                 "--hidden",
                 "--glob", "!.git/*",
-                "--no-ignore-vcs"
+                "--ignore-file", vim.fn.expand("~/.rgignore"),
             },
         },
     },
@@ -650,14 +631,11 @@ pcall(telescope.load_extension, "fzf")
 
 local tb = require("telescope.builtin")
 map("n", "<leader>t", tb.find_files, { silent = true })
-map("n", "<leader>bb", tb.buffers, { silent = true })
+map("n", "<leader>b", tb.buffers, { silent = true })
 map("n", "<leader><Enter>", tb.oldfiles, { silent = true })
 map("n", "<leader>bl", tb.current_buffer_fuzzy_find, { silent = true })
-map("n", "<leader>ba", tb.live_grep, { silent = true })
+map("n", "<leader>a", tb.live_grep, { silent = true })
 map("n", "<F4>", tb.tags, { silent = true })
-map("n", "<leader>a", tb.live_grep, { silent = true }) -- rg live grep
-map("n", "<leader>pw", tb.grep_string, { silent = true }) -- rg word under cursor
-map("n", "<leader>ps", tb.live_grep, { silent = true }) -- rg live grep
 map("n", "<F5>", tb.grep_string, { silent = true }) -- rg word under cursor
 map("v", "<F5>", tb.grep_string, { silent = true })
 
@@ -670,6 +648,11 @@ map("v", "<F5>", tb.grep_string, { silent = true })
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("NativeTreesitter", { clear = true }),
   callback = function(args)
+    -- Skip scratch/special buffers (Telescope prompt, results, preview, etc.)
+    -- but keep help buffers so :help still gets vimdoc highlighting.
+    local bt = vim.bo[args.buf].buftype
+    if bt ~= "" and bt ~= "help" then return end
+
     local ft = vim.bo[args.buf].filetype
     local lang = vim.treesitter.language.get_lang(ft) or ft
     -- language.add returns false (0.11) / nil (0.12) if no parser is found
@@ -684,45 +667,92 @@ vim.api.nvim_create_autocmd("FileType", {
 --------------------------------------------------------------------------------
 -- Plugin setup: LSP + completion
 --------------------------------------------------------------------------------
-require("mason").setup()
+-- Every server is defined inline with vim.lsp.config(name, {...}). Because we
+-- set the table ourselves, vim.lsp.enable(name) never needs to look for an
+-- lsp/<name>.lua file on the runtimepath -- this whole block is the config.
 
-local cmp = require("cmp")
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
--- Apply cmp completion capabilities to EVERY server via the native 0.11+ API.
--- nvim-lspconfig is still installed and still supplies each server's built-in
--- defaults (cmd, root markers, filetypes) through vim.lsp.config; we simply no
--- longer call its deprecated require('lspconfig')[server].setup() framework.
-vim.lsp.config("*", { capabilities = capabilities })
-vim.lsp.enable("basedpyright")
-
--- mason-lspconfig v2 auto-installs these AND auto-enables them for you
--- (it calls vim.lsp.enable() internally), so no manual enable loop is needed.
-require("mason-lspconfig").setup({
-  ensure_installed = { "clangd", "lua_ls", "gopls", "rust_analyzer" },
+-- Shared defaults applied to every server (merged over per-server tables).
+vim.lsp.config("*", {
+  root_markers = { ".git" },
 })
 
-cmp.setup({
-  snippet = {
-    expand = function(args) require("luasnip").lsp_expand(args.body) end,
+-- 1) Server definitions ------------------------------------------------------
+
+vim.lsp.config("clangd", {
+  cmd = {
+    "clangd",
+    "--background-index",
+    "--clang-tidy",
+    "--header-insertion=iwyu",
+    "--completion-style=detailed",
   },
-  mapping = cmp.mapping.preset.insert({
-    ["<C-Space>"] = cmp.mapping.complete(),
-    ["<CR>"]      = cmp.mapping.confirm({ select = true }),
-    ["<Tab>"]     = cmp.mapping.select_next_item(),
-    ["<S-Tab>"]   = cmp.mapping.select_prev_item(),
-  }),
-  sources = {
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
-    { name = "buffer" },
-    { name = "path" },
+  filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+  root_markers = {
+    ".clangd", ".clang-tidy", ".clang-format",
+    "compile_commands.json", "compile_flags.txt",
+    "Makefile", "configure.ac", ".git",
   },
 })
 
--- LSP keymaps on attach
+vim.lsp.config("rust_analyzer", {
+  cmd = { "rust-analyzer" },
+  filetypes = { "rust" },
+  root_markers = { "Cargo.toml", "rust-project.json", ".git" },
+})
+
+vim.lsp.config("gopls", {
+  cmd = { "gopls" },
+  filetypes = { "go", "gomod", "gowork", "gotmpl" },
+  root_markers = { "go.work", "go.mod", ".git" },
+  settings = { gopls = { analyses = { unusedparams = true }, staticcheck = true } },
+})
+
+vim.lsp.config("lua_ls", {
+  cmd = { "lua-language-server" },
+  filetypes = { "lua" },
+  root_markers = { ".luarc.json", ".luarc.jsonc", ".stylua.toml", ".git" },
+  settings = { Lua = { telemetry = { enable = false } } },
+})
+
+-- Python: pick whichever single-binary server you have. ty is Astral's
+-- (checker + LSP in one binary); pyrefly is Meta's. Both avoid the Node.js
+-- runtime that basedpyright drags in.
+vim.lsp.config("ty", {
+  cmd = { "ty", "server" },
+  filetypes = { "python" },
+  root_markers = { "pyproject.toml", "ty.toml", "setup.py", "setup.cfg", "requirements.txt", ".git" },
+})
+
+-- vim.lsp.config("pyrefly", {                    -- enable instead of ty if you prefer
+--   cmd = { "pyrefly", "lsp" },
+--   filetypes = { "python" },
+--   root_markers = { "pyrefly.toml", "pyproject.toml", ".git" },
+-- })
+
+-- 2) Enable only the servers whose binary is actually on PATH ---------------
+-- degrades to ctags + treesitter instead of erroring at startup.
+local function enable_if(bin, name)
+  if vim.fn.executable(bin) == 1 then vim.lsp.enable(name) end
+end
+
+enable_if("clangd",              "clangd")
+enable_if("rust-analyzer",       "rust_analyzer")
+enable_if("gopls",               "gopls")
+enable_if("lua-language-server", "lua_ls")
+enable_if("ty",                  "ty")
+-- enable_if("pyrefly",          "pyrefly")
+
+-- 4) Keymaps on attach -------------------------------------------------------
 vim.api.nvim_create_autocmd("LspAttach", {
+  group = grp,
   callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+    -- Native completion for this client in this buffer
+    if client and client:supports_method("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+    end
+
     local o = { buffer = ev.buf, silent = true }
     map("n", "<leader>gd", vim.lsp.buf.definition, o)
     map("n", "<leader>gr", vim.lsp.buf.references, o)
@@ -730,6 +760,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>gh", vim.lsp.buf.hover, o)
     map("n", "<leader>rn", vim.lsp.buf.rename, o)
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
+    map("i", "<C-Space>", function() vim.lsp.completion.get() end, o)
   end,
 })
 

@@ -23,14 +23,16 @@ GRAMMARS=(
 
 get_query_files() {
   # Vendor Neovim query files from nvim-treesitter (master branch = classic query layout)
-  local qrepo="$TMP/nvim-treesitter"
+  local qrepo="/tmp/nvim-treesitter-u261602"
   local lang="$1"
-  git clone --depth 1 --branch master \
-	https://github.com/nvim-treesitter/nvim-treesitter "$qrepo" >/dev/null 2>&1
+  if [ ! -d "$qrepo/queries/$lang" ]; then
+    git clone --depth 1 --branch master \
+      https://github.com/nvim-treesitter/nvim-treesitter "$qrepo" >/dev/null 2>&1
+  fi
   for lang in cpp python bash json yaml go rust; do
-	if [ -d "$qrepo/runtime/queries/$lang" ]; then
+	if [ -d "$qrepo/queries/$lang" ]; then
 	  mkdir -p "$QUERY_DIR/$lang"
-	  cp "$qrepo/runtime/queries/$lang"/*.scm "$QUERY_DIR/$lang/"
+	  cp "$qrepo/queries/$lang"/*.scm "$QUERY_DIR/$lang/"
 	fi
   done
 }
