@@ -506,7 +506,7 @@ vim.g.netrw_banner = 0
 vim.g.netrw_browse_split = 4
 vim.g.netrw_altv = 1
 vim.g.netrw_liststyle = 3
-vim.g.netrw_keepdir = 0
+vim.g.netrw_keepdir = 1
 vim.g.netrw_mousemaps = 0
 map("n", "<leader>E", ":Lexplore <bar> :vertical resize 50<CR>")
 map("n", "<leader>e", ":Lexplore %:p:h<bar> :vertical resize 50<CR>")
@@ -600,6 +600,7 @@ telescope.setup({
 			"--smart-case",
             "--hidden",
             "--glob", "!.git/*",
+            "--no-ignore-vcs",
 			"--ignore-file", vim.fn.expand("~/.rgignore"),
 		},
 		layout_strategy = "vertical",
@@ -622,6 +623,7 @@ telescope.setup({
                 "--files",
                 "--hidden",
                 "--glob", "!.git/*",
+                "--no-ignore-vcs",
                 "--ignore-file", vim.fn.expand("~/.rgignore"),
             },
         },
@@ -777,19 +779,19 @@ end, { silent = true })
 -- Autocommands
 --------------------------------------------------------------------------------
 vim.api.nvim_create_autocmd("BufReadPost", {
-	group = grp,
-	callback = function()
-		local mark = vim.api.nvim_buf_get_mark(0, '"')
-		if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
-			pcall(vim.api.nvim_win_set_cursor, 0, mark)
-		end
-	end,
+    group = grp,
+    callback = function()
+        local mark = vim.api.nvim_buf_get_mark(0, '"')
+        if mark[1] > 0 and mark[1] <= vim.api.nvim_buf_line_count(0) then
+            pcall(vim.api.nvim_win_set_cursor, 0, mark)
+        end
+    end,
 })
 
-vim.api.nvim_create_autocmd("BufWritePre", {
-	group = grp,
-	callback = trim_whitespace,
-})
+-- vim.api.nvim_create_autocmd("BufWritePre", {
+--     group = grp,
+--     callback = trim_whitespace,
+-- })
 
 --------------------------------------------------------------------------------
 -- Remaining Vimscript helpers kept as-is

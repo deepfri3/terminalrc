@@ -29,3 +29,4 @@ Doxyfile
 #*.txt
 *.include
 *.csp
+/build
