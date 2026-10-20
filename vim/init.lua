@@ -603,6 +603,7 @@ telescope.setup({
             "--no-ignore-vcs",
 			"--ignore-file", vim.fn.expand("~/.rgignore"),
 		},
+        sorting_strategy = "ascending",
 		layout_strategy = "vertical",
 		layout_config = {
             height = 0.5,
@@ -632,11 +633,11 @@ telescope.setup({
 pcall(telescope.load_extension, "fzf")
 
 local tb = require("telescope.builtin")
-map("n", "<leader>t", tb.find_files, { silent = true })
-map("n", "<leader>b", tb.buffers, { silent = true })
+map("n", "<leader>ff", tb.find_files, { silent = true })
+map("n", "<leader>fg", tb.live_grep, { silent = true })
+map("n", "<leader>fb", tb.buffers, { silent = true })
 map("n", "<leader><Enter>", tb.oldfiles, { silent = true })
 map("n", "<leader>bl", tb.current_buffer_fuzzy_find, { silent = true })
-map("n", "<leader>a", tb.live_grep, { silent = true })
 map("n", "<F4>", tb.tags, { silent = true })
 map("n", "<F5>", tb.grep_string, { silent = true }) -- rg word under cursor
 map("v", "<F5>", tb.grep_string, { silent = true })
