@@ -163,81 +163,81 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
   }
 
   if [[ "$DISTRO" == "debian" ]]; then
-	pkg_is_installed() {
-	  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
-	}
+    pkg_is_installed() {
+      dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+    }
 
-	packages=(
-	  ninja-build gettext libtool libtool-bin autoconf automake cmake make g++
-	  pkg-config unzip curl libevent-dev libncurses-dev bison byacc libx11-dev
-	  libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
-	  python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
-	  fd-find cargo wl-clipboard libcurl4-openssl-dev libexpat1-dev libssl-dev
-	  zlib1g-dev clangd lua-language-server
-	)
+    packages=(
+      ninja-build gettext libtool libtool-bin autoconf automake cmake make g++
+      pkg-config unzip curl libevent-dev libncurses-dev bison byacc libx11-dev
+      libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
+      python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
+      fd-find cargo wl-clipboard libcurl4-openssl-dev libexpat1-dev libssl-dev
+      zlib1g-dev clangd lua-language-server
+    )
 
-	missing=()
-	for pkg in "${packages[@]}"; do
-	  if ! pkg_is_installed "$pkg"; then
-		missing+=("$pkg")
-	  fi
-	done
+    missing=()
+    for pkg in "${packages[@]}"; do
+      if ! pkg_is_installed "$pkg"; then
+        missing+=("$pkg")
+      fi
+    done
 
-	if [[ ${#missing[@]} -gt 0 ]]; then
-	  log "Installing missing packages: ${missing[*]}"
-	  sudo apt-get update
-	  sudo apt-get install -y "${missing[@]}"
-	else
-	  echo "All apt packages already installed"
-	fi
+    if [[ ${#missing[@]} -gt 0 ]]; then
+      log "Installing missing packages: ${missing[*]}"
+      sudo apt-get update
+      sudo apt-get install -y "${missing[@]}"
+    else
+      echo "All apt packages already installed"
+    fi
 
-	# Make fd-find usable as 'fd'
-	if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
-	  mkdir -p ~/.local/bin
-	  ln -sf "$(command -v fdfind)" ~/.local/bin/fd
-	fi
+    # Make fd-find usable as 'fd'
+    if command -v fdfind >/dev/null 2>&1 && [[ ! -x ~/.local/bin/fd ]]; then
+      mkdir -p ~/.local/bin
+      ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+    fi
 
-	snap_is_installed() {
-	  snap list "$1" >/dev/null 2>&1
-	}
+    snap_is_installed() {
+      snap list "$1" >/dev/null 2>&1
+    }
 
-	if ! snap_is_installed ghostty; then
-	  sudo snap install ghostty --classic
-	  log "ghostty configuration"
-	  mkdir -p ~/.config/ghostty
-	  safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
-	  log "ghostty configuration completed"
-	else
-	  echo "ghostty already installed via snap, skipping"
-	fi
+    if ! snap_is_installed ghostty; then
+      sudo snap install ghostty --classic
+      log "ghostty configuration"
+      mkdir -p ~/.config/ghostty
+      safe_link "$basedir/configs/config.ghostty" ~/.config/ghostty/config.ghostty
+      log "ghostty configuration completed"
+    else
+      echo "ghostty already installed via snap, skipping"
+    fi
 
-	if ! snap_is_installed zig; then
-	  sudo snap install zig --beta --classic
-	else
-	  echo "zig already installed via snap, skipping"
-	fi
+    if ! snap_is_installed zig; then
+      sudo snap install zig --beta --classic
+    else
+      echo "zig already installed via snap, skipping"
+    fi
 
-	log "Install fastfetch"
-	if ! command -v fastfetch >/dev/null 2>&1; then
-	  FASTFETCH_VERSION=$(curl -fsSL \
-		"https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest" |
-		grep -Po '"tag_name": *"\K[^"]*' || true)
+    log "Install fastfetch"
+    if ! command -v fastfetch >/dev/null 2>&1; then
+      FASTFETCH_VERSION=$(curl -fsSL \
+        "https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest" |
+        grep -Po '"tag_name": *"\K[^"]*' || true)
 
-	  [[ -z "$FASTFETCH_VERSION" ]] && {
-		echo "Could not determine fastfetch version" >&2
-		exit 1
-	  }
+      [[ -z "$FASTFETCH_VERSION" ]] && {
+        echo "Could not determine fastfetch version" >&2
+        exit 1
+      }
 
-	  curl -fsSL -o /tmp/fastfetch-linux-amd64.deb \
-		"https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.deb"
+      curl -fsSL -o /tmp/fastfetch-linux-amd64.deb \
+        "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.deb"
 
-	  sudo dpkg -i /tmp/fastfetch-linux-amd64.deb
-	  sudo apt-get install -f -y
-	  rm -f /tmp/fastfetch-linux-amd64.deb
-	  log "Fastfetch installed"
-	else
-	  echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
-	fi
+      sudo dpkg -i /tmp/fastfetch-linux-amd64.deb
+      sudo apt-get install -f -y
+      rm -f /tmp/fastfetch-linux-amd64.deb
+      log "Fastfetch installed"
+    else
+      echo "fastfetch already installed ($(fastfetch --version | head -n1)), skipping"
+    fi
   elif is_rhel_family; then
     pkg_is_installed() {
       rpm -q "$1" &>/dev/null
@@ -392,8 +392,8 @@ if [[ $INSTALL_BASH -eq 1 ]]; then
   # --- base16-shell ------------------------------------------------------------
   log "base16 shell configuration"
   if [[ ! -d ~/.config/base16-shell ]]; then
-	git clone https://github.com/chriskempson/base16-shell.git \
-	  ~/.config/base16-shell
+    git clone https://github.com/chriskempson/base16-shell.git \
+      ~/.config/base16-shell
   fi
   pushd ~/.config/base16-shell
   echo "updating base16-shell"
@@ -437,16 +437,16 @@ fi
 if [[ $INSTALL_LAZYGIT -eq 1 ]]; then
   log "Install lazygit"
   LAZYGIT_VERSION=$(curl -fsSL \
-	"https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
-	grep -Po '"tag_name": *"v\K[^"]*') || true
+    "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" |
+    grep -Po '"tag_name": *"v\K[^"]*') || true
   [[ -z "$LAZYGIT_VERSION" ]] && {
-	echo "Could not fetch lazygit version" >&2
-	exit 1
+    echo "Could not fetch lazygit version" >&2
+    exit 1
   }
 
   LAZYGIT_ARCH="Linux_x86_64"
   curl -fsSL -o /tmp/lazygit.tar.gz \
-	"https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
+    "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_${LAZYGIT_ARCH}.tar.gz"
   tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
   sudo install /tmp/lazygit -D -t /usr/local/bin/
   rm -rf /tmp/lazygit.tar.gz /tmp/lazygit
@@ -498,43 +498,43 @@ fi
 if [[ $INSTALL_FZF -eq 1 ]]; then
   log "Install fzf"
   install_fzf() {
-	local version
-	version=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+    local version
+    version=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
+      | grep -Po '"tag_name": *"v\K[^"]*' || true)
 
-	[[ -z "$version" ]] && {
-	  echo "Could not determine latest fzf version" >&2
-	  return 1
-	}
+    [[ -z "$version" ]] && {
+      echo "Could not determine latest fzf version" >&2
+      return 1
+    }
 
-	local tarball="fzf-${version}-linux_amd64.tar.gz"
-	local url="https://github.com/junegunn/fzf/releases/download/v${version}/${tarball}"
+    local tarball="fzf-${version}-linux_amd64.tar.gz"
+    local url="https://github.com/junegunn/fzf/releases/download/v${version}/${tarball}"
 
-	echo "Downloading fzf ${version} for linux_amd64..."
-	curl -fsSL -o "/tmp/${tarball}" "$url"
+    echo "Downloading fzf ${version} for linux_amd64..."
+    curl -fsSL -o "/tmp/${tarball}" "$url"
 
-	echo "Extracting fzf to ~/.local/bin..."
-	tar -xzf "/tmp/${tarball}" -C ~/.local/bin fzf
-	chmod +x ~/.local/bin/fzf
+    echo "Extracting fzf to ~/.local/bin..."
+    tar -xzf "/tmp/${tarball}" -C ~/.local/bin fzf
+    chmod +x ~/.local/bin/fzf
 
-	rm -f "/tmp/${tarball}"
+    rm -f "/tmp/${tarball}"
   }
 
   if ! command -v fzf >/dev/null 2>&1; then
-	install_fzf
-	log "fzf installed"
+    install_fzf
+    log "fzf installed"
   else
-	current=$(fzf --version | awk '{print $1}')
-	latest=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+    current=$(fzf --version | awk '{print $1}')
+    latest=$(curl -fsSL "https://api.github.com/repos/junegunn/fzf/releases/latest" \
+      | grep -Po '"tag_name": *"v\K[^"]*' || true)
 
-	if [[ -n "$latest" && "$current" != "$latest" ]]; then
-	  echo "fzf ${current} installed, updating to ${latest}..."
-	  install_fzf
-	  log "fzf installed"
-	else
-	  echo "fzf ${current} already installed and up to date, skipping"
-	fi
+    if [[ -n "$latest" && "$current" != "$latest" ]]; then
+      echo "fzf ${current} installed, updating to ${latest}..."
+      install_fzf
+      log "fzf installed"
+    else
+      echo "fzf ${current} already installed and up to date, skipping"
+    fi
   fi
 fi
 
@@ -544,43 +544,43 @@ if [[ $INSTALL_STARSHIP -eq 1 ]]; then
   STARSHIP_ARCH="x86_64-unknown-linux-gnu"
 
   install_starship() {
-	local version
-	version=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+    local version
+    version=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
+      | grep -Po '"tag_name": *"v\K[^"]*' || true)
 
-	[[ -z "$version" ]] && {
-	  echo "Could not determine latest starship version" >&2
-	  return 1
-	}
+    [[ -z "$version" ]] && {
+      echo "Could not determine latest starship version" >&2
+      return 1
+    }
 
-	local tarball="starship-${STARSHIP_ARCH}.tar.gz"
-	local url="https://github.com/starship/starship/releases/download/v${version}/${tarball}"
+    local tarball="starship-${STARSHIP_ARCH}.tar.gz"
+    local url="https://github.com/starship/starship/releases/download/v${version}/${tarball}"
 
-	echo "Downloading starship ${version} for ${STARSHIP_ARCH}..."
-	curl -fsSL -o "/tmp/${tarball}" "$url"
+    echo "Downloading starship ${version} for ${STARSHIP_ARCH}..."
+    curl -fsSL -o "/tmp/${tarball}" "$url"
 
-	echo "Extracting starship to ~/.local/bin..."
-	tar -xzf "/tmp/${tarball}" -C ~/.local/bin starship
-	chmod +x ~/.local/bin/starship
+    echo "Extracting starship to ~/.local/bin..."
+    tar -xzf "/tmp/${tarball}" -C ~/.local/bin starship
+    chmod +x ~/.local/bin/starship
 
-	rm -f "/tmp/${tarball}"
+    rm -f "/tmp/${tarball}"
   }
 
   if ! command -v starship >/dev/null 2>&1; then
-	install_starship
-	log "starship installed"
+    install_starship
+    log "starship installed"
   else
-	current=$(starship --version | awk '{print $2}')
-	latest=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
-	  | grep -Po '"tag_name": *"v\K[^"]*' || true)
+    current=$(starship --version | awk '{print $2}')
+    latest=$(curl -fsSL "https://api.github.com/repos/starship/starship/releases/latest" \
+      | grep -Po '"tag_name": *"v\K[^"]*' || true)
 
-	if [[ -n "$latest" && "$current" != "$latest" ]]; then
-	  echo "starship ${current} installed, updating to ${latest}..."
-	  install_starship
-	  log "starship installed"
-	else
-	  echo "starship ${current} already installed and up to date, skipping"
-	fi
+    if [[ -n "$latest" && "$current" != "$latest" ]]; then
+      echo "starship ${current} installed, updating to ${latest}..."
+      install_starship
+      log "starship installed"
+    else
+      echo "starship ${current} already installed and up to date, skipping"
+    fi
   fi
 
   log "starship configuration"

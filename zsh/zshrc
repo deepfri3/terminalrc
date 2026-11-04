@@ -47,9 +47,7 @@ setopt INC_APPEND_HISTORY_TIME # append after command completes (preserves times
 
 ### Alias ###
 # Set tmux convenience aliases
-#gdb aliases
-alias gdb="gdb -quiet -fullname"
-alias editvimconf="$EDITOR ~/.config/nvim/init.lua"
+alias editvim="$EDITOR ~/.config/nvim/init.lua"
 alias sourcezsh='source ~/.zshrc'
 alias reloadzsh='exec zsh'   # cleanest: replace current shell
 eval "$(dircolors -b)"
@@ -57,7 +55,7 @@ alias ls='ls --color=auto'
 alias ll="ls --color=auto -lh"
 alias la="ls --color=auto -lah"
 # tmux
-alias edittmuxconf="$EDITOR ~/.tmux.conf"
+alias edittmux="$EDITOR ~/.tmux.conf"
 alias sourcetmux='tmux source ~/.tmux.conf'
 alias save=~/.tmux/plugins/tpm/tmux-resurrect/scripts/save.sh
 alias restore=~/.tmux/plugins/tpm/tmux-resurrect/scripts/restore.sh
@@ -100,7 +98,7 @@ fdr() {
       get_parent_dirs $(dirname "$1")
     fi
   }
-  local DIR=$(get_parent_dirs $(realpath "${1:-$(pwd)}") | fzf-tmux --tac)
+  local DIR=$(get_parent_dirs $(realpath "${1:-$(pwd)}") | fzf --tmux --tac)
   builtin cd "$DIR"
 }
 

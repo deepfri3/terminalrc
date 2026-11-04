@@ -506,10 +506,20 @@ vim.g.netrw_banner = 0
 vim.g.netrw_browse_split = 4
 vim.g.netrw_altv = 1
 vim.g.netrw_liststyle = 3
-vim.g.netrw_keepdir = 1
+vim.g.netrw_keepdir = 0
 vim.g.netrw_mousemaps = 0
+vim.g.netrw_preview = 1 
 map("n", "<leader>E", ":Lexplore <bar> :vertical resize 50<CR>")
 map("n", "<leader>e", ":Lexplore %:p:h<bar> :vertical resize 50<CR>")
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = vim.api.nvim_create_augroup("NetrwClose", {}),
+  callback = function()
+    if vim.bo.filetype == "netrw" and #vim.api.nvim_list_wins() == 1 then
+      vim.cmd.quit()
+    end
+  end,
+})
 
 --------------------------------------------------------------------------------
 -- Surround

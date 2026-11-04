@@ -27,3 +27,5 @@ alias editbashrc="$myed $masterbashrc"
 alias editosbashrc="$myed $osbashrc"
 alias editlocalbashrc="$myed $localbashrc"
 unset myed
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
