@@ -5,6 +5,7 @@ CFG="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
 PARSER_DIR="$CFG/parser"
 QUERY_DIR="$CFG/queries"
 TMP="$(mktemp -d)"
+QREPO="$TMP/nvim-treesitter"
 trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$PARSER_DIR" "$QUERY_DIR"
@@ -23,7 +24,7 @@ GRAMMARS=(
 
 get_query_files() {
   # Vendor Neovim query files from nvim-treesitter (master branch = classic query layout)
-  local qrepo="/tmp/nvim-treesitter-u261602"
+  local qrepo="$QREPO"
   local lang="$1"
   if [ ! -d "$qrepo/queries/$lang" ]; then
     git clone --depth 1 --branch master \
@@ -41,7 +42,17 @@ build_one() {
   local lang="$1" repo="$2" sub="$3"
   local dir="$TMP/$lang"
   echo "==> $lang"
-  git clone --depth 1 "$repo" "$dir" >/dev/null 2>&1
+  # Build the revision nvim-treesitter pins, so parser and vendored queries match
+  # (HEAD of a grammar can lag/lead the queries -> "Invalid node type" errors).
+  local rev=""
+  [ -f "$QREPO/lockfile.json" ] && \
+    rev="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get(sys.argv[2],{}).get("revision",""))' "$QREPO/lockfile.json" "$lang")"
+  if [ -n "$rev" ]; then
+    git init -q "$dir" && git -C "$dir" fetch -q --depth 1 "$repo" "$rev" \
+      && git -C "$dir" checkout -q FETCH_HEAD
+  else
+    git clone --depth 1 "$repo" "$dir" >/dev/null 2>&1
+  fi
   local src="$dir/$sub/src"
 
   # Collect sources: parser.c is always present; scanner may be .c or .cc
@@ -63,6 +74,10 @@ build_one() {
 
   get_query_files $lang
 }
+
+git clone --depth 1 --branch master \
+  https://github.com/nvim-treesitter/nvim-treesitter "$QREPO" >/dev/null 2>&1 \
+  || echo "!! could not clone nvim-treesitter (queries/pins unavailable)"
 
 for g in "${GRAMMARS[@]}"; do
   IFS='|' read -r lang repo sub <<< "$g"
