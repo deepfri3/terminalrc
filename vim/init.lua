@@ -140,15 +140,6 @@ require("lazy").setup({
           desc = "Quickfix List (Trouble)",
         },
       },
-    },
-    {
-      "gl1tchc0d3r/typstwriter.nvim",
-      ft = { "typst" },
-      config = function()
-        require("typstwriter").setup({
-          -- Configuration options (see Configuration page)
-        })
-      end,
     }
 })
 
@@ -742,6 +733,18 @@ vim.lsp.config("ty", {
 --   root_markers = { "pyrefly.toml", "pyproject.toml", ".git" },
 -- })
 
+-- Typst: tinymist. PDF export is left to `typst watch` (see below), so the
+-- server only provides diagnostics/completion/hover/etc.
+vim.lsp.config("tinymist", {
+  cmd = { "tinymist" },
+  filetypes = { "typst" },
+  root_markers = { ".git" },
+  settings = {
+    exportPdf = "never",
+    formatterMode = "typstyle",
+  },
+})
+
 -- 2) Enable only the servers whose binary is actually on PATH ---------------
 -- degrades to ctags + treesitter instead of erroring at startup.
 local function enable_if(bin, name)
@@ -754,6 +757,51 @@ enable_if("gopls",               "gopls")
 enable_if("lua-language-server", "lua_ls")
 enable_if("ty",                  "ty")
 -- enable_if("pyrefly",          "pyrefly")
+enable_if("tinymist",            "tinymist")
+
+--------------------------------------------------------------------------------
+-- Typst: `typst watch` runs in the background and recompiles the PDF on save
+--------------------------------------------------------------------------------
+local typst_jobs = {} -- abs file path -> job id
+
+local function typst_watch_start(buf)
+  buf = buf or vim.api.nvim_get_current_buf()
+  local file = vim.api.nvim_buf_get_name(buf)
+  if file == "" or vim.fn.executable("typst") ~= 1 then return end
+  if typst_jobs[file] then return end
+  local id = vim.fn.jobstart({ "typst", "watch", "--diagnostic-format", "short", file }, {
+    cwd = vim.fn.fnamemodify(file, ":h"),
+    on_exit = function() typst_jobs[file] = nil end,
+  })
+  if id > 0 then
+    typst_jobs[file] = id
+    vim.notify("typst watch: " .. vim.fn.fnamemodify(file, ":t"))
+  end
+end
+
+local function typst_watch_stop(buf)
+  local file = vim.api.nvim_buf_get_name(buf or 0)
+  if typst_jobs[file] then
+    vim.fn.jobstop(typst_jobs[file])
+    typst_jobs[file] = nil
+    vim.notify("typst watch stopped")
+  end
+end
+
+vim.api.nvim_create_user_command("TypstWatch", function() typst_watch_start() end, {})
+vim.api.nvim_create_user_command("TypstWatchStop", function() typst_watch_stop() end, {})
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = grp,
+  pattern = "typst",
+  callback = function(ev) typst_watch_start(ev.buf) end,
+})
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = grp,
+  callback = function()
+    for _, id in pairs(typst_jobs) do pcall(vim.fn.jobstop, id) end
+  end,
+})
 
 -- 4) Keymaps on attach -------------------------------------------------------
 vim.api.nvim_create_autocmd("LspAttach", {

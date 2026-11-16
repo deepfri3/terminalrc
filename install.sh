@@ -731,6 +731,17 @@ if [[ $INSTALL_NVIM -eq 1 ]]; then
   make install
   echo "install done"
   popd
+  echo "check tinymist (typst language server)"
+  tinymist_installed=$(cargo install --list | sed -n 's/^tinymist v\([^ :]*\).*/\1/p')
+  tinymist_latest=$(cargo search tinymist --limit 1 2>/dev/null \
+    | sed -n 's/^tinymist = "\([^"]*\)".*/\1/p')
+  if [[ -z $tinymist_installed || \
+        ( -n $tinymist_latest && $tinymist_installed != "$tinymist_latest" ) ]]; then
+    echo "installing tinymist ${tinymist_latest:-latest} (installed: ${tinymist_installed:-none})"
+    cargo install --locked tinymist
+  else
+    echo "tinymist $tinymist_installed is up to date"
+  fi
   safe_link "$basedir/vim/build-parsers.sh" ~/.config/nvim/build-parsers.sh
   ~/.config/nvim/build-parsers.sh
   log "neovim setup completed"
