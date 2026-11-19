@@ -504,8 +504,8 @@ vim.g.netrw_preview = 1
 -- mapped, so park it on an unreachable key to keep <C-l> as "move to right window".
 -- (Refresh is unusable anyway: with netrw_browse_split=4 it opens a new netrw split.)
 vim.keymap.set("o", "<F35>", "<Plug>NetrwRefresh", { remap = true })
-map("n", "<leader>E", ":Lexplore <bar> :vertical resize 50<CR>")
-map("n", "<leader>e", ":Lexplore %:p:h<bar> :vertical resize 50<CR>")
+map("n", "<leader>E", ":Lexplore <bar> :vertical resize 40<CR>")
+map("n", "<leader>e", ":Lexplore %:p:h<bar> :vertical resize 40<CR>")
 
 --------------------------------------------------------------------------------
 -- Surround
