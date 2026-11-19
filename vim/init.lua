@@ -140,15 +140,6 @@ require("lazy").setup({
           desc = "Quickfix List (Trouble)",
         },
       },
-    },
-    {
-      "gl1tchc0d3r/typstwriter.nvim",
-      ft = { "typst" },
-      config = function()
-        require("typstwriter").setup({
-          -- Configuration options (see Configuration page)
-        })
-      end,
     }
 })
 
@@ -506,20 +497,15 @@ vim.g.netrw_banner = 0
 vim.g.netrw_browse_split = 4
 vim.g.netrw_altv = 1
 vim.g.netrw_liststyle = 3
-vim.g.netrw_keepdir = 0
+vim.g.netrw_keepdir = 1
 vim.g.netrw_mousemaps = 0
 vim.g.netrw_preview = 1 
-map("n", "<leader>E", ":Lexplore <bar> :vertical resize 50<CR>")
-map("n", "<leader>e", ":Lexplore %:p:h<bar> :vertical resize 50<CR>")
-
-vim.api.nvim_create_autocmd("BufEnter", {
-  group = vim.api.nvim_create_augroup("NetrwClose", {}),
-  callback = function()
-    if vim.bo.filetype == "netrw" and #vim.api.nvim_list_wins() == 1 then
-      vim.cmd.quit()
-    end
-  end,
-})
+-- netrw binds buffer-local <C-l> to refresh unless <Plug>NetrwRefresh is already
+-- mapped, so park it on an unreachable key to keep <C-l> as "move to right window".
+-- (Refresh is unusable anyway: with netrw_browse_split=4 it opens a new netrw split.)
+vim.keymap.set("o", "<F35>", "<Plug>NetrwRefresh", { remap = true })
+map("n", "<leader>E", ":Lexplore <bar> :vertical resize 40<CR>")
+map("n", "<leader>e", ":Lexplore %:p:h<bar> :vertical resize 40<CR>")
 
 --------------------------------------------------------------------------------
 -- Surround
@@ -584,7 +570,9 @@ map("n", "<F9>", "<cmd>TagbarToggle<CR>", { silent = true })
 -- Plugin setup: nvim-tree (NERDTree replacement)
 --------------------------------------------------------------------------------
 require("nvim-tree").setup({
-	view = { side = "left", width = 40 },
+	hijack_netrw = false,                       -- leave netrw buffers alone
+	hijack_directories = { enable = false },    -- don't take over directory buffers
+	view ={ side = "left", width = 40 },
 	filters = {
         custom = { "\\.vim$", "\\.cat$" },
         dotfiles = false,      -- also show dotfiles if you want
@@ -700,11 +688,7 @@ vim.lsp.config("clangd", {
     "--completion-style=detailed",
   },
   filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
-  root_markers = {
-    ".clangd", ".clang-tidy", ".clang-format",
-    "compile_commands.json", "compile_flags.txt",
-    "Makefile", "configure.ac", ".git",
-  },
+  root_markers = { {"compile_commands.json", "compile_flags.txt" }, ".git" },
 })
 
 vim.lsp.config("rust_analyzer", {
@@ -742,6 +726,18 @@ vim.lsp.config("ty", {
 --   root_markers = { "pyrefly.toml", "pyproject.toml", ".git" },
 -- })
 
+-- Typst: tinymist. PDF export is left to `typst watch` (see below), so the
+-- server only provides diagnostics/completion/hover/etc.
+vim.lsp.config("tinymist", {
+  cmd = { "tinymist" },
+  filetypes = { "typst" },
+  root_markers = { ".git" },
+  settings = {
+    exportPdf = "never",
+    formatterMode = "typstyle",
+  },
+})
+
 -- 2) Enable only the servers whose binary is actually on PATH ---------------
 -- degrades to ctags + treesitter instead of erroring at startup.
 local function enable_if(bin, name)
@@ -754,6 +750,51 @@ enable_if("gopls",               "gopls")
 enable_if("lua-language-server", "lua_ls")
 enable_if("ty",                  "ty")
 -- enable_if("pyrefly",          "pyrefly")
+enable_if("tinymist",            "tinymist")
+
+--------------------------------------------------------------------------------
+-- Typst: `typst watch` runs in the background and recompiles the PDF on save
+--------------------------------------------------------------------------------
+local typst_jobs = {} -- abs file path -> job id
+
+local function typst_watch_start(buf)
+  buf = buf or vim.api.nvim_get_current_buf()
+  local file = vim.api.nvim_buf_get_name(buf)
+  if file == "" or vim.fn.executable("typst") ~= 1 then return end
+  if typst_jobs[file] then return end
+  local id = vim.fn.jobstart({ "typst", "watch", "--diagnostic-format", "short", file }, {
+    cwd = vim.fn.fnamemodify(file, ":h"),
+    on_exit = function() typst_jobs[file] = nil end,
+  })
+  if id > 0 then
+    typst_jobs[file] = id
+    vim.notify("typst watch: " .. vim.fn.fnamemodify(file, ":t"))
+  end
+end
+
+local function typst_watch_stop(buf)
+  local file = vim.api.nvim_buf_get_name(buf or 0)
+  if typst_jobs[file] then
+    vim.fn.jobstop(typst_jobs[file])
+    typst_jobs[file] = nil
+    vim.notify("typst watch stopped")
+  end
+end
+
+vim.api.nvim_create_user_command("TypstWatch", function() typst_watch_start() end, {})
+vim.api.nvim_create_user_command("TypstWatchStop", function() typst_watch_stop() end, {})
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = grp,
+  pattern = "typst",
+  callback = function(ev) typst_watch_start(ev.buf) end,
+})
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = grp,
+  callback = function()
+    for _, id in pairs(typst_jobs) do pcall(vim.fn.jobstop, id) end
+  end,
+})
 
 -- 4) Keymaps on attach -------------------------------------------------------
 vim.api.nvim_create_autocmd("LspAttach", {
