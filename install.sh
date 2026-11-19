@@ -27,7 +27,7 @@ Usage: $0 [OPTIONS]
 Setup terminal environment.
 
 Options:
-  --all      Install tmux, vim, neovim, and fonts (default if no options given)
+  --all      Install everything below
   --tmux     Compile and install tmux
   --vim      Compile and install vim
   --nvim     Compile and install neovim
@@ -44,6 +44,12 @@ Options:
   --help     Show this help message
 EOF
 }
+
+if [[ $# -eq 0 ]]; then
+  echo "Error: no options provided" >&2
+  usage >&2
+  exit 1
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -173,7 +179,7 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
       libxt-dev libgtk-3-dev zsh perl libperl-dev ruby ruby-dev python3-pip
       python3-dev btop autotools-dev xsel xclip ripgrep universal-ctags snapd
       fd-find cargo wl-clipboard libcurl4-openssl-dev libexpat1-dev libssl-dev
-      zlib1g-dev clangd lua-language-server
+      zlib1g-dev clangd
     )
 
     missing=()
@@ -260,7 +266,7 @@ if [[ $INSTALL_PACKAGES -eq 1 ]]; then
       libX11-devel libXt-devel gtk3-devel zsh perl perl-devel ruby ruby-devel
       python3-pip python3-devel btop xsel xclip ripgrep universal-ctags
       fd-find cargo wl-clipboard libcurl-devel expat-devel openssl-devel
-      zlib-devel snapd clangd lua-language-server
+      zlib-devel snapd clangd
     )
 
     missing=()
@@ -731,14 +737,46 @@ if [[ $INSTALL_NVIM -eq 1 ]]; then
   make install
   echo "install done"
   popd
+  echo "check lua-language-server"
+  # Not packaged in Debian 12 / many RHEL repos; use the GitHub release.
+  case "$(uname -m)" in
+    x86_64) lls_arch="linux-x64" ;;
+    *)      lls_arch="linux-arm64" ;;
+  esac
+  lls_installed=$(lua-language-server --version 2>/dev/null | head -1 || true)
+  lls_latest=$("${CURL[@]}" https://api.github.com/repos/LuaLS/lua-language-server/releases/latest \
+    | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1 || true)
+  if [[ -z $lls_latest ]]; then
+    echo "WARNING: could not determine latest lua-language-server release; skipping" >&2
+  elif [[ $lls_installed != "$lls_latest" ]]; then
+    echo "installing lua-language-server $lls_latest (installed: ${lls_installed:-none})"
+    lls_dir=~/.local/share/lua-language-server
+    lls_tmp=$(mktemp -d)
+    "${CURL[@]}" -o "$lls_tmp/lls.tar.gz" \
+      "https://github.com/LuaLS/lua-language-server/releases/download/${lls_latest}/lua-language-server-${lls_latest}-${lls_arch}.tar.gz"
+    rm -rf "$lls_dir"; mkdir -p "$lls_dir" ~/.local/bin
+    tar -xzf "$lls_tmp/lls.tar.gz" -C "$lls_dir"
+    ln -sf "$lls_dir/bin/lua-language-server" ~/.local/bin/lua-language-server
+    rm -rf "$lls_tmp"
+  else
+    echo "lua-language-server $lls_installed is up to date"
+  fi
   echo "check tinymist (typst language server)"
-  tinymist_installed=$(cargo install --list | sed -n 's/^tinymist v\([^ :]*\).*/\1/p')
-  tinymist_latest=$(cargo search tinymist --limit 1 2>/dev/null \
-    | sed -n 's/^tinymist = "\([^"]*\)".*/\1/p')
-  if [[ -z $tinymist_installed || \
-        ( -n $tinymist_latest && $tinymist_installed != "$tinymist_latest" ) ]]; then
-    echo "installing tinymist ${tinymist_latest:-latest} (installed: ${tinymist_installed:-none})"
-    cargo install --locked tinymist
+  # The crates.io `tinymist` crate is library-only now; the binary ships as a
+  # prebuilt GitHub release asset.
+  tinymist_installed=$(tinymist --version 2>/dev/null | sed -n '1s/^tinymist v//p' || true)
+  tinymist_latest=$("${CURL[@]}" https://api.github.com/repos/Myriad-Dreamin/tinymist/releases/latest \
+    | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -1)
+  if [[ -z $tinymist_latest ]]; then
+    echo "WARNING: could not determine latest tinymist release; skipping" >&2
+  elif [[ $tinymist_installed != "$tinymist_latest" ]]; then
+    echo "installing tinymist $tinymist_latest (installed: ${tinymist_installed:-none})"
+    tinymist_tmp=$(mktemp -d)
+    "${CURL[@]}" -o "$tinymist_tmp/tinymist.tar.gz" \
+      "https://github.com/Myriad-Dreamin/tinymist/releases/download/v${tinymist_latest}/tinymist-${RUST_TRIPLE}.tar.gz"
+    tar -xzf "$tinymist_tmp/tinymist.tar.gz" -C "$tinymist_tmp"
+    install -m 0755 "$tinymist_tmp/tinymist-${RUST_TRIPLE}/tinymist" ~/.local/bin/tinymist
+    rm -rf "$tinymist_tmp"
   else
     echo "tinymist $tinymist_installed is up to date"
   fi
