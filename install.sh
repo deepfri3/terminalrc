@@ -45,12 +45,6 @@ Options:
 EOF
 }
 
-if [[ $# -eq 0 ]]; then
-  echo "Error: no options provided" >&2
-  usage >&2
-  exit 1
-fi
-
 while [[ $# -gt 0 ]]; do
   case "$1" in
   --all) INSTALL_ALL=1 ;;
@@ -821,6 +815,10 @@ log "do misc"
 echo "ssh configuration"
 mkdir -p ~/.ssh
 chmod 0700 ~/.ssh
+
+echo "cmake-compdb"
+chmod +x "$basedir/bin/cmake-compdb"
+safe_link "$basedir/bin/cmake-compdb" ~/.local/bin/cmake-compdb
 
 echo "(rg)ignore file"
 safe_link "$basedir/.rgignore" ~/.rgignore

@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+"""Build one master compile_commands.json from every CMake project under a directory.
+
+Finds every CMake project at any depth (CMakeLists.txt containing project()), configures
+each in a private build dir (<root>/.compdb/<project>) with
+CMAKE_EXPORT_COMPILE_COMMANDS=ON, then merges all resulting compile databases
+into <root>/compile_commands.json for clangd.
+
+Only the configure step runs; nothing is compiled. Projects whose sources depend
+on build-time generated files (protobuf, etc.) will still need a real build for
+those headers to resolve.
+
+Usage:
+  cmake-compdb [ROOT] [-j N] [-x PATTERN]... [-o FILE] [-- <extra cmake args>]
+"""
+from __future__ import annotations
+
+import argparse
+import fnmatch
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+PROJECT_RE = re.compile(r"^\s*project\s*\(", re.IGNORECASE | re.MULTILINE)
+CACHE_DIR = ".compdb"
+PRUNE = {".git", ".hg", ".svn", "node_modules", "_deps", ".cpm-cache", CACHE_DIR, ".cache"}
+
+
+def is_project(cmakelists: Path) -> bool:
+    try:
+        return bool(PROJECT_RE.search(cmakelists.read_text(errors="replace")))
+    except OSError:
+        return False
+
+
+def find_projects(root: Path, excludes: list[str]) -> list[Path]:
+    """Every directory whose CMakeLists.txt calls project(), at any depth.
+    Nested projects are found too (a root project doesn't hide its children).
+    Build dirs (CMakeCache.txt) and dependency caches are skipped."""
+    found: list[Path] = []
+
+    def excluded(p: Path) -> bool:
+        rel = p.relative_to(root).as_posix()
+        return any(fnmatch.fnmatch(rel, g) or fnmatch.fnmatch(p.name, g) for g in excludes)
+
+    for dirpath, dirnames, filenames in os.walk(root):
+        d = Path(dirpath)
+        if "CMakeCache.txt" in filenames:  # an in-tree build dir
+            dirnames.clear()
+            continue
+        if "CMakeLists.txt" in filenames and is_project(d / "CMakeLists.txt"):
+            found.append(d)
+        dirnames[:] = sorted(
+            n for n in dirnames if n not in PRUNE and not excluded(d / n)
+        )
+    return found
+
+
+def slug(root: Path, proj: Path) -> str:
+    rel = proj.relative_to(root).as_posix()
+    return "root" if rel == "." else rel.replace("/", "__")
+
+
+def configure(root: Path, proj: Path, extra: list[str], generator: list[str]):
+    """Returns (proj, compile_commands path | None, error text)."""
+    build = root / CACHE_DIR / slug(root, proj)
+    build.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "cmake", "-S", str(proj), "-B", str(build),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        *generator, *extra,
+    ]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    db = build / "compile_commands.json"
+    if r.returncode != 0 and not db.exists():
+        lines = [l.strip() for l in (r.stderr or r.stdout).splitlines() if l.strip()]
+        i = next((n for n, l in enumerate(lines) if "Error" in l), 0)
+        tail = "\n".join(lines[i:i + 2])  # first error + its message line
+        return proj, None, tail
+    if not db.exists():
+        return proj, None, "configured, but no compile_commands.json (non-Makefile/Ninja generator?)"
+    return proj, db, ""
+
+
+def entry_key(e: dict) -> tuple:
+    cmd = e.get("command") or tuple(e.get("arguments", ()))
+    return (e.get("directory"), e.get("file"), cmd)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("root", nargs="?", default=".", help="directory to search (default: .)")
+    ap.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4)
+    ap.add_argument("-x", "--exclude", action="append", default=[], metavar="GLOB",
+                    help="skip dirs matching GLOB (name or path relative to root); repeatable")
+    ap.add_argument("-o", "--output", help="output file (default: <root>/compile_commands.json)")
+    ap.add_argument("cmake_args", nargs="*", help="extra cmake args, after `--`")
+    args = ap.parse_args()
+
+    if not shutil.which("cmake"):
+        print("cmake not found in PATH", file=sys.stderr)
+        return 2
+
+    root = Path(args.root).resolve()
+    out = Path(args.output).resolve() if args.output else root / "compile_commands.json"
+
+    projects = find_projects(root, args.exclude)
+    if not projects:
+        print(f"No CMake projects found under {root}", file=sys.stderr)
+        return 1
+
+    (root / CACHE_DIR).mkdir(exist_ok=True)
+    (root / CACHE_DIR / ".gitignore").write_text("*\n")
+
+    generator = ["-G", "Ninja"] if shutil.which("ninja") else []
+    print(f"Found {len(projects)} project(s) under {root}")
+
+    merged: dict[tuple, dict] = {}
+    failures = 0
+    with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        futures = [pool.submit(configure, root, p, args.cmake_args, generator) for p in projects]
+        for fut in futures:  # in order, for deterministic output
+            proj, db, err = fut.result()
+            name = proj.relative_to(root).as_posix()
+            if db is None:
+                failures += 1
+                print(f"  FAIL  {name}\n" + "\n".join(f"        {l}" for l in err.splitlines()))
+                continue
+            try:
+                entries = json.loads(db.read_text())
+            except (OSError, json.JSONDecodeError) as e:
+                failures += 1
+                print(f"  FAIL  {name}: unreadable compile database ({e})")
+                continue
+            for e in entries:
+                merged.setdefault(entry_key(e), e)
+            print(f"  ok    {name} ({len(entries)} entries)")
+
+    if not merged:
+        print("No compile commands produced; leaving existing output untouched.", file=sys.stderr)
+        return 1
+
+    tmp = out.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(list(merged.values()), indent=2) + "\n")
+    tmp.replace(out)  # atomic: clangd never sees a half-written file
+    print(f"Wrote {len(merged)} entries -> {out}")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -738,7 +738,7 @@ vim.lsp.config("tinymist", {
   },
 })
 
--- 2) Enable only the servers whose binary is actually on PATH ---------------
+-- Enable only the servers whose binary is actually on PATH ---------------
 -- degrades to ctags + treesitter instead of erroring at startup.
 local function enable_if(bin, name)
   if vim.fn.executable(bin) == 1 then vim.lsp.enable(name) end
@@ -751,6 +751,56 @@ enable_if("lua-language-server", "lua_ls")
 enable_if("ty",                  "ty")
 -- enable_if("pyrefly",          "pyrefly")
 enable_if("tinymist",            "tinymist")
+
+-- Keymaps on attach -------------------------------------------------------
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = grp,
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+
+    -- Native completion for this client in this buffer
+    if client and client:supports_method("textDocument/completion") then
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+    end
+
+    local o = { buffer = ev.buf, silent = true }
+    map("n", "<leader>gd", vim.lsp.buf.definition, o)
+    map("n", "<leader>gr", vim.lsp.buf.references, o)
+    map("n", "<leader>gi", vim.lsp.buf.implementation, o)
+    map("n", "<leader>gh", vim.lsp.buf.hover, o)
+    map("n", "<leader>rn", vim.lsp.buf.rename, o)
+    map("n", "<leader>ca", vim.lsp.buf.code_action, o)
+    map("i", "<C-Space>", function() vim.lsp.completion.get() end, o)
+  end,
+})
+
+--------------------------------------------------------------------------------
+-- :CompDb [dir] -- regenerate the master compile_commands.json for every CMake
+-- project under dir (default: cwd) via `cmake-compdb`, then restart clangd.
+-- clangd finds <workspace>/compile_commands.json by walking up from each file,
+-- and the clangd root_markers above make that directory the LSP root.
+--------------------------------------------------------------------------------
+vim.api.nvim_create_user_command("CompDb", function(opts)
+  if vim.fn.executable("cmake-compdb") ~= 1 then
+    return vim.notify("cmake-compdb not found in PATH", vim.log.levels.ERROR)
+  end
+  local root = opts.args ~= "" and vim.fn.expand(opts.args) or vim.fn.getcwd()
+  vim.notify("CompDb: configuring CMake projects in " .. root .. " ...")
+  vim.system({ "cmake-compdb", root }, { text = true }, vim.schedule_wrap(function(res)
+    local out = vim.trim((res.stdout or "") .. (res.stderr or ""))
+    local last = out:match("[^\n]*$")
+    if res.code == 0 then
+      vim.notify("CompDb: " .. last)
+    else
+      vim.notify("CompDb finished with errors:\n" .. out, vim.log.levels.WARN)
+    end
+    if vim.fn.filereadable(root .. "/compile_commands.json") == 1 and vim.fn.executable("clangd") == 1 then
+      vim.lsp.enable("clangd", false)
+      vim.lsp.enable("clangd")
+    end
+  end))
+end, { nargs = "?", complete = "dir", desc = "Regenerate master compile_commands.json" })
+map("n", "<leader>cc", "<cmd>CompDb<cr>", { silent = true, desc = "CompDb: regenerate compile_commands.json" })
 
 --------------------------------------------------------------------------------
 -- Typst: `typst watch` runs in the background and recompiles the PDF on save
@@ -793,28 +843,6 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
   group = grp,
   callback = function()
     for _, id in pairs(typst_jobs) do pcall(vim.fn.jobstop, id) end
-  end,
-})
-
--- 4) Keymaps on attach -------------------------------------------------------
-vim.api.nvim_create_autocmd("LspAttach", {
-  group = grp,
-  callback = function(ev)
-    local client = vim.lsp.get_client_by_id(ev.data.client_id)
-
-    -- Native completion for this client in this buffer
-    if client and client:supports_method("textDocument/completion") then
-      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
-    end
-
-    local o = { buffer = ev.buf, silent = true }
-    map("n", "<leader>gd", vim.lsp.buf.definition, o)
-    map("n", "<leader>gr", vim.lsp.buf.references, o)
-    map("n", "<leader>gi", vim.lsp.buf.implementation, o)
-    map("n", "<leader>gh", vim.lsp.buf.hover, o)
-    map("n", "<leader>rn", vim.lsp.buf.rename, o)
-    map("n", "<leader>ca", vim.lsp.buf.code_action, o)
-    map("i", "<C-Space>", function() vim.lsp.completion.get() end, o)
   end,
 })
 
