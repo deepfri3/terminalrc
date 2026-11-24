@@ -54,7 +54,7 @@ require("lazy").setup({
     },
 	-- Colors
     -- Gruvbox written in native lua
-    { "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...},
+    { "ellisonleao/gruvbox.nvim", priority = 1000 , config = true },
 
 	-- Statusline: airline -> lualine
 	{ "nvim-lualine/lualine.nvim", dependencies = { "nvim-tree/nvim-web-devicons" } },
@@ -146,64 +146,62 @@ require("lazy").setup({
 --------------------------------------------------------------------------------
 -- General options
 --------------------------------------------------------------------------------
-local opt = vim.opt
-
-opt.mouse = "" -- "this is vim!"
-opt.termguicolors = true
+vim.opt.mouse = "" -- "this is vim!"
+vim.opt.termguicolors = true
 vim.cmd.colorscheme("gruvbox")
 
-opt.colorcolumn = "88"
+vim.opt.colorcolumn = "88"
 vim.api.nvim_set_hl(0, "ColorColumn", { ctermbg = "LightGray", bg = "gray14" })
 
-opt.ruler = true
-opt.number = true
-opt.relativenumber = true
-opt.hidden = true
-opt.wrap = false
-opt.linebreak = true
-opt.showmatch = true
+vim.opt.ruler = true
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.hidden = true
+vim.opt.wrap = false
+vim.opt.linebreak = true
+vim.opt.showmatch = true
 
 -- virtual tabstops using spaces
-opt.tabstop = 4
-opt.softtabstop = 4
-opt.shiftwidth = 4
-opt.expandtab = true
-opt.smartindent = true
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.smartindent = true
 
-opt.backspace = { "indent", "eol", "start" }
-opt.ignorecase = true
-opt.smartcase = true
-opt.incsearch = true
-opt.hlsearch = true
-opt.scrolloff = 8
+vim.opt.backspace = { "indent", "eol", "start" }
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+vim.opt.incsearch = true
+vim.opt.hlsearch = true
+vim.opt.scrolloff = 8
 
-opt.splitbelow = true
-opt.splitright = true
+vim.opt.splitbelow = true
+vim.opt.splitright = true
 
-opt.autoread = true
-opt.autowrite = true
+vim.opt.autoread = true
+vim.opt.autowrite = true
 
-opt.backup = false
-opt.swapfile = false
-opt.undofile = true
-opt.undolevels = 1000
+vim.opt.backup = false
+vim.opt.swapfile = false
+vim.opt.undofile = true
+vim.opt.undolevels = 1000
 local undodir = vim.fn.expand("~/.local/nvim/undodir")
 vim.fn.mkdir(undodir, "p")
-opt.undodir = undodir
+vim.opt.undodir = undodir
 
-opt.shada = "'100,f1"
+vim.opt.shada = "'100,f1"
 
-opt.history = 1000
-opt.showcmd = true
-opt.showmode = false -- lualine shows the mode now
-opt.guicursor = "a:blinkon0"
-opt.cmdheight = 1
+vim.opt.history = 1000
+vim.opt.showcmd = true
+vim.opt.showmode = false -- lualine shows the mode now
+vim.opt.guicursor = "a:blinkon0"
+vim.opt.cmdheight = 1
 
-opt.path:append("**")
+vim.opt.path:append("**")
 
-opt.wildmenu = true
-opt.wildmode = { "list:longest", "full" }
-opt.wildignore = {
+vim.opt.wildmenu = true
+vim.opt.wildmode = { "list:longest", "full" }
+vim.opt.wildignore = {
 	"tags",
 	"*.o",
 	"*~",
@@ -217,8 +215,10 @@ opt.wildignore = {
 	"package/**",
 }
 
-opt.laststatus = 2
-opt.listchars = { tab = ">-", trail = "!", nbsp = "%", eol = "$" }
+vim.opt.laststatus = 2
+vim.opt.listchars = { tab = ">-", trail = "!", nbsp = "%", eol = "$" }
+-- Don't auto-select/insert the first completion item; pick explicitly with <C-n>/<C-p>, accept with <C-y>
+vim.opt.completeopt = { "menu", "menuone", "noselect", "popup" }
 
 --------------------------------------------------------------------------------
 -- Helper functions
@@ -233,13 +233,13 @@ end
 
 local function tab_toggle(spaces)
 	if spaces == 2 or spaces == 4 then
-		opt.softtabstop = spaces
-		opt.shiftwidth = spaces
+		vim.opt.softtabstop = spaces
+		vim.opt.shiftwidth = spaces
 		if vim.o.expandtab then
-			opt.expandtab = false
+			vim.opt.expandtab = false
 			print("TabToggle using tabs (" .. spaces .. ")")
 		else
-			opt.expandtab = true
+			vim.opt.expandtab = true
 			print("TabToggle using spaces (" .. spaces .. ")")
 		end
 	else
@@ -263,7 +263,7 @@ local function toggle_quickfix_height()
 end
 
 local function toggle_rel()
-	opt.relativenumber = not vim.o.relativenumber
+	vim.opt.relativenumber = not vim.o.relativenumber
 end
 
 local function trim_whitespace()
@@ -306,7 +306,7 @@ vim.g.clipboard = {
   copy  = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") },
   paste = { ["+"] = paste,           ["*"] = paste },
 }
-opt.clipboard = "unnamedplus"
+vim.opt.clipboard = "unnamedplus"
 
 --------------------------------------------------------------------------------
 -- Ease of use
@@ -499,7 +499,7 @@ vim.g.netrw_altv = 1
 vim.g.netrw_liststyle = 3
 vim.g.netrw_keepdir = 1
 vim.g.netrw_mousemaps = 0
-vim.g.netrw_preview = 1 
+vim.g.netrw_preview = 1
 -- netrw binds buffer-local <C-l> to refresh unless <Plug>NetrwRefresh is already
 -- mapped, so park it on an unreachable key to keep <C-l> as "move to right window".
 -- (Refresh is unusable anyway: with netrw_browse_split=4 it opens a new netrw split.)
@@ -758,9 +758,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
 
-    -- Native completion for this client in this buffer
+    -- Native completion for this client in this buffer.
+    -- ty's completions are noisy, so it only completes on demand (<C-Space>);
+    -- <leader>tc toggles auto-popup per buffer for any server.
+    local auto = not (client and client.name == "ty")
     if client and client:supports_method("textDocument/completion") then
-      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = auto })
+    end
+    if vim.b[ev.buf].lsp_autotrigger == nil then
+      vim.b[ev.buf].lsp_autotrigger = auto
     end
 
     local o = { buffer = ev.buf, silent = true }
@@ -771,6 +777,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>rn", vim.lsp.buf.rename, o)
     map("n", "<leader>ca", vim.lsp.buf.code_action, o)
     map("i", "<C-Space>", function() vim.lsp.completion.get() end, o)
+    map("n", "<leader>tc", function()
+      local buf = ev.buf
+      vim.b[buf].lsp_autotrigger = not vim.b[buf].lsp_autotrigger
+      for _, c in ipairs(vim.lsp.get_clients({ bufnr = buf })) do
+        if c:supports_method("textDocument/completion") then
+          vim.lsp.completion.enable(false, c.id, buf)
+          vim.lsp.completion.enable(true, c.id, buf, { autotrigger = vim.b[buf].lsp_autotrigger })
+        end
+      end
+      vim.notify("LSP auto-completion " .. (vim.b[buf].lsp_autotrigger and "on" or "off"))
+    end, o)
   end,
 })
 
@@ -868,10 +885,10 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end,
 })
 
--- vim.api.nvim_create_autocmd("BufWritePre", {
---     group = grp,
---     callback = trim_whitespace,
--- })
+vim.api.nvim_create_autocmd("BufWritePre", {
+    group = grp,
+    callback = trim_whitespace,
+})
 
 --------------------------------------------------------------------------------
 -- Remaining Vimscript helpers kept as-is
