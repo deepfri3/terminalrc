@@ -711,20 +711,11 @@ vim.lsp.config("lua_ls", {
   settings = { Lua = { telemetry = { enable = false } } },
 })
 
--- Python: pick whichever single-binary server you have. ty is Astral's
--- (checker + LSP in one binary); pyrefly is Meta's. Both avoid the Node.js
--- runtime that basedpyright drags in.
 vim.lsp.config("ty", {
   cmd = { "ty", "server" },
   filetypes = { "python" },
   root_markers = { "pyproject.toml", "ty.toml", "setup.py", "setup.cfg", "requirements.txt", ".git" },
 })
-
--- vim.lsp.config("pyrefly", {                    -- enable instead of ty if you prefer
---   cmd = { "pyrefly", "lsp" },
---   filetypes = { "python" },
---   root_markers = { "pyrefly.toml", "pyproject.toml", ".git" },
--- })
 
 -- Typst: tinymist. PDF export is left to `typst watch` (see below), so the
 -- server only provides diagnostics/completion/hover/etc.
@@ -749,7 +740,6 @@ enable_if("rust-analyzer",       "rust_analyzer")
 enable_if("gopls",               "gopls")
 enable_if("lua-language-server", "lua_ls")
 enable_if("ty",                  "ty")
--- enable_if("pyrefly",          "pyrefly")
 enable_if("tinymist",            "tinymist")
 
 -- Keymaps on attach -------------------------------------------------------
