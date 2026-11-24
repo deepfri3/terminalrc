@@ -14,6 +14,7 @@ INSTALL_UV=0
 INSTALL_STARSHIP=0
 INSTALL_FZF=0
 INSTALL_GO=0
+INSTALL_RUST=0
 INSTALL_LAZYGIT=0
 INSTALL_GIT=0
 INSTALL_PACKAGES=0
@@ -36,6 +37,7 @@ Options:
   --starship Download and install starship executable
   --fzf      Download and install fzf executable
   --go       Download and install latest Go
+  --rust     Install minimal Rust toolchain (rustup) and rust-analyzer
   --lazy     Download and install lazygit
   --git      Compile and install git
   --packages Install system packages
@@ -56,6 +58,7 @@ while [[ $# -gt 0 ]]; do
   --starship) INSTALL_STARSHIP=1 ;;
   --fzf) INSTALL_FZF=1 ;;
   --go) INSTALL_GO=1 ;;
+  --rust) INSTALL_RUST=1 ;;
   --lazy) INSTALL_LAZYGIT=1 ;;
   --git) INSTALL_GIT=1 ;;
   --packages) INSTALL_PACKAGES=1 ;;
@@ -83,6 +86,7 @@ if [[ $INSTALL_ALL -eq 1 ]]; then
   INSTALL_STARSHIP=1
   INSTALL_FZF=1
   INSTALL_GO=1
+  INSTALL_RUST=1
   INSTALL_LAZYGIT=1
   INSTALL_GIT=1
   INSTALL_PACKAGES=1
@@ -492,6 +496,37 @@ if [[ $INSTALL_GO -eq 1 ]]; then
   log "Install/update gopls"
   GOBIN="$HOME/.local/bin" "$GO_BIN" install golang.org/x/tools/gopls@latest
   "$HOME/.local/bin/gopls" version | head -n1
+fi
+
+# --- Rust --------------------------------------------------------------------
+if [[ $INSTALL_RUST -eq 1 ]]; then
+  log "Install Rust toolchain and rust-analyzer"
+  export PATH="$HOME/.cargo/bin:$PATH"
+
+  if ! command -v rustup >/dev/null 2>&1; then
+    echo "rustup not found, installing minimal toolchain"
+    rustup_url="https://static.rust-lang.org/rustup/dist/${RUST_TRIPLE}/rustup-init"
+    "${CURL[@]}" -o "$WORKDIR/rustup-init" "$rustup_url"
+    sha=$("${CURL[@]}" "$rustup_url.sha256" | awk '{print $1}')
+    verify_sha256 "$WORKDIR/rustup-init" "$sha"
+    chmod +x "$WORKDIR/rustup-init"
+    # --no-modify-path: shell rc files are managed by this repo
+    "$WORKDIR/rustup-init" -y --no-modify-path --profile minimal \
+      --default-toolchain stable
+  elif ! rustup show active-toolchain >/dev/null 2>&1; then
+    echo "rustup present but no toolchain configured, installing stable (minimal)"
+    rustup toolchain install stable --profile minimal
+    rustup default stable
+  else
+    echo "Rust toolchain already present: $(rustc --version)"
+  fi
+
+  log "Install/update rust-analyzer"
+  rustup component add rust-analyzer
+  # rustup's proxy only works once a toolchain is active; verify it runs
+  rustup run stable rust-analyzer --version 2>/dev/null \
+    || rustup which rust-analyzer
+  log "Rust setup completed"
 fi
 
 # --- fzf ----------------------------------------------------------------------
